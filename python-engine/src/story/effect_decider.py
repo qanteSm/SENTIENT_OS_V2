@@ -49,16 +49,16 @@ class EffectDecider:
         pass
 
     def _determine_category(self, action_name: str) -> str:
-        if action_name in ["overlay_text", "screen_glitch", "screen_fade", "blackout", "flash", "screen_shake", "wallpaper_change"]:
+        if action_name in ["overlay_text", "screen_glitch", "screen_fade", "blackout", "flash", "screen_shake", "jumpscare", "wallpaper_change"]:
             return "visual"
         if action_name in ["ambient_shift", "play_sfx", "play_stinger", "tts_speak"]:
             return "audio"
-        if action_name in ["brightness", "brightness_shift", "mouse_drift", "mouse_freeze", "fake_notification", "fake_bsod", "fake_file_appear", "system_clock_shift", "log_message"]:
+        if action_name in ["brightness", "brightness_shift", "mouse_drift", "mouse_freeze", "fake_notification", "fake_bsod", "fake_file_appear", "desktop_file", "system_clock_shift", "log_message"]:
             return "system"
         return "ui"
 
     def _determine_priority(self, action_name: str) -> str:
-        if action_name in CRITICAL_PRIORITY_EFFECTS:
+        if action_name in CRITICAL_PRIORITY_EFFECTS or action_name == "jumpscare":
             return "critical"
         if action_name in HIGH_PRIORITY_EFFECTS or action_name in ["blackout", "brightness"]:
             return "high"

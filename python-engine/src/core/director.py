@@ -25,6 +25,7 @@ from src.story.timeline import Timeline
 
 from src.infrastructure.edge_tts import EdgeTTSWorker
 from src.infrastructure.platform.windows.brightness import WindowsBrightnessManager
+from src.infrastructure.platform.windows.desktop_file import WindowsDesktopFileManager
 from src.infrastructure.platform.windows.mouse import WindowsMouseController
 from src.infrastructure.platform.windows.wallpaper import WindowsWallpaperManager
 
@@ -51,6 +52,7 @@ class Director:
         mouse_controller: Optional[WindowsMouseController] = None,
         brightness_manager: Optional[WindowsBrightnessManager] = None,
         wallpaper_manager: Optional[WindowsWallpaperManager] = None,
+        desktop_file_manager: Optional[WindowsDesktopFileManager] = None,
         tts_worker: Optional[EdgeTTSWorker] = None,
     ):
         self.event_bus = event_bus
@@ -69,6 +71,7 @@ class Director:
         self.mouse_controller = mouse_controller or WindowsMouseController()
         self.brightness_manager = brightness_manager or WindowsBrightnessManager()
         self.wallpaper_manager = wallpaper_manager or WindowsWallpaperManager()
+        self.desktop_file_manager = desktop_file_manager or WindowsDesktopFileManager()
         self.tts_worker = tts_worker or EdgeTTSWorker(temp_dir=config.temp_dir)
 
         self._message_count = 0
@@ -110,6 +113,11 @@ class Director:
         elif name == "mouse_freeze":
             duration_ms = int(params.get("duration_ms", 1000))
             asyncio.create_task(self.mouse_controller.freeze(duration_ms=duration_ms))
+        elif name in ["fake_file_appear", "desktop_file"]:
+            filename = str(params.get("filename", "BENI_OKU.txt"))
+            content = str(params.get("content", "Beni silemezsin. Seni izliyorum...\n\nSENTIENT_OS v2"))
+            duration_s = float(params.get("duration_ms", 15000)) / 1000.0
+            self.desktop_file_manager.create_file(filename=filename, content=content, duration_s=duration_s)
         elif name == "system_clock_shift":
             logger.info("Visual clock shift dispatched to overlay.")
 

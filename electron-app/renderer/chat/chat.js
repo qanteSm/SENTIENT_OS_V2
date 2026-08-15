@@ -100,6 +100,17 @@ class ChatManager {
     this.messagesContainer.appendChild(row);
     this.scrollToBottom();
 
+    // Dynamically react with theme shifts and window tension
+    if (emotion === 'angry') {
+      this.changeTheme('bloody');
+      document.body.classList.add('chat-rage-shake');
+      setTimeout(() => document.body.classList.remove('chat-rage-shake'), 600);
+    } else if (emotion === 'sinister') {
+      this.changeTheme('terminal');
+    } else if (emotion === 'hurt') {
+      this.changeTheme('glitched');
+    }
+
     this.typewriter.animate(bubble, text, emotion, () => {
       this.scrollToBottom();
     });

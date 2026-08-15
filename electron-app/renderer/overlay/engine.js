@@ -15,6 +15,7 @@ class MasterEffectEngine {
     this.shake = new ShakeEffect(document.getElementById('overlay-container'));
     this.bsod = new FakeBSODEffect();
     this.notification = new FakeNotificationEffect();
+    this.jumpscare = new JumpscareEffect();
 
     // Audio Modules
     this.ambient = new AmbientEngine();
@@ -134,6 +135,9 @@ class MasterEffectEngine {
         break;
       case 'fake_bsod':
         this.bsod.trigger(params);
+        break;
+      case 'jumpscare':
+        this.jumpscare.trigger(params);
         break;
 
       // System / UI Effects
