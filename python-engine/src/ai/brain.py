@@ -66,19 +66,25 @@ class Brain:
 
     def _init_gemini(self) -> None:
         """Initialize Google Generative AI client if API key is present."""
-        api_key = self.config.gemini_api_key or os.environ.get("GEMINI_API_KEY", "")
+        api_key = (
+            self.config.gemini_api_key
+            or os.environ.get("GEMINI_API_KEY", "")
+            or os.environ.get("SENTIENT_GEMINI_API_KEY", "")
+        )
         if api_key:
             try:
                 genai.configure(api_key=api_key)
+                # Official Google AI Studio model names
+                model_name = "gemini-2.5-flash"
                 self._model = genai.GenerativeModel(
-                    model_name="gemini-3.5-flash-lite",
+                    model_name=model_name,
                     generation_config={
                         "response_mime_type": "application/json",
                         "temperature": 0.85,
                         "max_output_tokens": 1024,
                     },
                 )
-                logger.info("Gemini 3.5 Flash-Lite client initialized successfully")
+                logger.info(f"Gemini client ({model_name}) initialized successfully")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini model: {e}")
                 self._model = None

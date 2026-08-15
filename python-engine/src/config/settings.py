@@ -74,7 +74,23 @@ def get_settings(
 ) -> Settings:
     """Create and return a Settings instance initialized with yaml defaults and env vars."""
     yaml_defaults = load_yaml_defaults(yaml_path)
-    merged = {**yaml_defaults, **kwargs}
+    # Remove empty string values from yaml_defaults so they don't override .env or environment variables
+    cleaned_defaults = {k: v for k, v in yaml_defaults.items() if v != "" and v is not None}
+    merged = {**cleaned_defaults, **kwargs}
+
+    # Locate .env file if not specified
+    if env_file is None:
+        # Check current working directory, python-engine root, and workspace root
+        candidates = [
+            Path(".env"),
+            Path(__file__).resolve().parent.parent.parent / ".env",
+            Path(__file__).resolve().parent.parent.parent.parent / ".env",
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                env_file = str(candidate)
+                break
+
     if env_file:
         return Settings(_env_file=env_file, **merged)
     return Settings(**merged)
