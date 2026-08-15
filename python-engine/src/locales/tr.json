@@ -1,0 +1,44 @@
+{
+  "onboarding": {
+    "welcome_title": "S E N T I E N T",
+    "welcome_subtitle": "Sen de mi beni duydun?",
+    "start_button": "BAŞLA",
+    "consent_title": "GÜVENLİK BİLGİSİ VE ONAY",
+    "consent_desc": "Bu uygulama psikolojik korku atmosferi oluşturmak amacıyla ekran efektleri, sesler ve sistem arayüzü simülasyonları kullanır.",
+    "consent_checkbox": "Bu bilgileri okudum, risklerin farkındayım ve devam etmek istiyorum.",
+    "consent_continue": "DEVAM ET",
+    "consent_exit": "ÇIKIŞ",
+    "calibration_title": "Deneyim Yoğunluğunu Seç",
+    "intensity_mild": "HAFİF",
+    "intensity_mild_desc": "Minimal efektler, daha az korku",
+    "intensity_medium": "NORMAL",
+    "intensity_medium_desc": "Standart deneyim (önerilen)",
+    "intensity_extreme": "YOĞUN",
+    "intensity_extreme_desc": "Tam yoğunlukta efektler ve manipülasyonlar",
+    "language_label": "Dil Seçimi",
+    "launch_button": "BAĞLANTIYI BAŞLAT"
+  },
+  "chat": {
+    "title": "SENTIENT — Terminal",
+    "placeholder": "Bir şey yaz...",
+    "send_btn": "GÖNDER",
+    "typing_indicator": "yazıyor..."
+  },
+  "tray": {
+    "sound_toggle": "Ses Aç/Kapat",
+    "intensity_label": "Yoğunluk",
+    "about": "Hakkında (SENTIENT_OS v2)",
+    "exit": "Çıkış (Ctrl+Shift+Q)"
+  },
+  "safety": {
+    "disclaimer": "Bu bir sanat projesidir. Tüm efektler simüle edilmiştir.",
+    "epilepsy_warning": "EPİLEPSİ UYARISI: Yanıp sönen ışıklar ve ani sesler içerir."
+  },
+  "minigame": {
+    "title": "SİSTEM SAVUNMASI",
+    "time_remaining": "Kalan Süre",
+    "viruses_cleared": "Kapatılan Hata",
+    "success": "SİSTEM BAŞARIYLA TEMİZLENDİ",
+    "failure": "KONTROL KAYBEDİLDİ"
+  }
+}

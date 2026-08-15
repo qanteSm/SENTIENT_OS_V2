@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, ipcMain } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import { IPCBridge } from './ipc-bridge';
@@ -20,7 +20,6 @@ class Application {
   public async start(): Promise<void> {
     console.log('[MAIN] Starting SENTIENT_OS v2 Electron Application...');
 
-    // Wait for electron app readiness
     await app.whenReady();
 
     // 1. Setup backup kill switch (Ctrl+Shift+Q)
@@ -30,54 +29,96 @@ class Application {
     setupTray(this.ipcBridge);
 
     // 3. Register IPC event handlers
-    this.setupIPCEvents();
+    this.setupRendererIPCEvents();
+    this.setupPythonWSEvents();
 
-    // 4. Start or connect to Python backend
+    // 4. Start Python backend
     await this.spawnPythonBackend();
   }
 
-  private setupIPCEvents(): void {
-    this.ipcBridge.on('ready', (payload) => {
-      console.log('[MAIN] Python backend ready. Opening overlay window...', payload);
-      this.windowManager.createOverlayWindow();
-
-      // Echo test message for Phase 1 validation
+  private setupRendererIPCEvents(): void {
+    // Renderer -> Main -> Python
+    ipcMain.on('user-chat', (_event, data) => {
       this.ipcBridge.send('user_input', {
-        text: 'Electron connected successfully (Phase 1 Foundation)',
-        source: 'electron_main',
+        text: data.text,
+        source: 'electron_chat',
       });
     });
 
-    const forwardToRenderer = (type: string, payload: any) => {
-      const win = this.windowManager.getOverlayWindow();
-      if (win && !win.isDestroyed()) {
-        win.webContents.send('ws-message', { type, payload });
+    ipcMain.on('system-event', (_event, data) => {
+      this.ipcBridge.send('system_event', data);
+    });
+
+    ipcMain.on('onboarding-complete', (_event, data) => {
+      console.log('[MAIN] Onboarding completed:', data);
+      this.windowManager.closeOnboarding();
+      this.windowManager.createOverlayWindow();
+
+      this.ipcBridge.send('onboarding_complete', {
+        intensity: data.intensity,
+        language: data.language,
+      });
+    });
+
+    ipcMain.on('minigame-result', (_event, data) => {
+      console.log('[MAIN] Minigame finished with result:', data);
+      this.windowManager.closeMinigame();
+      this.ipcBridge.send('minigame_completed', data);
+    });
+
+    ipcMain.on('app-exit', () => {
+      this.shutdown();
+    });
+  }
+
+  private setupPythonWSEvents(): void {
+    this.ipcBridge.on('ready', (payload) => {
+      console.log('[MAIN] Python backend ready. Launching Onboarding Wizard...', payload);
+      this.windowManager.createOnboardingWindow();
+    });
+
+    const forwardToAll = (type: string, payload: any) => {
+      const overlayWin = this.windowManager.getOverlayWindow();
+      if (overlayWin && !overlayWin.isDestroyed()) {
+        overlayWin.webContents.send('ws-message', { type, payload });
+      }
+
+      const chatWin = this.windowManager.getChatWindow();
+      if (chatWin && !chatWin.isDestroyed()) {
+        chatWin.webContents.send('ws-message', { type, payload });
       }
     };
 
     this.ipcBridge.on('effect', (payload) => {
-      console.log('[MAIN] Forwarding effect to overlay renderer:', payload);
-      forwardToRenderer('effect', payload);
+      forwardToAll('effect', payload);
     });
 
     this.ipcBridge.on('ambient_change', (payload) => {
-      console.log('[MAIN] Forwarding ambient_change to overlay renderer:', payload);
-      forwardToRenderer('ambient_change', payload);
+      forwardToAll('ambient_change', payload);
     });
 
     this.ipcBridge.on('ui_command', (payload) => {
-      console.log('[MAIN] Forwarding ui_command to overlay renderer:', payload);
-      forwardToRenderer('ui_command', payload);
+      console.log('[MAIN] Received ui_command:', payload);
+      const cmd = payload?.command;
+      if (cmd === 'open_chat') {
+        const chatWin = this.windowManager.createChatWindow();
+        setTimeout(() => {
+          chatWin.webContents.send('ws-message', { type: 'ui_command', payload });
+        }, 500);
+      } else if (cmd === 'trigger_minigame') {
+        this.windowManager.createMinigameWindow();
+      } else {
+        forwardToAll('ui_command', payload);
+      }
     });
 
     this.ipcBridge.on('ai_response', (payload) => {
-      console.log('[MAIN] Received AI Response from Python:', payload);
-      forwardToRenderer('ai_response', payload);
+      console.log('[MAIN] Received AI Response from Python:', payload?.speech?.slice(0, 30));
+      forwardToAll('ai_response', payload);
     });
 
     this.ipcBridge.on('narrative_event', (payload) => {
-      console.log('[MAIN] Received Narrative Event:', payload);
-      forwardToRenderer('narrative_event', payload);
+      forwardToAll('narrative_event', payload);
     });
 
     this.ipcBridge.on('shutdown', () => {
@@ -93,7 +134,6 @@ class Application {
 
   private spawnPythonBackend(): Promise<void> {
     return new Promise((resolve) => {
-      // Check if external python engine port passed via environment variable
       if (process.env.SENTIENT_PORT) {
         const port = parseInt(process.env.SENTIENT_PORT, 10);
         console.log(`[MAIN] Using predefined Python WS port: ${port}`);
@@ -119,7 +159,6 @@ class Application {
         const text = data.toString('utf-8');
         process.stdout.write(`[PYTHON] ${text}`);
 
-        // Scan line for WS_PORT:{port} announcement
         const match = text.match(/WS_PORT:(\d+)/);
         if (match && !portDiscovered) {
           portDiscovered = true;
@@ -141,7 +180,6 @@ class Application {
         }
       });
 
-      // Fallback timeout if WS_PORT is not received in 15 seconds
       setTimeout(() => {
         if (!portDiscovered) {
           console.error('[MAIN] Timeout waiting for Python WS_PORT. Trying fallback port 5000...');
@@ -180,5 +218,5 @@ sentientApp.start().catch((err) => {
 });
 
 app.on('window-all-closed', () => {
-  // Prevent quitting automatically on overlay close unless shutdown initiated
+  // Keep app active in background
 });

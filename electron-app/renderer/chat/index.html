@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-normal">
+  <div class="chat-container">
+    <!-- Custom Title Bar -->
+    <header class="chat-header">
+      <div class="header-left">
+        <span class="status-dot"></span>
+        <span class="header-title" id="chat-title">SENTIENT_OS [SECURE_SHELL]</span>
+      </div>
+      <div class="header-controls">
+        <button id="btn-close" class="ctrl-btn btn-x" title="Kapat">✕</button>
+      </div>
+    </header>
+
+    <!-- Message History Stream -->
+    <main id="chat-messages" class="messages-area"></main>
+
+    <!-- Typing Indicator -->
+    <div id="typing-indicator" class="typing-box" style="display: none;">
+      <span class="typing-label">SENTIENT</span>
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Input Bar -->
+    <footer class="chat-footer">
+      <input type="text" id="chat-input" placeholder="Bir şey yaz..." autocomplete="off" spellcheck="false">
+      <button id="chat-send-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <script src="typing-animation.js"></script>
+  <script src="chat.js"></script>
+</body>
+</html>

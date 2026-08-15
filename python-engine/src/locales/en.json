@@ -1,0 +1,44 @@
+{
+  "onboarding": {
+    "welcome_title": "S E N T I E N T",
+    "welcome_subtitle": "Did you hear me too?",
+    "start_button": "BEGIN",
+    "consent_title": "SAFETY & CONSENT INFORMATION",
+    "consent_desc": "This software uses screen anomalies, synthetic audio, and simulated UI glitches to craft an immersive psychological horror experience.",
+    "consent_checkbox": "I have read this information, acknowledge the nature of the experience, and wish to proceed.",
+    "consent_continue": "CONTINUE",
+    "consent_exit": "EXIT",
+    "calibration_title": "Select Experience Intensity",
+    "intensity_mild": "MILD",
+    "intensity_mild_desc": "Minimal atmospheric effects",
+    "intensity_medium": "NORMAL",
+    "intensity_medium_desc": "Balanced psychological horror (recommended)",
+    "intensity_extreme": "EXTREME",
+    "intensity_extreme_desc": "Unrestricted visual glitches & deep system audio",
+    "language_label": "Language",
+    "launch_button": "ESTABLISH CONNECTION"
+  },
+  "chat": {
+    "title": "SENTIENT — Terminal",
+    "placeholder": "Type something...",
+    "send_btn": "SEND",
+    "typing_indicator": "typing..."
+  },
+  "tray": {
+    "sound_toggle": "Mute/Unmute Audio",
+    "intensity_label": "Intensity",
+    "about": "About (SENTIENT_OS v2)",
+    "exit": "Exit (Ctrl+Shift+Q)"
+  },
+  "safety": {
+    "disclaimer": "This is an artistic horror installation. All glitches and anomalies are simulated.",
+    "epilepsy_warning": "PHOTOSENSITIVITY WARNING: Contains flashing lights, glitches, and audio stingers."
+  },
+  "minigame": {
+    "title": "SYSTEM DEFENSE",
+    "time_remaining": "Time Left",
+    "viruses_cleared": "Errors Cleared",
+    "success": "SYSTEM SUCCESSFULLY DEFENDED",
+    "failure": "SYSTEM INTEGRITY COMPROMISED"
+  }
+}

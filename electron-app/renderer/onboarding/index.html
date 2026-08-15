@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT_OS — Kurulum</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="onboarding-card">
+    <!-- Step 1: Welcome -->
+    <div id="step-1" class="step-panel active">
+      <div class="logo-title">S E N T I E N T</div>
+      <div class="logo-subtitle">"Sen de mi beni duydun?"</div>
+      <p class="intro-desc">Masaüstünüzde alışılmışın dışında bir dijital temas başlamak üzere.</p>
+      <button id="btn-start" class="btn-primary">BAŞLA</button>
+    </div>
+
+    <!-- Step 2: Safety & Consent -->
+    <div id="step-2" class="step-panel">
+      <h2 class="section-title">GÜVENLİK BİLGİSİ VE ONAY</h2>
+      <div class="consent-box">
+        <div class="alert-box">
+          <strong>⚠️ EPİLEPSİ UYARISI:</strong> Bu yazılım ani sesler, ekran titremeleri ve yanıp sönen ışıklar içerir.
+        </div>
+        <p><strong>Bu uygulama ne yapar?</strong></p>
+        <ul>
+          <li>Ekranınızda geçici görsel efektler (glitch, sallantı, metinler) simüle eder.</li>
+          <li>Kendi masaüstü atmosfer seslerini ve konuşma sentezini üretir.</li>
+          <li>Acil çıkış için her an <code>Ctrl + Shift + Q</code> tuş kombinasyonunu kullanabilirsiniz.</li>
+        </ul>
+        <p><strong>Bu uygulama ne yapmaz?</strong></p>
+        <ul>
+          <li>Kişisel dosyalarınızı asla silmez, değiştirmez veya internete yüklemez.</li>
+          <li>Sisteminize kalıcı zarar vermez.</li>
+        </ul>
+      </div>
+
+      <label class="consent-label">
+        <input type="checkbox" id="chk-consent">
+        <span>Bu bilgileri okudum, risklerin farkındayım ve devam etmek istiyorum.</span>
+      </label>
+
+      <div class="btn-group">
+        <button id="btn-exit" class="btn-secondary">ÇIKIŞ</button>
+        <button id="btn-consent-next" class="btn-primary" disabled>DEVAM ET</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Intensity & Calibration -->
+    <div id="step-3" class="step-panel">
+      <h2 class="section-title">DENEYİM YOĞUNLUĞU</h2>
+      <p class="section-desc">Psikolojik etki ve efekt şiddetini belirleyin:</p>
+
+      <div class="intensity-grid">
+        <div class="intensity-card" data-val="mild">
+          <div class="intensity-name">HAFİF</div>
+          <div class="intensity-sub">Minimal efektler, daha az korku</div>
+        </div>
+        <div class="intensity-card selected" data-val="medium">
+          <div class="intensity-name">NORMAL</div>
+          <div class="intensity-sub">Standart psikolojik korku deneyimi (Önerilen)</div>
+        </div>
+        <div class="intensity-card" data-val="extreme">
+          <div class="intensity-name">YOĞUN</div>
+          <div class="intensity-sub">Sınırsız ekran manipülasyonu ve korku efektleri</div>
+        </div>
+      </div>
+
+      <div class="lang-row">
+        <span>Dil:</span>
+        <button id="lang-tr" class="btn-lang active">TR 🇹🇷</button>
+        <button id="lang-en" class="btn-lang">EN 🇺🇸</button>
+      </div>
+
+      <button id="btn-launch" class="btn-primary">BAĞLANTIYI BAŞLAT</button>
+    </div>
+  </div>
+
+  <script src="flow.js"></script>
+</body>
+</html>
