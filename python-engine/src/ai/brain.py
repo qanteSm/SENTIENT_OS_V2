@@ -1,10 +1,11 @@
-"""Gemini 3.5 Flash-Lite AI Brain integration with caching, retry, and offline fallback."""
+"""Gemini AI Brain integration using the new official google-genai SDK."""
 
 import asyncio
 import os
 import random
 from typing import Any, List, Optional
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 from src.ai.cache import ResponseCache
 from src.ai.context_builder import ContextBuilder
@@ -45,7 +46,7 @@ OFFLINE_TEMPLATES = {
 
 
 class Brain:
-    """Core intelligence engine powered by Gemini 3.5 Flash-Lite."""
+    """Core intelligence engine powered by official google-genai SDK."""
 
     def __init__(
         self,
@@ -54,18 +55,20 @@ class Brain:
         personality: Personality,
         context_builder: Optional[ContextBuilder] = None,
         cache: Optional[ResponseCache] = None,
+        model_name: str = "gemini-2.5-flash",
     ):
         self.config = config
         self.memory = memory
         self.personality = personality
         self.context_builder = context_builder or ContextBuilder()
         self.cache = cache or ResponseCache()
+        self.model_name = model_name
 
-        self._model = None
+        self._client: Optional[genai.Client] = None
         self._init_gemini()
 
     def _init_gemini(self) -> None:
-        """Initialize Google Generative AI client if API key is present."""
+        """Initialize new official google-genai Client."""
         api_key = (
             self.config.gemini_api_key
             or os.environ.get("GEMINI_API_KEY", "")
@@ -73,24 +76,14 @@ class Brain:
         )
         if api_key:
             try:
-                genai.configure(api_key=api_key)
-                # Official Google AI Studio model names
-                model_name = "gemini-2.5-flash"
-                self._model = genai.GenerativeModel(
-                    model_name=model_name,
-                    generation_config={
-                        "response_mime_type": "application/json",
-                        "temperature": 0.85,
-                        "max_output_tokens": 1024,
-                    },
-                )
-                logger.info(f"Gemini client ({model_name}) initialized successfully")
+                self._client = genai.Client(api_key=api_key)
+                logger.info(f"Gemini google-genai Client ({self.model_name}) initialized successfully")
             except Exception as e:
-                logger.error(f"Failed to initialize Gemini model: {e}")
-                self._model = None
+                logger.error(f"Failed to initialize google-genai Client: {e}")
+                self._client = None
         else:
             logger.warning("No GEMINI_API_KEY configured. Running in offline fallback mode.")
-            self._model = None
+            self._client = None
 
     async def generate_response(
         self,
@@ -105,7 +98,6 @@ class Brain:
         # 1. Check Response Cache
         cached_resp = self.cache.get(user_input, phase, current_emotion)
         if cached_resp is not None:
-            # Add to memory
             await self.memory.add_message("user", user_input)
             await self.memory.add_message("ai", cached_resp.speech, cached_resp.emotion)
             return cached_resp
@@ -138,7 +130,7 @@ class Brain:
 
         # 4. Generate with Gemini or Fallback
         response = None
-        if self._model is not None:
+        if self._client is not None:
             response = await self._call_gemini_with_retry(full_prompt)
 
         if response is None:
@@ -162,15 +154,27 @@ class Brain:
     async def _call_gemini_with_retry(
         self, prompt: str, max_retries: int = 3, timeout_sec: float = 10.0
     ) -> Optional[AIResponse]:
-        """Execute Gemini API call with exponential backoff retry."""
+        """Execute Gemini API call with exponential backoff retry using google-genai SDK."""
         delays = [1.0, 2.0, 4.0]
+
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.85,
+            max_output_tokens=1024,
+        )
 
         for attempt in range(max_retries):
             try:
                 loop = asyncio.get_running_loop()
-                # Run synchronous SDK call in threadpool with timeout
                 response = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: self._model.generate_content(prompt)),
+                    loop.run_in_executor(
+                        None,
+                        lambda: self._client.models.generate_content(
+                            model=self.model_name,
+                            contents=prompt,
+                            config=config,
+                        ),
+                    ),
                     timeout=timeout_sec,
                 )
 
@@ -192,8 +196,6 @@ class Brain:
         """Generate contextual offline template response."""
         emotion = self.personality.get_current_emotion()
         templates = OFFLINE_TEMPLATES.get(emotion, OFFLINE_TEMPLATES["calm"])
-
-        # Check for keywords in user input to pick best template
         speech = random.choice(templates)
 
         logger.info(f"Using offline template response (emotion={emotion}): {speech}")
@@ -211,8 +213,7 @@ class Brain:
         if not messages:
             return ""
 
-        if self._model is None:
-            # Fallback simple text summary
+        if self._client is None:
             first = messages[0].content[:30]
             last = messages[-1].content[:30]
             return f"Kullanıcı ile '{first}...' ile başlayan ve '{last}...' ile biten kısa diyalog."
@@ -228,7 +229,13 @@ class Brain:
         try:
             loop = asyncio.get_running_loop()
             res = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: self._model.generate_content(prompt)),
+                loop.run_in_executor(
+                    None,
+                    lambda: self._client.models.generate_content(
+                        model=self.model_name,
+                        contents=prompt,
+                    ),
+                ),
                 timeout=8.0,
             )
             if res and res.text:

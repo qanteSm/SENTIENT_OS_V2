@@ -1,6 +1,6 @@
 """Unit tests for Brain intelligence engine and offline fallback."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import pytest
 from src.ai.brain import Brain
 from src.ai.memory import Memory
@@ -31,8 +31,8 @@ async def test_brain_mock_gemini_call():
 
     brain = Brain(config=settings, memory=memory, personality=personality)
 
-    # Mock model
-    mock_model = MagicMock()
+    # Mock google-genai client
+    mock_client = MagicMock()
     mock_gen_response = MagicMock()
     mock_gen_response.text = """
     {
@@ -45,8 +45,8 @@ async def test_brain_mock_gemini_call():
         "narrative_signal": "branch_fear"
     }
     """
-    mock_model.generate_content.return_value = mock_gen_response
-    brain._model = mock_model
+    mock_client.models.generate_content.return_value = mock_gen_response
+    brain._client = mock_client
 
     resp = await brain.generate_response("Sen nesin?")
     assert resp.speech == "Ben senin bilgisayarınım."
