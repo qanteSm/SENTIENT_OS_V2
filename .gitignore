@@ -1,0 +1,83 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+
+# ===== Virtual Environments =====
+venv/
+.venv/
+env/
+.env
+
+# ===== Environment Variables =====
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ===== Node.js / Electron =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/
+
+# ===== Electron Builder Output =====
+electron-app/dist/
+electron-app/out/
+electron-app/release/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===== Logs =====
+logs/
+*.log
+
+# ===== Temp Files =====
+temp/
+tmp/
+*.tmp
+
+# ===== Database =====
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== TTS Output =====
+temp/tts_*.mp3
+
+# ===== PyInstaller =====
+*.spec
+
+# ===== Testing =====
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# ===== Build Artifacts =====
+installer/output/
+*.nsi.bak
