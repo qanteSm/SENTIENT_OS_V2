@@ -1,4 +1,4 @@
-"""Gemini 2.5 Flash AI Brain integration with caching, retry, and offline fallback."""
+"""Gemini 3.5 Flash-Lite AI Brain integration with caching, retry, and offline fallback."""
 
 import asyncio
 import os
@@ -45,7 +45,7 @@ OFFLINE_TEMPLATES = {
 
 
 class Brain:
-    """Core intelligence engine powered by Gemini 2.5 Flash."""
+    """Core intelligence engine powered by Gemini 3.5 Flash-Lite."""
 
     def __init__(
         self,
@@ -71,14 +71,14 @@ class Brain:
             try:
                 genai.configure(api_key=api_key)
                 self._model = genai.GenerativeModel(
-                    model_name="gemini-2.5-flash",
+                    model_name="gemini-3.5-flash-lite",
                     generation_config={
                         "response_mime_type": "application/json",
                         "temperature": 0.85,
                         "max_output_tokens": 1024,
                     },
                 )
-                logger.info("Gemini 2.5 Flash client initialized successfully")
+                logger.info("Gemini 3.5 Flash-Lite client initialized successfully")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini model: {e}")
                 self._model = None

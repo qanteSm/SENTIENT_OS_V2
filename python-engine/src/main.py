@@ -92,7 +92,15 @@ class EngineApp:
         session_id = self.ws_server._session_id
         set_global_session_id(session_id)
 
-        # 4. Initialize AI Domain
+        # 4. Initialize AI Domain & ensure session row exists in DB
+        if self.state_store:
+            await self.state_store.create_session(
+                session_id=session_id,
+                language=self.settings.language,
+                intensity=self.settings.intensity,
+                current_phase=self.current_phase,
+            )
+
         self.memory = Memory(
             session_id=session_id,
             state_store=self.state_store,

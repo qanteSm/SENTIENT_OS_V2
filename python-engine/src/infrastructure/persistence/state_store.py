@@ -29,6 +29,10 @@ class StateStore:
             """
             INSERT INTO sessions (id, started_at, current_phase, language, intensity, status)
             VALUES (?, ?, ?, ?, ?, 'active')
+            ON CONFLICT(id) DO UPDATE SET
+                language = excluded.language,
+                intensity = excluded.intensity,
+                current_phase = excluded.current_phase
             """,
             (session_id, started_at, current_phase, language, intensity),
         ):
