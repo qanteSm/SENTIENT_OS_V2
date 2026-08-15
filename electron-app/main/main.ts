@@ -48,8 +48,36 @@ class Application {
       });
     });
 
+    const forwardToRenderer = (type: string, payload: any) => {
+      const win = this.windowManager.getOverlayWindow();
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('ws-message', { type, payload });
+      }
+    };
+
+    this.ipcBridge.on('effect', (payload) => {
+      console.log('[MAIN] Forwarding effect to overlay renderer:', payload);
+      forwardToRenderer('effect', payload);
+    });
+
+    this.ipcBridge.on('ambient_change', (payload) => {
+      console.log('[MAIN] Forwarding ambient_change to overlay renderer:', payload);
+      forwardToRenderer('ambient_change', payload);
+    });
+
+    this.ipcBridge.on('ui_command', (payload) => {
+      console.log('[MAIN] Forwarding ui_command to overlay renderer:', payload);
+      forwardToRenderer('ui_command', payload);
+    });
+
     this.ipcBridge.on('ai_response', (payload) => {
       console.log('[MAIN] Received AI Response from Python:', payload);
+      forwardToRenderer('ai_response', payload);
+    });
+
+    this.ipcBridge.on('narrative_event', (payload) => {
+      console.log('[MAIN] Received Narrative Event:', payload);
+      forwardToRenderer('narrative_event', payload);
     });
 
     this.ipcBridge.on('shutdown', () => {

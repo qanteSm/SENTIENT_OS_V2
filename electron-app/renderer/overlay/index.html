@@ -5,15 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SENTIENT_OS Overlay</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Cinzel:wght@600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="overlay-container" class="overlay-root">
-    <!-- Visual Effect Layers (Phase 4 engine hook) -->
+    <!-- Visual Effect Layers -->
     <canvas id="glitch-canvas" class="effect-layer"></canvas>
     <div id="text-overlay-layer" class="effect-layer"></div>
     <div id="screen-fade-layer" class="effect-layer"></div>
     <div id="vignette-layer" class="effect-layer"></div>
+    <div id="notification-container"></div>
+    <div id="bsod-container" style="display: none;"></div>
   </div>
+
+  <!-- Audio Modules -->
+  <script src="../audio/ambient-engine.js"></script>
+  <script src="../audio/spatial-audio.js"></script>
+  <script src="../audio/tts-player.js"></script>
+
+  <!-- Effect Modules -->
+  <script src="effects/glitch.js"></script>
+  <script src="effects/text-overlay.js"></script>
+  <script src="effects/fade.js"></script>
+  <script src="effects/shake.js"></script>
+  <script src="effects/bsod.js"></script>
+  <script src="effects/notification.js"></script>
+
+  <!-- Master Engine -->
   <script src="engine.js"></script>
 </body>
 </html>
