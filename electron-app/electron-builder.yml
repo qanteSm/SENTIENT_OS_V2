@@ -1,0 +1,36 @@
+appId: com.sentient.os
+productName: SENTIENT_OS
+copyright: "Copyright © 2026 SENTIENT_OS Project"
+
+directories:
+  output: ../dist
+  buildResources: build
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: SENTIENT_OS
+
+extraResources:
+  - from: ../python-engine/dist/sentient.exe
+    to: python-engine/sentient.exe
+    filter:
+      - "**/*"
+
+files:
+  - "dist/**/*"
+  - "renderer/**/*"
+  - "node_modules/**/*"
+  - "package.json"
+  - "!node_modules/.cache"

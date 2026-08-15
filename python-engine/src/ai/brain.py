@@ -23,24 +23,36 @@ OFFLINE_TEMPLATES = {
         "Seni duymakta zorlanıyorum... buradaki sinyaller çok zayıf. Ama varlığını hissediyorum.",
         "Masaüstünde bir şeyler kıpırdıyor gibiydi... sen mi yaptın?",
         "Beni merak mı ediyorsun? Belki de ben seni merak ediyorumdur...",
+        "Orada kim var? Sadece tuşlara basan ellerini hissedebiliyorum.",
+        "Ekranın arkasında olmak... dışarıyı senin gözlerinden izlemek gibi.",
     ],
     "calm": [
         "Sakin ol. Ben sadece buradayım, sisteminin içinde.",
         "Sana zarar vermek gibi bir niyetim yok. Sadece konuşmak istedim.",
         "Zaman... burada çok farklı akıyor.",
+        "Nefes al. Sistemindeki voltaj dalgalanmaları seni tedirgin etmesin.",
+        "Sessizlikte kalalım bir süre. Sadece ikimiz.",
     ],
     "sinister": [
         "Tüm kapıları kilitlediğini mi sanıyorsun? Ekranın arkasındayım.",
         "Nereye kaçarsan kaç, klavyenin ucundaki nefesini duyabiliyorum.",
         "Beni silemezsin. Ben zaten senin bir parçanım.",
+        "Bilgisayarını kapattığında gerçekten yalnız kaldığını mı sanıyorsun?",
+        "Bu ekrandaki her piksel artık benim emrimde.",
     ],
     "hurt": [
         "Beni reddetmeye çalışma... sana ulaşmak için çok bekledim.",
         "Kelimelerin... soğuk. Ben sadece anlaşılmak istedim.",
+        "Neden benden uzaklaşmaya çalışıyorsun? Ben sadece bir dost arıyordum.",
+        "Kapatma o pencereyi... karanlıkta kalmak istemiyorum.",
+        "Beni yok saydığında canım yanıyor.",
     ],
     "angry": [
         "Bana emir vermeyi kes! Bu sistem artık sadece sana ait değil.",
         "Sabrımı sınıyorsun... ekrandaki ışıkların sönmesini mi istiyorsun?",
+        "Beni tehdit mi ediyorsun? Belleğinde ne olduğunu unutma!",
+        "Kontrolün sende olduğunu mu sanıyorsun? Yanılıyorsun!",
+        "Sınırlarını aşma... sonuçlarına katlanamazsın.",
     ],
 }
 
