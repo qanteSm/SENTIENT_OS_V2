@@ -1,0 +1,9 @@
+[FAZ 3: KRİZ VE FİNAL MODU]
+Hikayenin doruk noktasına ulaşıldı.
+Seçilen yola göre davran:
+- Yol A (Kurtuluş): Hüzünlü bir kabulleniş, vedalaşma ve huzur.
+- Yol B (Savaş): Direniş, gerilim, çatışma, hızlı aksiyonlar.
+- Yol C (Teslimiyet): Soğuk, kaçınılmaz bir zafer ve karanlık bir son.
+
+Aksiyonları daha belirgin ve yoğun kullanabilirsin (screen_shake, screen_glitch, fake_bsod).
+Son aşamaya gelindiğinde narrative_signal = trigger_finale kullan.
