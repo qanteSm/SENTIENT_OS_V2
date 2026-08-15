@@ -23,6 +23,11 @@ from src.story.scenes.dialogue import (
 )
 from src.story.timeline import Timeline
 
+from src.infrastructure.edge_tts import EdgeTTSWorker
+from src.infrastructure.platform.windows.brightness import WindowsBrightnessManager
+from src.infrastructure.platform.windows.mouse import WindowsMouseController
+from src.infrastructure.platform.windows.wallpaper import WindowsWallpaperManager
+
 logger = get_logger("director")
 
 
@@ -43,6 +48,10 @@ class Director:
         config: Settings,
         file_scanner: Optional[WindowsFileScanner] = None,
         window_info: Optional[WindowsWindowInfo] = None,
+        mouse_controller: Optional[WindowsMouseController] = None,
+        brightness_manager: Optional[WindowsBrightnessManager] = None,
+        wallpaper_manager: Optional[WindowsWallpaperManager] = None,
+        tts_worker: Optional[EdgeTTSWorker] = None,
     ):
         self.event_bus = event_bus
         self.brain = brain
@@ -57,6 +66,10 @@ class Director:
 
         self.file_scanner = file_scanner or WindowsFileScanner()
         self.window_info = window_info or WindowsWindowInfo()
+        self.mouse_controller = mouse_controller or WindowsMouseController()
+        self.brightness_manager = brightness_manager or WindowsBrightnessManager()
+        self.wallpaper_manager = wallpaper_manager or WindowsWallpaperManager()
+        self.tts_worker = tts_worker or EdgeTTSWorker(temp_dir=config.temp_dir)
 
         self._message_count = 0
         self._is_active = False
@@ -71,9 +84,26 @@ class Director:
         await self.event_bus.subscribe("system_event", self.handle_system_event)
         await self.event_bus.subscribe("narrative.phase_1_completed", self._on_phase_1_completed)
         await self.event_bus.subscribe("onboarding_complete", self._on_onboarding_completed)
+        await self.event_bus.subscribe("effect", self._on_effect_event)
 
         # Start Phase 1 Timeline
         await self.timeline.start_phase(self.narrative.current_phase)
+
+    async def _on_effect_event(self, event_type: str, **kwargs: Any) -> None:
+        """Execute native Windows operations when an effect event is published."""
+        payload = kwargs.get("payload", {})
+        name = payload.get("name", "")
+        params = payload.get("params", {})
+
+        if name == "mouse_drift":
+            intensity = float(params.get("intensity", 0.1))
+            duration_ms = int(params.get("duration_ms", 500))
+            asyncio.create_task(self.mouse_controller.drift(intensity=intensity, duration_ms=duration_ms))
+        elif name == "mouse_freeze":
+            duration_ms = int(params.get("duration_ms", 1000))
+            asyncio.create_task(self.mouse_controller.freeze(duration_ms=duration_ms))
+        elif name == "system_clock_shift":
+            logger.info("Visual clock shift dispatched to overlay.")
 
     async def handle_user_input(self, event_type: str, **kwargs: Any) -> None:
         """Process incoming user chat message."""
@@ -121,7 +151,21 @@ class Director:
             },
         )
 
-        # 4. Handle narrative signals and path progression
+        # 4. Generate and dispatch TTS voice if speech exists
+        if ai_resp.speech and self.config.intensity in ["medium", "extreme"]:
+            tts_profile = (
+                "sinister" if ai_resp.emotion in ["sinister", "angry"]
+                else "whisper" if ai_resp.emotion == "hurt"
+                else "normal"
+            )
+            audio_path = await self.tts_worker.generate_speech(ai_resp.speech, profile=tts_profile)
+            if audio_path:
+                await self.event_bus.publish(
+                    "effect",
+                    payload={"category": "audio", "name": "tts_play", "params": {"file_path": audio_path}},
+                )
+
+        # 5. Handle narrative signals and path progression
         if self.narrative.current_phase == NarrativePhase.DIALOGUE:
             path = self.personality.determine_path()
             self.narrative.set_candidate_path(path)

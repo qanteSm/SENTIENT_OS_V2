@@ -1,7 +1,5 @@
 /**
  * SENTIENT_OS v2 — Text Overlay Effect Module
- * Styles: normal, ghostly, glitched, bloody, terminal, whisper
- * Animations: fade_in_out, typewriter, glitch_in, dissolve, shake
  */
 
 class TextOverlayEffect {
@@ -14,12 +12,13 @@ class TextOverlayEffect {
     if (!text) return;
 
     const style = params.style || 'ghostly';
-    const animation = params.animation || 'fade_in_out';
-    const durationMs = params.duration_ms || 3000;
-    const position = params.position || 'center'; // 'center' | 'top' | 'bottom_right'
+    const animation = params.animation || (style === 'glitched' ? 'glitch_in' : 'fade_in_out');
+    const durationMs = params.duration_ms || 4000;
+    const position = params.position || 'center';
 
     const textElem = document.createElement('div');
     textElem.className = `overlay-text-item style-${style} anim-${animation} pos-${position}`;
+    textElem.style.animationDuration = `${durationMs}ms`;
 
     if (animation === 'typewriter') {
       this.container.appendChild(textElem);
@@ -30,8 +29,8 @@ class TextOverlayEffect {
 
       setTimeout(() => {
         textElem.classList.add('fade-out');
-        setTimeout(() => textElem.remove(), 600);
-      }, durationMs);
+        setTimeout(() => textElem.remove(), 800);
+      }, durationMs - 800);
     }
   }
 
@@ -47,7 +46,7 @@ class TextOverlayEffect {
         clearInterval(interval);
         setTimeout(() => {
           element.classList.add('fade-out');
-          setTimeout(() => element.remove(), 600);
+          setTimeout(() => element.remove(), 800);
         }, totalDurationMs / 2);
       }
     }, charDelay);
