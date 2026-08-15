@@ -62,8 +62,10 @@ tmp/
 
 # ===== Database =====
 *.db
+*.db-*
 *.sqlite
 *.sqlite3
+data/
 
 # ===== TTS Output =====
 temp/tts_*.mp3

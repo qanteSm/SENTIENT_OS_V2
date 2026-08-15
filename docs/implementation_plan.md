@@ -13,7 +13,7 @@
 | **GUI/Overlay** | Electron (Chromium) | WebGL/CSS glitch, Web Audio API, GDI sorunu tamamen kalkar |
 | **Backend** | Python (Headless Engine) | AI, dosya tarama, Win32 API, SQLite — tüm iş mantığı |
 | **İletişim** | WebSocket (lokal) | Electron ↔ Python async haberleşme |
-| **AI Model** | Gemini 2.5 Flash | ~500ms-1s yanıt, hem chat hem arka plan analizi |
+| **AI Model** | Gemini 3.5 Flash-Lite | ~500ms-1s yanıt, hem chat hem arka plan analizi |
 | **TTS** | Edge-TTS (async) | tr-TR-AhmetNeural / tr-TR-EmelNeural, doğal Türkçe ses |
 | **Audio Engine** | Web Audio API (Electron) | Spatial audio, real-time processing, düşük latency |
 | **State/DB** | SQLite + Event Sourcing | ACID garantisi, corruption-proof, hızlı query |

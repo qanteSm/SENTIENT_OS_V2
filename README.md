@@ -26,7 +26,7 @@ Geleneksel oyunlardan farklı olarak SENTIENT_OS:
 |---------|-------|
 | **Süre** | 35-40 dakika |
 | **Yeniden Oynanabilirlik** | 3 farklı final (Kurtuluş, Savaş, Teslimiyet) |
-| **AI** | Google Gemini 2.5 Flash — gerçek zamanlı, dinamik diyalog |
+| **AI** | Google Gemini 3.5 Flash-Lite — gerçek zamanlı, dinamik diyalog |
 | **Ses** | Edge-TTS (doğal Türkçe ses) + Web Audio API (spatial ambient) |
 | **Diller** | Türkçe 🇹🇷 ve İngilizce 🇺🇸 |
 

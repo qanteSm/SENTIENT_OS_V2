@@ -2,7 +2,7 @@
 
 > **Versiyon:** 1.0  
 > **Tarih:** 15 Ağustos 2026  
-> **Model:** Gemini 2.5 Flash  
+> **Model:** Gemini 3.5 Flash-Lite  
 > **TTS:** Microsoft Edge-TTS
 
 ---

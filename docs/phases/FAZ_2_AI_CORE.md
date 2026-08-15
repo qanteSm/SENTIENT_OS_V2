@@ -22,7 +22,7 @@ Bu fazda AI beynini inşa ediyoruz. Faz 2 sonunda Python backend'de bir terminal
 | `src/ai/brain.py` | Gemini API istemcisi, yanıt üretimi, retry mantığı |
 
 **Sorumluluklar:**
-- `google-generativeai` SDK ile Gemini 2.5 Flash bağlantısı
+- `google-generativeai` SDK ile Gemini 3.5 Flash-Lite bağlantısı
 - `generation_config` ve `safety_settings` yapılandırması
 - JSON mode (`response_mime_type: "application/json"`)
 - Retry: 3 deneme, exponential backoff (1s → 2s → 4s)
@@ -312,7 +312,7 @@ async def terminal_chat():
 ## Faz 2 Çıkış Kriterleri
 
 - [ ] `python -m src.main --chat` ile terminal'de AI sohbet çalışır
-- [ ] AI Türkçe yanıt veriyor (Gemini 2.5 Flash)
+- [ ] AI Türkçe yanıt veriyor (Gemini 3.5 Flash-Lite)
 - [ ] Working memory: son 20 mesaj tutulur, FIFO
 - [ ] Episodic memory: 10 mesaj sonrası otomatik özet üretilir
 - [ ] Semantic memory: kullanıcı profili oluşturulur ve güncellenir
