@@ -1,0 +1,22 @@
+{
+  "name": "sentient-os-electron",
+  "version": "2.0.0",
+  "description": "SENTIENT_OS v2 Electron Presentation & Overlay Shell",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && electron ."
+  },
+  "keywords": ["horror", "ai", "sentient-os", "electron"],
+  "author": "Muhammet Ali Büyük",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.10",
+    "electron": "^31.0.0",
+    "typescript": "^5.4.0"
+  }
+}

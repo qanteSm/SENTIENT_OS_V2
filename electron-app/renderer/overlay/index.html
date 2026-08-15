@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT_OS Overlay</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="overlay-container" class="overlay-root">
+    <!-- Visual Effect Layers (Phase 4 engine hook) -->
+    <canvas id="glitch-canvas" class="effect-layer"></canvas>
+    <div id="text-overlay-layer" class="effect-layer"></div>
+    <div id="screen-fade-layer" class="effect-layer"></div>
+    <div id="vignette-layer" class="effect-layer"></div>
+  </div>
+  <script src="engine.js"></script>
+</body>
+</html>
