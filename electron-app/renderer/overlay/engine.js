@@ -123,6 +123,12 @@ class MasterEffectEngine {
       case 'screen_fade':
         this.fade.trigger(params);
         break;
+      case 'blackout':
+        this.fade.blackout(params.duration_ms || 2500);
+        break;
+      case 'flash':
+        this.fade.flash(params.color || '#ffffff', params.duration_ms || 500);
+        break;
       case 'screen_shake':
         this.shake.trigger(params);
         break;

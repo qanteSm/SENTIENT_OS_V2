@@ -95,7 +95,15 @@ class Director:
         name = payload.get("name", "")
         params = payload.get("params", {})
 
-        if name == "mouse_drift":
+        if name in ["brightness", "brightness_shift"]:
+            target_percent = int(params.get("target_percent", 30))
+            duration_ms = int(params.get("duration_ms", 4000))
+            self.brightness_manager.set_brightness(target_percent)
+            async def _restore_brightness():
+                await asyncio.sleep(duration_ms / 1000.0)
+                self.brightness_manager.restore()
+            asyncio.create_task(_restore_brightness())
+        elif name == "mouse_drift":
             intensity = float(params.get("intensity", 0.1))
             duration_ms = int(params.get("duration_ms", 500))
             asyncio.create_task(self.mouse_controller.drift(intensity=intensity, duration_ms=duration_ms))

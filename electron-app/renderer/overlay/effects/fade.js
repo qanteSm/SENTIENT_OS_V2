@@ -1,5 +1,5 @@
 /**
- * SENTIENT_OS v2 — Screen Fade & Flash Effect Module
+ * SENTIENT_OS v2 — Screen Fade & Blackout Effect Module
  */
 
 class FadeEffect {
@@ -10,20 +10,29 @@ class FadeEffect {
   trigger(params = {}) {
     const targetOpacity = params.target_opacity !== undefined ? params.target_opacity : 1.0;
     const durationMs = params.duration_ms || 1000;
+    const restoreAfterMs = params.restore_after_ms || (params.blackout ? (params.duration_ms || 2500) : 0);
     const color = params.color || '#000000';
 
     if (!this.layer) return;
 
     this.layer.style.backgroundColor = color;
-    this.layer.style.transition = `opacity ${durationMs}ms ease`;
+    this.layer.style.transition = `opacity ${Math.min(300, durationMs)}ms ease`;
     this.layer.style.opacity = Math.max(0.0, Math.min(1.0, targetOpacity)).toString();
 
-    // If flash (e.g. white or red pulse), automatically restore after duration
-    if (params.flash) {
+    // Auto-restore after delay if flash or blackout
+    if (params.flash || restoreAfterMs > 0) {
+      const waitTime = restoreAfterMs > 0 ? restoreAfterMs : durationMs;
       setTimeout(() => {
-        this.layer.style.opacity = '0';
-      }, durationMs);
+        if (this.layer) {
+          this.layer.style.transition = 'opacity 800ms ease';
+          this.layer.style.opacity = '0';
+        }
+      }, waitTime);
     }
+  }
+
+  blackout(durationMs = 2500) {
+    this.trigger({ color: '#000000', target_opacity: 1.0, duration_ms: 150, restore_after_ms: durationMs });
   }
 
   flash(color = '#ffffff', durationMs = 500) {

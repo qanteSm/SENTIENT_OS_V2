@@ -49,18 +49,18 @@ class EffectDecider:
         pass
 
     def _determine_category(self, action_name: str) -> str:
-        if action_name in ["overlay_text", "screen_glitch", "screen_fade", "screen_shake", "wallpaper_change"]:
+        if action_name in ["overlay_text", "screen_glitch", "screen_fade", "blackout", "flash", "screen_shake", "wallpaper_change"]:
             return "visual"
         if action_name in ["ambient_shift", "play_sfx", "play_stinger", "tts_speak"]:
             return "audio"
-        if action_name in ["mouse_drift", "mouse_freeze", "fake_notification", "fake_bsod", "fake_file_appear", "system_clock_shift", "log_message"]:
+        if action_name in ["brightness", "brightness_shift", "mouse_drift", "mouse_freeze", "fake_notification", "fake_bsod", "fake_file_appear", "system_clock_shift", "log_message"]:
             return "system"
         return "ui"
 
     def _determine_priority(self, action_name: str) -> str:
         if action_name in CRITICAL_PRIORITY_EFFECTS:
             return "critical"
-        if action_name in HIGH_PRIORITY_EFFECTS:
+        if action_name in HIGH_PRIORITY_EFFECTS or action_name in ["blackout", "brightness"]:
             return "high"
         return "normal"
 
@@ -79,6 +79,18 @@ class EffectDecider:
                 bounded["duration_ms"] = max(100, min(15000, int(bounded["duration_ms"])))
             except (ValueError, TypeError):
                 bounded["duration_ms"] = 2000
+
+        if "target_percent" in bounded:
+            try:
+                bounded["target_percent"] = max(20, min(100, int(bounded["target_percent"])))
+            except (ValueError, TypeError):
+                bounded["target_percent"] = 30
+
+        if "target_opacity" in bounded:
+            try:
+                bounded["target_opacity"] = max(0.0, min(1.0, float(bounded["target_opacity"])))
+            except (ValueError, TypeError):
+                bounded["target_opacity"] = 1.0
 
         if "volume" in bounded:
             try:
