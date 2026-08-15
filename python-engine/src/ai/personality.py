@@ -74,9 +74,9 @@ class Personality:
             self.state.path_scores["fear"] += 0.2
             self.state.path_scores["curious"] = max(0.0, self.state.path_scores["curious"] - 0.1)
             self.state.trust = max(0.0, self.state.trust - 0.05)
-        elif "swear" in behavior or "attack" in behavior or "aggression" in behavior:
-            self.state.path_scores["attack"] += 0.3
-            self.state.path_scores["curious"] = max(0.0, self.state.path_scores["curious"] - 0.2)
+        elif "swear" in behavior or "attack" in behavior or "aggression" in behavior or "hostile" in behavior:
+            self.state.path_scores["attack"] += 0.4
+            self.state.path_scores["curious"] = max(0.0, self.state.path_scores["curious"] - 0.3)
             self.state.aggression = min(1.0, self.state.aggression + 0.15)
             self.state.trust = max(0.0, self.state.trust - 0.2)
 
