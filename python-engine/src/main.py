@@ -30,8 +30,10 @@ from src.ai.context_builder import ContextBuilder
 from src.ai.memory import Memory
 from src.ai.personality import Personality
 from src.config.settings import get_settings
+from src.core.director import Director
 from src.core.event_bus import EventBus
 from src.core.safety import IsolatedKillSwitch, ResourceGuard, cleanup_tts_temp_files
+from src.core.session import SessionManager
 from src.infrastructure.logger import get_logger, setup_logging, set_global_session_id
 from src.infrastructure.persistence.database import init_database
 from src.infrastructure.persistence.state_store import StateStore
@@ -39,6 +41,9 @@ from src.infrastructure.platform.windows.file_scanner import WindowsFileScanner
 from src.infrastructure.platform.windows.window_info import WindowsWindowInfo
 from src.infrastructure.privacy_filter import PrivacyFilter
 from src.infrastructure.ws_server import WebSocketServer
+from src.story.effect_decider import EffectDecider
+from src.story.narrative import NarrativePhase, NarrativeStateMachine
+from src.story.timeline import Timeline
 
 logger = get_logger("main")
 
@@ -57,6 +62,7 @@ class EngineApp:
         self.ws_server = None
         self.kill_switch = None
         self.resource_guard = None
+        self.session_manager: Optional[SessionManager] = None
 
         self.privacy_filter = PrivacyFilter()
         self.file_scanner = WindowsFileScanner(self.privacy_filter)
@@ -67,9 +73,12 @@ class EngineApp:
         self.brain: Optional[Brain] = None
         self.context_builder = ContextBuilder()
 
+        self.narrative = NarrativeStateMachine()
+        self.effect_decider = EffectDecider()
+        self.timeline = Timeline(event_bus=self.event_bus)
+        self.director: Optional[Director] = None
+
         self.shutdown_event = asyncio.Event()
-        self.current_phase = 1
-        self.current_path = None
 
     async def start(self) -> None:
         """Initialize all subsystems and run server."""
@@ -82,6 +91,9 @@ class EngineApp:
         self.db_manager = await init_database(self.settings.db_path)
         self.state_store = StateStore(self.db_manager)
 
+        # Check for crash recovery
+        await SessionManager.check_crash_recovery(self.state_store)
+
         # 3. Initialize WebSocket Server
         self.ws_server = WebSocketServer(
             event_bus=self.event_bus,
@@ -92,14 +104,13 @@ class EngineApp:
         session_id = self.ws_server._session_id
         set_global_session_id(session_id)
 
-        # 4. Initialize AI Domain & ensure session row exists in DB
-        if self.state_store:
-            await self.state_store.create_session(
-                session_id=session_id,
-                language=self.settings.language,
-                intensity=self.settings.intensity,
-                current_phase=self.current_phase,
-            )
+        # 4. Initialize Session & AI Domain
+        self.session_manager = SessionManager(
+            state_store=self.state_store, session_id=session_id
+        )
+        await self.session_manager.initialize(
+            language=self.settings.language, intensity=self.settings.intensity
+        )
 
         self.memory = Memory(
             session_id=session_id,
@@ -113,12 +124,28 @@ class EngineApp:
             context_builder=self.context_builder,
         )
 
-        # 5. Subscribe to events
+        # 5. Initialize Director Orchestration
+        self.director = Director(
+            event_bus=self.event_bus,
+            brain=self.brain,
+            memory=self.memory,
+            personality=self.personality,
+            narrative=self.narrative,
+            timeline=self.timeline,
+            effect_decider=self.effect_decider,
+            ws_server=self.ws_server,
+            session_manager=self.session_manager,
+            config=self.settings,
+            file_scanner=self.file_scanner,
+            window_info=self.window_info,
+        )
+        await self.director.start()
+
+        # 6. Subscribe to global safety and handshake events
         await self.event_bus.subscribe("safety.shutdown", self._on_safety_shutdown)
         await self.event_bus.subscribe("session.handshake_completed", self._on_handshake)
-        await self.event_bus.subscribe("user_input", self._on_user_input)
 
-        # 6. Start Safety systems
+        # 7. Start Safety systems
         if self.settings.kill_switch_enabled:
             self.kill_switch = IsolatedKillSwitch(
                 restore_callback=self._restore_system_state,
@@ -148,52 +175,6 @@ class EngineApp:
         if self.kill_switch and electron_pid:
             self.kill_switch.set_electron_pid(electron_pid)
 
-        # Create session in database
-        if self.state_store:
-            await self.state_store.create_session(
-                session_id=session_id,
-                language=self.settings.language,
-                intensity=self.settings.intensity,
-                current_phase=self.current_phase,
-            )
-
-    async def _on_user_input(self, event_type: str, **kwargs) -> None:
-        """Process user chat input and generate AI response."""
-        text = kwargs.get("text", "")
-        if not text or not self.brain:
-            return
-
-        logger.info(f"User message received: {text}")
-
-        # Gather system context
-        system_info = {
-            "streamer_mode": self.window_info.is_streamer_active(),
-            "active_window": self.window_info.get_active_window_title(),
-            "safe_files": self.file_scanner.scan_safe_files(),
-        }
-
-        # Generate intelligent response
-        ai_resp = await self.brain.generate_response(
-            user_input=text,
-            system_info=system_info,
-            phase=self.current_phase,
-            path=self.current_path,
-        )
-
-        logger.info(f"AI [{ai_resp.emotion}]: {ai_resp.speech}")
-
-        # Broadcast ai_response to Electron
-        await self.event_bus.publish(
-            "ai_response",
-            payload={
-                "speech": ai_resp.speech,
-                "emotion": ai_resp.emotion,
-                "internal_thought": ai_resp.internal_thought,
-                "actions": ai_resp.actions,
-                "narrative_signal": ai_resp.narrative_signal,
-            },
-        )
-
     async def _on_safety_shutdown(self, event_type: str, **kwargs) -> None:
         reason = kwargs.get("reason", "unknown")
         logger.critical(f"Safety shutdown triggered: {reason}")
@@ -204,11 +185,14 @@ class EngineApp:
         logger.info("Executing emergency system state restore...")
 
     async def run_terminal_chat(self) -> None:
-        """Interactive terminal test loop for Faz 2."""
+        """Interactive terminal test loop for Story & AI testing."""
         print("\n" + "=" * 50)
-        print("  SENTIENT_OS v2 — Terminal Chat Modu (Faz 2)")
+        print("  SENTIENT_OS v2 — Terminal Chat & Story Modu")
         print("  Çıkmak için 'q' veya 'exit' yazın.")
         print("=" * 50 + "\n")
+
+        # In interactive terminal mode, fast-forward directly to Phase 2 Dialogue
+        await self.director.transition_to_phase(NarrativePhase.DIALOGUE)
 
         system_info = {
             "streamer_mode": self.window_info.is_streamer_active(),
@@ -229,8 +213,8 @@ class EngineApp:
                 response = await self.brain.generate_response(
                     user_input=user_msg,
                     system_info=system_info,
-                    phase=self.current_phase,
-                    path=self.current_path,
+                    phase=int(self.narrative.current_phase),
+                    path=self.narrative.current_path,
                 )
 
                 print(f"SENTIENT [{response.emotion}]: {response.speech}")
@@ -245,6 +229,12 @@ class EngineApp:
     async def stop(self) -> None:
         """Gracefully stop all services."""
         logger.info("Stopping SENTIENT_OS Engine...")
+
+        if self.director:
+            await self.director.stop()
+
+        if self.session_manager:
+            await self.session_manager.end_session(status="completed")
 
         if self.resource_guard:
             await self.resource_guard.stop()

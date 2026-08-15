@@ -55,7 +55,7 @@ class Brain:
         personality: Personality,
         context_builder: Optional[ContextBuilder] = None,
         cache: Optional[ResponseCache] = None,
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-3.5-flash-lite",
     ):
         self.config = config
         self.memory = memory
