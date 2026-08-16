@@ -95,6 +95,10 @@ class DesktopThreatManager:
     def spawned_file_count(self) -> int:
         return sum(1 for f in self._spawned_files if f.exists())
 
+    @property
+    def spawned_files(self) -> List[str]:
+        return [f.name for f in self._spawned_files if f.exists()]
+
     async def start(self) -> None:
         """Start the background desktop threat and organic detection loop."""
         if self._is_running:

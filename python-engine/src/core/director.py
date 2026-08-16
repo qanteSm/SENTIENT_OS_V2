@@ -238,8 +238,8 @@ class Director:
 
         elif cmd in ["/status", "status", "durum"]:
             curr_obj = self.quest_manager.get_current_objective_title()
-            completed = sum(1 for t in self.quest_manager.trials if t.completed)
-            total = len(self.quest_manager.trials)
+            completed = self.quest_manager.completed_count
+            total = self.quest_manager.total_count
             status_report = (
                 f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
                 f"• Aktif Hedef: {curr_obj}\n"
@@ -274,7 +274,7 @@ class Director:
             return True
 
         elif cmd in ["/hack", "hack", "sız", "/hint", "ipucu", "analiz"]:
-            trial = self.quest_manager.get_current_active_trial() or self.quest_manager.get_next_available_trial()
+            trial = self.quest_manager.get_next_available_trial()
             active_files = self.desktop_threat.spawned_files
 
             if active_files:

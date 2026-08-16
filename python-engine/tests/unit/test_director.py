@@ -68,9 +68,24 @@ async def test_director_orchestration(tmp_path):
 
     # 2. Simulate User Input message
     await director.handle_user_input("user_input", text="Burada mısın?")
-
     assert len(ai_responses) > 0
     assert "speech" in ai_responses[-1]
+
+    # 3. Test /status command
+    await director.handle_user_input("user_input", text="/status")
+    assert "GÖREV & ÇEKİRDEK DURUMU" in ai_responses[-1]["speech"]
+
+    # 4. Test /scan command
+    await director.handle_user_input("user_input", text="/scan")
+    assert "HIZLI TEHDİT TARAMASI" in ai_responses[-1]["speech"]
+
+    # 5. Test /hack command
+    await director.handle_user_input("user_input", text="/hack")
+    assert "ANALİZ" in ai_responses[-1]["speech"] or "HEDEF" in ai_responses[-1]["speech"]
+
+    # 6. Test /help command
+    await director.handle_user_input("user_input", text="/help")
+    assert "KOMUT REHBERİ" in ai_responses[-1]["speech"]
 
     # Cleanup
     await director.stop()
