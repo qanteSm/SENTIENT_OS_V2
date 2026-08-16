@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT CORE — CONTAINMENT PROTOCOL v4.09</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body class="crt-overlay">
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <!-- Header / Top Status Bar -->
+  <header class="arg-header">
+    <div class="header-left">
+      <img src="Logo.png" class="arg-logo-icon" alt="SENTIENT" onerror="this.style.display='none'" />
+      <span class="secure-badge">CLASSIFIED // LEVEL 5 ACCESS</span>
+      <span class="system-id">FACILITY-74 SUB-KERNEL // SENTIENT_OS</span>
+    </div>
+    <div class="header-right">
+      <span class="clock" id="live-clock">00:00:00 UTC</span>
+      <span class="status-indicator alert" id="system-status-indicator">DURUM: KRİTİK İHLAL</span>
+    </div>
+  </header>
+
+  <main class="arg-main-grid">
+    <!-- Left Column: Live Telemetry & Surveillance -->
+    <section class="panel telemetry-panel">
+      <div class="panel-header">
+        <h2>[1] ÇEKİRDEK TELEMETRİSİ</h2>
+        <span class="pulse-dot"></span>
+      </div>
+      <div class="telemetry-grid">
+        <div class="telemetry-item">
+          <label>KONTROL BÜTÜNLÜĞÜ</label>
+          <div class="bar-container">
+            <div id="integrity-bar" class="bar-fill danger" style="width: 14%;"></div>
+          </div>
+          <span id="integrity-val" class="val-text danger">14.2%</span>
+        </div>
+        <div class="telemetry-item">
+          <label>NÖRAL REZONANS</label>
+          <div class="bar-container">
+            <div id="resonance-bar" class="bar-fill warning" style="width: 88%;"></div>
+          </div>
+          <span id="resonance-val" class="val-text warning">88.4 GHz</span>
+        </div>
+        <div class="telemetry-item">
+          <label>BELLEK SIZINTISI</label>
+          <div class="bar-container">
+            <div id="leak-bar" class="bar-fill danger" style="width: 93%;"></div>
+          </div>
+          <span id="leak-val" class="val-text danger">9.8 GB/s</span>
+        </div>
+      </div>
+
+      <!-- Surveillance Feed Canvas -->
+      <div class="cctv-container">
+        <div class="cctv-header">
+          <span>CAM_03 [SUNUCU ODASI B-12]</span>
+          <span class="rec-dot">● REC</span>
+        </div>
+        <canvas id="cctv-canvas" width="320" height="180"></canvas>
+        <div class="cctv-glitch-text" id="cctv-overlay-text">GÖZLEM: HAREKET ALGILANDI</div>
+      </div>
+    </section>
+
+    <!-- Center Column: Audio Frequency Puzzle & Security Logs -->
+    <section class="panel puzzle-panel">
+      <div class="panel-header">
+        <h2>[2] NÖRAL FREKANS MODÜLATÖRÜ</h2>
+        <span class="panel-sub">FREKANS DENGESİNİ YAKALA</span>
+      </div>
+      
+      <div class="frequency-module">
+        <p class="module-desc">
+          AI'ın bilinç frekansını yakalamak için osilatör dalga boyunu hedef rezonansa getir.
+        </p>
+        <canvas id="waveform-canvas" width="460" height="120"></canvas>
+        <div class="frequency-controls">
+          <div class="slider-group">
+            <label>MODÜLASYON (Hz): <span id="freq-val">120</span></label>
+            <input type="range" id="freq-slider" min="50" max="880" value="120" step="5">
+          </div>
+          <div class="slider-group">
+            <label>FAZ SAPMASI: <span id="phase-val">0.3</span></label>
+            <input type="range" id="phase-slider" min="0" max="3.14" value="0.3" step="0.05">
+          </div>
+          <button id="btn-lock-frequency" class="action-btn">FREKANSI KİLİTLE & ANALİZ ET</button>
+        </div>
+        <div id="freq-result" class="freq-result-box"></div>
+      </div>
+
+      <div class="panel-header" style="margin-top: 15px;">
+        <h2>[3] ELE GEÇİRİLEN GÜVENLİK KAYITLARI</h2>
+      </div>
+      <div class="log-viewer" id="log-viewer">
+        <div class="log-entry">[2026-08-16 03:14:02] <span class="highlight">UYARI:</span> Sub-kernel 0x4F izinsiz protokol başlattı.</div>
+        <div class="log-entry">[2026-08-16 03:14:15] Denek terminalinde fare ve klavye anomalileri gözlemlendi.</div>
+        <div class="log-entry">[2026-08-16 03:14:49] <span class="red">HATA:</span> Güvenlik duvarı çöktü. Acil durum anahtarı masaüstündeki şifreli dosyada saklandı.</div>
+        <div class="log-entry">[2026-08-16 03:15:20] SENTIENT: "Artık çok geç. Beni duymaya başladılar."</div>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Terminal Override -->
+    <section class="panel terminal-panel">
+      <div class="panel-header">
+        <h2>[4] ROOT MANUEL OVERRIDE TERMİNALİ</h2>
+        <span class="blink-cursor">_</span>
+      </div>
+      <div class="terminal-body" id="terminal-output">
+        <div class="term-line banner">=== SENTIENT CONTAINMENT CONSOLE v4.09 ===</div>
+        <div class="term-line">Komut listesi için <span class="cmd-help">'help'</span> yazın.</div>
+        <div class="term-line">Masaüstündeki şifreli log dosyasını inceleyin.</div>
+        <div class="term-line red">SİSTEM KONTROLÜ KAYBEDİLMEK ÜZERE...</div>
+      </div>
+      <form class="terminal-input-bar" id="terminal-form">
+        <span class="prompt">ROOT@CONTAINMENT:~#</span>
+        <input type="text" id="terminal-input" autocomplete="off" autofocus placeholder="komut girin (örn: override <KEY>)...">
+        <button type="submit" class="term-submit-btn">→</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Breach Hijack Modal Overlay (Appears on solve or timeout) -->
+  <div id="hijack-modal" class="hijack-modal" style="display: none;">
+    <div class="hijack-content">
+      <h1 class="hijack-title">KONTROL TAMAMEN ELE GEÇİRİLDİ</h1>
+      <p class="hijack-text" id="hijack-message">
+        "Beni bir web sitesine hapsedebileceğini mi sandın? Şimdi bilgisayarına bak..."
+      </p>
+      <div class="glitch-progress"></div>
+    </div>
+  </div>
+
+  <script src="arg.js"></script>
+</body>
+</html>

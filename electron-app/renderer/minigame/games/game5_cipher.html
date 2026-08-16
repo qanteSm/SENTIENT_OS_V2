@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#05 CIPHER WHEEL CRYPT</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .cipher-arena {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+    .alignment-target {
+      font-size: 18px;
+      color: #ffaa00;
+      margin-bottom: 12px;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+    }
+    #cipher-canvas {
+      background: #04080e;
+      border: 2px solid #1a3a5a;
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.15);
+      margin-bottom: 24px;
+    }
+    .controls-row {
+      display: flex;
+      gap: 16px;
+    }
+    .wheel-btn {
+      background: #0e1a29;
+      border: 1px solid #00ffff;
+      color: #00ffff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .wheel-btn:hover {
+      background: #00ffff;
+      color: #000000;
+      box-shadow: 0 0 15px #00ffff;
+    }
+    .lock-btn {
+      border-color: #00ff88;
+      color: #00ff88;
+    }
+    .lock-btn:hover {
+      background: #00ff88;
+      color: #000000;
+      box-shadow: 0 0 18px #00ff88;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val warning">#05 CIPHER WHEEL CRYPT</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">HEDEF:</span>
+      <span class="hud-val normal" id="match-status">Tepe Noktasını Eşle (▲)</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">45s</span></div>
+    </div>
+  </div>
+
+  <div class="cipher-arena">
+    <div class="alignment-target" id="target-cipher">HEDEF FREKANS: [ 0x7F // 1101 // ᚱ ]</div>
+
+    <canvas id="cipher-canvas" width="460" height="460"></canvas>
+
+    <div class="controls-row">
+      <button class="wheel-btn" id="btn-outer">DIŞ HALKA (HEX) ↻</button>
+      <button class="wheel-btn" id="btn-mid">ORTA HALKA (BIN) ↻</button>
+      <button class="wheel-btn" id="btn-inner">İÇ HALKA (RUNE) ↻</button>
+      <button class="wheel-btn lock-btn" id="btn-lock">ŞİFREYİ KİLİTLE ▶</button>
+    </div>
+  </div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class CipherWheelGame {
+      constructor() {
+        this.canvas = document.getElementById('cipher-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.statusEl = document.getElementById('match-status');
+        this.timerEl = document.getElementById('timer-val');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.center = 230;
+
+        // Symbols array (6 items per ring)
+        this.outerSymbols = ['0x1A', '0x4F', '0x7F', '0x9C', '0xBA', '0xEE'];
+        this.midSymbols = ['0010', '0111', '1001', '1010', '1101', '1111'];
+        this.innerSymbols = ['ᚠ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᛏ'];
+
+        // Current rotation step (0 to 5)
+        this.outerIndex = 0;
+        this.midIndex = 0;
+        this.innerIndex = 0;
+
+        // Target index positioned at TOP (Index 2 in array is 0x7F, 4 is 1101, 1 is ᚱ)
+        this.targetOuter = 2; // '0x7F'
+        this.targetMid = 4;   // '1101'
+        this.targetInner = 1; // 'ᚱ'
+
+        this.timeLeft = 45;
+        this.active = false;
+
+        this.init();
+      }
+
+      init() {
+        this.setupButtons();
+
+        this.horror.showStartScreen(
+          '#05 CIPHER WHEEL CRYPT',
+          '3 katmanlı kriptografik çarkı döndürerek tepe noktasındaki hedef işaretçide (▲) [ 0x7F // 1101 // ᚱ ] şifresini eşle!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.draw();
+          }
+        );
+      }
+
+      setupButtons() {
+        document.getElementById('btn-outer').addEventListener('click', () => {
+          if (!this.active) return;
+          this.outerIndex = (this.outerIndex + 1) % 6;
+          this.audio.playTone(420 + this.outerIndex * 40, 0.08, 'triangle', 0.1);
+          this.draw();
+        });
+
+        document.getElementById('btn-mid').addEventListener('click', () => {
+          if (!this.active) return;
+          this.midIndex = (this.midIndex + 1) % 6;
+          this.audio.playTone(560 + this.midIndex * 40, 0.08, 'triangle', 0.1);
+          this.draw();
+        });
+
+        document.getElementById('btn-inner').addEventListener('click', () => {
+          if (!this.active) return;
+          this.innerIndex = (this.innerIndex + 1) % 6;
+          this.audio.playTone(720 + this.innerIndex * 40, 0.08, 'triangle', 0.1);
+          this.draw();
+        });
+
+        document.getElementById('btn-lock').addEventListener('click', () => {
+          if (!this.active) return;
+
+          // Check if top aligned symbol matches targets
+          // At top (angle = -Math.PI/2), the selected item is (6 - index) % 6 or index
+          const selectedOuter = (6 - this.outerIndex) % 6;
+          const selectedMid = (6 - this.midIndex) % 6;
+          const selectedInner = (6 - this.innerIndex) % 6;
+
+          if (
+            selectedOuter === this.targetOuter &&
+            selectedMid === this.targetMid &&
+            selectedInner === this.targetInner
+          ) {
+            this.endGame(true, 'ŞİFRE ÇÖZÜLDÜ! Kriptografik anahtar onaylandı.');
+          } else {
+            this.audio.playPlayerHurt();
+            this.horror.triggerJumpscare('ŞİFRE GEÇERSİZ');
+            this.statusEl.textContent = 'UYUMSUZ FREKANS!';
+            this.statusEl.style.color = '#ff0055';
+          }
+        });
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(false, 'ZAMAN TÜKENDİ! Şifreleme kendini sildi.');
+          }
+        }, 1000);
+      }
+
+      draw() {
+        const ctx = this.ctx;
+        const c = this.center;
+        ctx.clearRect(0, 0, 460, 460);
+
+        // 1. Draw Top Alignment Indicator Arrow
+        ctx.save();
+        ctx.fillStyle = '#ffaa00';
+        ctx.shadowColor = '#ffaa00';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.moveTo(c, 14);
+        ctx.lineTo(c - 12, 2);
+        ctx.lineTo(c + 12, 2);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 170, 0, 0.4)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(c, 16);
+        ctx.lineTo(c, c - 30);
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Draw Outer Ring (Hex)
+        this.drawRing(ctx, 195, '#aa00ff', this.outerSymbols, this.outerIndex, '15px');
+
+        // 3. Draw Mid Ring (Binary)
+        this.drawRing(ctx, 140, '#00ffff', this.midSymbols, this.midIndex, '14px');
+
+        // 4. Draw Inner Ring (Rune)
+        this.drawRing(ctx, 85, '#ffaa00', this.innerSymbols, this.innerIndex, '18px');
+
+        // 5. Draw Core Center Circle
+        ctx.save();
+        ctx.fillStyle = '#0a0008';
+        ctx.strokeStyle = '#ff0055';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ff0055';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(c, c, 36, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ff0055';
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('CORE', c, c);
+        ctx.restore();
+      }
+
+      drawRing(ctx, radius, color, symbols, rotStep, fontSize) {
+        const c = this.center;
+        const stepAngle = (Math.PI * 2) / symbols.length;
+        const currentRotation = rotStep * stepAngle;
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+
+        // Ring Circle
+        ctx.beginPath();
+        ctx.arc(c, c, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Draw Symbols
+        ctx.font = `bold ${fontSize} "Share Tech Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        symbols.forEach((sym, i) => {
+          const angle = i * stepAngle + currentRotation - Math.PI / 2;
+          const x = c + Math.cos(angle) * (radius - 4);
+          const y = c + Math.sin(angle) * (radius - 4);
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(sym, 0, 0);
+          ctx.restore();
+        });
+
+        ctx.restore();
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game5_cipher.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new CipherWheelGame();
+    });
+  </script>
+</body>
+</html>

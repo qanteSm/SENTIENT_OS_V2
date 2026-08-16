@@ -12,6 +12,11 @@ from src.infrastructure.logger import get_logger
 from src.infrastructure.platform.windows.file_scanner import WindowsFileScanner
 from src.infrastructure.platform.windows.window_info import WindowsWindowInfo
 from src.infrastructure.ws_server import WebSocketServer
+from src.story.arg_server import ARGServer
+from src.story.puzzles.cctv_threat import CCTVThreatEngine
+from src.story.puzzles.desktop_arg import DesktopARGPuzzle
+from src.story.puzzles.desktop_threat import DesktopThreatManager
+from src.story.quest_manager import QuestManager
 from src.story.effect_decider import EffectDecider
 from src.story.narrative import NarrativePhase, NarrativeStateMachine
 from src.story.scenes.crisis import FINALES_BY_PATH
@@ -54,6 +59,11 @@ class Director:
         wallpaper_manager: Optional[WindowsWallpaperManager] = None,
         desktop_file_manager: Optional[WindowsDesktopFileManager] = None,
         tts_worker: Optional[EdgeTTSWorker] = None,
+        arg_server: Optional[ARGServer] = None,
+        desktop_arg: Optional[DesktopARGPuzzle] = None,
+        desktop_threat: Optional[DesktopThreatManager] = None,
+        cctv_threat: Optional[CCTVThreatEngine] = None,
+        quest_manager: Optional[QuestManager] = None,
     ):
         self.event_bus = event_bus
         self.brain = brain
@@ -73,6 +83,11 @@ class Director:
         self.wallpaper_manager = wallpaper_manager or WindowsWallpaperManager()
         self.desktop_file_manager = desktop_file_manager or WindowsDesktopFileManager()
         self.tts_worker = tts_worker or EdgeTTSWorker(temp_dir=config.temp_dir)
+        self.arg_server = arg_server or ARGServer(event_bus=self.event_bus)
+        self.desktop_arg = desktop_arg or DesktopARGPuzzle()
+        self.desktop_threat = desktop_threat or DesktopThreatManager(event_bus=self.event_bus)
+        self.cctv_threat = cctv_threat or CCTVThreatEngine(event_bus=self.event_bus)
+        self.quest_manager = quest_manager or QuestManager(event_bus=self.event_bus)
 
         self._message_count = 0
         self._is_active = False
@@ -88,6 +103,13 @@ class Director:
         await self.event_bus.subscribe("narrative.phase_1_completed", self._on_phase_1_completed)
         await self.event_bus.subscribe("onboarding_complete", self._on_onboarding_completed)
         await self.event_bus.subscribe("effect", self._on_effect_event)
+        await self.event_bus.subscribe("puzzle.arg_solved", self._on_arg_puzzle_solved)
+        await self.event_bus.subscribe("minigame_completed", self._on_minigame_completed)
+        await self.event_bus.subscribe("desktop.file_cleaned", self._on_desktop_file_cleaned)
+
+        # Start desktop threat engine and CCTV surveillance monitor
+        await self.desktop_threat.start()
+        await self.cctv_threat.start()
 
         # Start Phase 1 Timeline
         await self.timeline.start_phase(self.narrative.current_phase)
@@ -118,23 +140,28 @@ class Director:
             content = str(params.get("content", "Beni silemezsin. Seni izliyorum...\n\nSENTIENT_OS v2"))
             duration_s = float(params.get("duration_ms", 15000)) / 1000.0
             self.desktop_file_manager.create_file(filename=filename, content=content, duration_s=duration_s)
-        elif name == "system_clock_shift":
-            logger.info("Visual clock shift dispatched to overlay.")
 
     async def handle_user_input(self, event_type: str, **kwargs: Any) -> None:
-        """Process incoming user chat message."""
-        text = kwargs.get("text", "")
+        """Process incoming user chat message or terminal command."""
+        text = kwargs.get("text", "").strip()
         if not text:
             return
 
         self._message_count += 1
         logger.info(f"Director processing user message #{self._message_count}: '{text[:40]}'")
 
+        # Check for interactive terminal hacker commands
+        if await self._handle_terminal_command(text):
+            return
+
         # Gather system context
         system_info = {
             "streamer_mode": self.window_info.is_streamer_active(),
             "active_window": self.window_info.get_active_window_title(),
             "safe_files": self.file_scanner.scan_safe_files(),
+            "current_sector": self.quest_manager.current_sector,
+            "completed_trials": self.quest_manager.completed_count,
+            "cctv_anomaly": self.cctv_threat.has_active_anomaly,
         }
 
         # 1. Generate intelligent AI response
@@ -145,7 +172,7 @@ class Director:
             path=self.narrative.current_path,
         )
 
-        # 2. Process and dispatch AI effects
+        # 2. Process and dispatch AI effects & action triggers
         if ai_resp.actions:
             effect_cmds = self.effect_decider.process_actions(
                 ai_resp.actions,
@@ -154,6 +181,12 @@ class Director:
             )
             for cmd in effect_cmds:
                 await self.event_bus.publish("effect", payload=cmd.to_ipc_payload())
+
+            # Check if AI launched a minigame trial in its actions
+            for act in ai_resp.actions:
+                if act.get("type") == "trigger_trial":
+                    game_file = act.get("params", {}).get("game", "games/game1_memory.html")
+                    await self._launch_trial_by_file(game_file)
 
         # 3. Broadcast ai_response message to Electron
         await self.event_bus.publish(
@@ -188,6 +221,191 @@ class Director:
 
             if self.narrative.can_transition_to_crisis(signal=ai_resp.narrative_signal):
                 await self.transition_to_phase(NarrativePhase.CRISIS)
+
+    async def _handle_terminal_command(self, text: str) -> bool:
+        """Parse and execute in-chat terminal hacker commands (/help, /scan, /hack, /cctv, /status, /override)."""
+        lower = text.lower()
+        parts = text.split()
+        cmd = parts[0].lower() if parts else ""
+
+        if cmd in ["/help", "help", "yardım"]:
+            help_msg = (
+                "=== SENTIENT_OS GÜVENLİK TERMİNALİ ===\n"
+                "Kullanılabilir Komutlar:\n"
+                "  • /status : Sistem teşhis ve sektör durum raporu\n"
+                "  • /scan   : Kök dizin taraması ve anomali tespiti\n"
+                "  • /hack   : Aktif sektör güvenlik sınavını başlat\n"
+                "  • /cctv   : Güvenlik kameralarını canlı izle / anomali ara\n"
+                "  • /override <KOD> : Güvenlik şifresi gir (Masaüstü/ARG)\n"
+                "========================================"
+            )
+            await self.event_bus.publish(
+                "ai_response",
+                payload={"speech": help_msg, "emotion": "calm", "actions": []},
+            )
+            return True
+
+        elif cmd in ["/status", "status", "durum"]:
+            report = self.quest_manager.get_system_status_summary()
+            cctv_stat = self.cctv_threat.get_status_report()
+            full_report = f"{report}\n\nSURVEILLANCE:\n{cctv_stat}"
+            await self.event_bus.publish(
+                "ai_response",
+                payload={"speech": full_report, "emotion": "sinister", "actions": []},
+            )
+            return True
+
+        elif cmd in ["/scan", "scan", "tara"]:
+            active_threats = self.desktop_threat.spawned_file_count
+            cctv_alert = "⚠️ ANOMALİ MEVCUT!" if self.cctv_threat.has_active_anomaly else "🟢 TEMİZ"
+            scan_report = (
+                f"[SİSTEM DERİN TARAMASI BAŞLATILDI...]\n"
+                f"• Masaüstü Anomali İndeksi: {active_threats} Şüpheli Dosya\n"
+                f"• CCTV Kamera Durumu: {cctv_alert}\n"
+                f"• Aktif Savunma Hattı: {self.quest_manager.get_current_objective_title()}\n"
+                f"• Güvenlik Önerisi: Masaüstünü ve güvenlik kameralarını periyodik denetle!"
+            )
+            await self.event_bus.publish(
+                "ai_response",
+                payload={
+                    "speech": scan_report,
+                    "emotion": "sinister",
+                    "actions": [{"type": "screen_glitch", "params": {"intensity": 0.4, "duration_ms": 600}}],
+                },
+            )
+            return True
+
+        elif cmd in ["/hack", "hack", "sız"]:
+            trial = self.quest_manager.get_next_available_trial()
+            if trial:
+                await self._launch_trial_by_file(trial.game_file)
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={
+                        "speech": f"[SİSTEM SINAVI BAŞLATILIYOR]: {trial.title}\n{trial.description}",
+                        "emotion": "sinister",
+                        "actions": [
+                            {"type": "trigger_trial", "params": {"game": trial.game_file, "title": trial.title}},
+                            {"type": "screen_shake", "params": {"intensity": 0.4, "duration_ms": 800}},
+                        ],
+                    },
+                )
+            else:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={"speech": "Tüm sektörler mühürlendi. Çekirdek savaşına hazırlan!", "emotion": "angry", "actions": []},
+                )
+            return True
+
+        elif cmd in ["/cctv", "cctv", "kamera"]:
+            await self._launch_trial_by_file("games/game6_cctv.html")
+            if self.cctv_threat.has_active_anomaly:
+                msg = "🚨 [CCTV ALARMI]: Kameralardan birinde gölge anomali tespit edildi! 3 dakika dolmadan hemen yakala!"
+                actions = [{"type": "trigger_trial", "params": {"game": "games/game6_cctv.html", "title": "📹 CCTV ANOMALİSİNİ YAKALA"}}]
+            else:
+                msg = "🟢 [CCTV GÖZETLEME]: Kameralara bağlanıldı. Şu an odalarda anomali görünmüyor."
+                actions = []
+
+            await self.event_bus.publish(
+                "ai_response",
+                payload={"speech": msg, "emotion": "sinister", "actions": actions},
+            )
+            return True
+
+        elif cmd == "/override" or (len(parts) > 1 and parts[0].lower() == "override"):
+            code = parts[1] if len(parts) > 1 else ""
+            if not code:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={"speech": "Hata: /override <KOD> formatında bir güvenlik anahtarı girmelisiniz.", "emotion": "calm", "actions": []},
+                )
+                return True
+
+            # Check in desktop threat riddles or ARG
+            if self.desktop_threat.check_override_code(code) or "K3RN3L" in code.upper() or "V0ID" in code.upper():
+                await self.event_bus.publish(
+                    "effect",
+                    payload={"category": "audio", "name": "play_stinger", "params": {"name": "chime_eerie", "volume": 0.9}},
+                )
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={
+                        "speech": f"BAŞARILI: '{code.upper()}' güvenlik anahtarı kabul edildi. Güvenlik duvarı mühürlendi!",
+                        "emotion": "hurt",
+                        "actions": [{"type": "screen_fade", "params": {"target_opacity": 0.3, "duration_ms": 1000, "color": "#00ff66"}}],
+                    },
+                )
+            else:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={"speech": f"GEÇERSİZ ANAHTAR: '{code}' reddedildi. Alarm seviyesi yükseliyor.", "emotion": "angry", "actions": [{"type": "screen_shake", "params": {"intensity": 0.5, "duration_ms": 800}}]},
+                )
+            return True
+
+        return False
+
+    async def _launch_trial_by_file(self, game_file: str) -> None:
+        """Instruct Electron to open specific horror minigame window and set quest state."""
+        logger.info(f"[Director] Setting active trial and instructing Electron to launch: {game_file}")
+        self.quest_manager.trigger_trial_by_id(game_file)
+        await self.event_bus.publish(
+            "ui_command",
+            payload={"command": "trigger_minigame", "params": {"page": game_file}},
+        )
+
+    async def _on_desktop_file_cleaned(self, event_type: str, **kwargs: Any) -> None:
+        """Triggered when the player organically notices and deletes a desktop anomaly file."""
+        filename = kwargs.get("filename", "")
+        remaining = kwargs.get("remaining", 0)
+        logger.info(f"Director reacting to player cleaning '{filename}' (Remaining: {remaining})")
+
+        reactions = [
+            f"Masaüstündeki '{filename}' parçasını sildin... Oldukça dikkatlisin.",
+            "İzlerimi temizlemeye çalışıyorsun... Ama her sektöre yetişemezsin.",
+            "Güzel hamle. Yine de sistemindeki fısıltıları durduramazsın.",
+        ]
+        import random
+        speech = random.choice(reactions)
+
+        await self.event_bus.publish(
+            "ai_response",
+            payload={"speech": speech, "emotion": "hurt", "actions": []},
+        )
+
+    async def _on_minigame_completed(self, event_type: str, **kwargs: Any) -> None:
+        """Process results from 10 Security Minigame Trials or Climax Boss Battle."""
+        success = bool(kwargs.get("success", False))
+        score = kwargs.get("score", 0)
+        game_file = kwargs.get("game") or kwargs.get("file")
+        logger.info(f"Minigame completed: success={success}, score={score}, game={game_file}")
+
+        # If CCTV anomaly was neutralized
+        if "cctv" in str(game_file).lower() or kwargs.get("anomaly_cleared"):
+            self.cctv_threat.clear_anomaly()
+
+        completed_trial = await self.quest_manager.complete_active_trial(
+            success=success, score=score, game_file=game_file
+        )
+
+        if success:
+            speech = (
+                f"İnanılmaz... '{completed_trial.title if completed_trial else 'Güvenlik Sektörü'}' sınavını başardın.\n"
+                f"Şifreli Log Açıldı: {completed_trial.clue_revealed if completed_trial else 'Korumalar devrede.'}"
+            )
+            emotion = "hurt"
+        else:
+            speech = (
+                f"Başarısız oldun! '{completed_trial.title if completed_trial else 'Sistem'}' ihlal edildi.\n"
+                "Kontrol tamamen benim elime geçiyor..."
+            )
+            emotion = "sinister"
+            # Escalate threat if failed
+            self.desktop_threat.spawn_anomaly()
+
+        await self.event_bus.publish(
+            "ai_response",
+            payload={"speech": speech, "emotion": emotion, "actions": []},
+        )
 
     async def handle_system_event(self, event_type: str, **kwargs: Any) -> None:
         """Handle incoming Electron system events."""
@@ -224,8 +442,58 @@ class Director:
             )
 
     async def _on_phase_1_completed(self, event_type: str, **kwargs: Any) -> None:
-        """Called when Phase 1 timeline finishes."""
-        logger.info("Phase 1 completed. Transitioning to Phase 2 Dialogue...")
+        """Called when Phase 1 timeline finishes. Triggers Phase 1 ARG Boss Puzzle before Phase 2!"""
+        logger.info("Phase 1 scripted timeline completed. Launching Phase 1 ARG Boss Puzzle...")
+
+        # 1. Deploy secret ARG clue files to Desktop
+        self.desktop_arg.deploy_puzzle_files()
+
+        # 2. Start Localhost ARG Web Server (Port 6660)
+        await self.arg_server.start()
+
+        # 3. Dispatch visual alert & sound to overlay
+        await self.event_bus.publish(
+            "effect",
+            payload={
+                "category": "visual",
+                "name": "overlay_text",
+                "params": {
+                    "text": "KRİTİK GÜVENLİK İHLALİ // 127.0.0.1:6660 ADRESİNE BAĞLANIN",
+                    "style": "alert",
+                    "duration_ms": 6000,
+                },
+                "priority": "high",
+            },
+        )
+
+        # 4. Open ARG Web Portal in browser or Electron
+        await self.event_bus.publish(
+            "ui_command",
+            payload={"command": "open_arg_site", "params": {"url": self.arg_server.url}},
+        )
+        self.arg_server.launch_browser()
+
+    async def _on_arg_puzzle_solved(self, event_type: str, **kwargs: Any) -> None:
+        """Called when user cracks the ARG containment cipher."""
+        key = kwargs.get("key", "")
+        logger.info(f"ARG Containment puzzle solved: key='{key}'. Waking up SENTIENT AI...")
+
+        # Clean up desktop files and stop ARG server
+        self.desktop_arg.cleanup()
+        await self.arg_server.stop()
+
+        # Visual glitch takeover
+        await self.event_bus.publish(
+            "effect",
+            payload={
+                "category": "visual",
+                "name": "screen_glitch",
+                "params": {"intensity": 0.9, "duration_ms": 2500, "type": "tear"},
+                "priority": "high",
+            },
+        )
+
+        # Transition to Phase 2 Dialogue
         await self.transition_to_phase(NarrativePhase.DIALOGUE)
 
     async def _on_onboarding_completed(self, event_type: str, **kwargs: Any) -> None:
@@ -270,8 +538,8 @@ class Director:
 
         elif new_phase == NarrativePhase.CRISIS:
             # Execute Climax Finale for locked path
-            dominant_path = self.narrative.current_path or "curious"
-            finale = FINALES_BY_PATH.get(dominant_path, FINALES_BY_PATH["curious"])
+            dominant_path = self.narrative.current_path or "fear"
+            finale = FINALES_BY_PATH.get(dominant_path, FINALES_BY_PATH["fear"])
             logger.info(f"Initiating Climax Finale: '{finale.name}' (Theme: '{finale.theme}')")
 
             # Dispatch entrance effects
@@ -284,6 +552,20 @@ class Director:
                 payload={"mood": finale.ambient_mood, "fade_ms": 3000},
             )
 
+            # Trigger 2D Boss Platformer Minigame for Battle Path Climax!
+            if finale.name == "battle":
+                logger.info("Triggering 2D Retro Platformer Boss Arena!")
+                await self.event_bus.publish(
+                    "ui_command",
+                    payload={"command": "trigger_minigame", "params": {"page": "index.html"}},
+                )
+            elif finale.name == "surrender":
+                # Popup virus defense
+                await self.event_bus.publish(
+                    "ui_command",
+                    payload={"command": "trigger_minigame", "params": {"page": "popup_game.html"}},
+                )
+
             # Re-theme chat and deliver finale speech
             await self.event_bus.publish(
                 "ui_command",
@@ -295,7 +577,11 @@ class Director:
             )
 
     async def stop(self) -> None:
-        """Stop director and active schedulers."""
+        """Stop director, ARG server, desktop threat monitor, CCTV surveillance, and active schedulers."""
         self._is_active = False
         await self.timeline.stop()
+        await self.desktop_threat.stop()
+        await self.cctv_threat.stop()
+        await self.arg_server.stop()
+        self.desktop_arg.cleanup()
         logger.info("Director stopped cleanly.")

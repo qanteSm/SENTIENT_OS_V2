@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT — POPUP VIRUS DEFENSE</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* Retro Error Dialogs */
+    .popup-arena {
+      position: fixed;
+      inset: 56px 0 0 0;
+      width: 100vw;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+    .error-box {
+      position: absolute;
+      width: 330px;
+      background: #c0c0c0;
+      border: 2px outset #ffffff;
+      box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.85);
+      color: #000000;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      z-index: 50;
+      animation: popIn 0.12s ease-out forwards;
+      user-select: none;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .error-titlebar {
+      background: linear-gradient(90deg, #800000, #ff0000);
+      color: #ffffff;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .error-close-btn {
+      background: #c0c0c0;
+      border: 1px outset #ffffff;
+      font-size: 11px;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .error-close-btn:hover {
+      background: #ff0000;
+      color: #ffffff;
+    }
+    .error-body {
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .error-icon { font-size: 24px; }
+    .error-btn-bar {
+      padding: 6px 14px 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .error-ok-btn {
+      background: #c0c0c0;
+      border: 2px outset #ffffff;
+      padding: 3px 18px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .error-ok-btn:active {
+      border-style: inset;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">DURUM:</span>
+      <span class="hud-val danger">VIRÜS SALDIRISI</span>
+    </div>
+    <div class="boss-hp-wrapper">
+      <div class="boss-label-bar">
+        <span class="boss-name">SAVUNMA BÜTÜNLÜĞÜ</span>
+        <span id="score-progress" class="boss-hp-text">0/15</span>
+      </div>
+      <div class="boss-hp-track">
+        <div id="defense-fill" class="boss-hp-fill" style="width: 0%; background: #00ff88;"></div>
+      </div>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="popup-timer">45s</span></div>
+    </div>
+  </div>
+
+  <div id="popup-field" class="popup-arena"></div>
+
+  <!-- End Game Modal -->
+  <div id="game-over-modal" class="game-modal" style="display: none;">
+    <div class="modal-card">
+      <h1 id="modal-title" class="modal-title">SİSTEM KORUNDU</h1>
+      <p id="modal-desc" class="modal-desc">Tüm hata pencereleri başarıyla kapatıldı.</p>
+      <div class="modal-actions">
+        <button id="modal-continue-btn" class="modal-btn">TAMAM</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio/synth.js"></script>
+  <script>
+    class PopupGame {
+      constructor() {
+        this.timeLeft = 45;
+        this.score = 0;
+        this.targetScore = 15;
+        this.active = true;
+
+        this.arena = document.getElementById('popup-field');
+        this.timerEl = document.getElementById('popup-timer');
+        this.progressEl = document.getElementById('score-progress');
+        this.barEl = document.getElementById('defense-fill');
+        this.modal = document.getElementById('game-over-modal');
+        this.modalTitle = document.getElementById('modal-title');
+        this.modalDesc = document.getElementById('modal-desc');
+        this.modalBtn = document.getElementById('modal-continue-btn');
+
+        this.audio = new MinigameAudio();
+        this.audio.startBGM(150);
+
+        this.init();
+      }
+
+      init() {
+        this.clock = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(this.score >= this.targetScore);
+          }
+        }, 1000);
+
+        this.scheduleSpawn();
+
+        this.modalBtn.addEventListener('click', () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: this.score >= this.targetScore,
+              score: this.score * 100,
+              time_left: this.timeLeft,
+              mode: 'popup_defense',
+            });
+          }
+        });
+      }
+
+      scheduleSpawn() {
+        if (!this.active) return;
+        const delay = Math.max(300, 1400 - (45 - this.timeLeft) * 25);
+        this.spawnTimer = setTimeout(() => {
+          this.spawnPopup();
+          this.scheduleSpawn();
+        }, delay);
+      }
+
+      spawnPopup() {
+        if (!this.active) return;
+        this.audio.playTone(320, 0.08, 'sawtooth', 0.08);
+
+        const titles = [
+          'CRITICAL_PROCESS_DIED',
+          'SENTIENT_CORE_ACCESS_VIOLATION',
+          'KERNEL_MEMORY_LEAK_0x7F',
+          'UNAUTHORIZED_AI_OVERRIDE',
+          'SYSTEM_FIREWALL_BREACH',
+        ];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+
+        const pop = document.createElement('div');
+        pop.className = 'error-box';
+
+        const maxX = window.innerWidth - 360;
+        const maxY = window.innerHeight - 200;
+        const x = Math.max(20, Math.floor(Math.random() * maxX));
+        const y = Math.max(70, Math.floor(Math.random() * maxY));
+
+        pop.style.left = `${x}px`;
+        pop.style.top = `${y}px`;
+
+        pop.innerHTML = `
+          <div class="error-titlebar">
+            <span>${title}</span>
+            <div class="error-close-btn">✕</div>
+          </div>
+          <div class="error-body">
+            <span class="error-icon">❌</span>
+            <span>Bellek bloğu bozuldu. Tehdidi hemen durdurun!</span>
+          </div>
+          <div class="error-btn-bar">
+            <button class="error-ok-btn">Kapat</button>
+          </div>
+        `;
+
+        const close = () => {
+          pop.remove();
+          this.score++;
+          this.audio.playTone(880, 0.1, 'triangle', 0.1);
+          this.updateHUD();
+          if (this.score >= this.targetScore) {
+            this.endGame(true);
+          }
+        };
+
+        pop.querySelector('.error-close-btn').addEventListener('click', close);
+        pop.querySelector('.error-ok-btn').addEventListener('click', close);
+
+        this.arena.appendChild(pop);
+      }
+
+      updateHUD() {
+        this.progressEl.textContent = `${this.score}/${this.targetScore}`;
+        const pct = Math.min(100, (this.score / this.targetScore) * 100);
+        this.barEl.style.width = `${pct}%`;
+      }
+
+      endGame(success) {
+        this.active = false;
+        clearInterval(this.clock);
+        clearTimeout(this.spawnTimer);
+        this.audio.stopBGM();
+        this.arena.innerHTML = '';
+
+        if (success) {
+          this.audio.playVictory();
+          this.modalTitle.textContent = 'SİSTEM KORUNDU';
+          this.modalTitle.style.color = '#00ff88';
+          this.modalDesc.textContent = 'Tüm virüs saldırıları başarıyla püskürtüldü!';
+        } else {
+          this.modalTitle.textContent = 'KONTROL KAYBEDİLDİ';
+          this.modalTitle.style.color = '#ff2244';
+          this.modalDesc.textContent = 'Sistem kararsız hale geldi. SENTIENT kontrolü ele geçirdi.';
+        }
+
+        this.modal.style.display = 'flex';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.popupGame = new PopupGame();
+    });
+  </script>
+</body>
+</html>

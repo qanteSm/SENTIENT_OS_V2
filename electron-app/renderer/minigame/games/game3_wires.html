@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#03 NEURAL WIRE CONNECT</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .wires-container {
+      position: fixed;
+      inset: 60px 0 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 100px;
+    }
+    .sockets-column {
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      z-index: 20;
+    }
+    .wire-socket {
+      width: 140px;
+      height: 54px;
+      background: #0d1622;
+      border: 2px solid #1a3a5a;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      color: #ffffff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      user-select: none;
+    }
+    .socket-node {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 3px solid #ffffff;
+      cursor: grab;
+    }
+    #wires-canvas {
+      position: fixed;
+      inset: 60px 0 0 0;
+      width: 100vw;
+      height: calc(100vh - 60px);
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val normal">#03 NEURAL WIRE CONNECT</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">BAĞLANTI:</span>
+      <span class="hud-val warning" id="wires-count">0 / 4</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">20s</span></div>
+    </div>
+  </div>
+
+  <canvas id="wires-canvas"></canvas>
+
+  <div class="wires-container">
+    <div class="sockets-column" id="left-sockets"></div>
+    <div class="sockets-column" id="right-sockets"></div>
+  </div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class WireGame {
+      constructor() {
+        this.leftCol = document.getElementById('left-sockets');
+        this.rightCol = document.getElementById('right-sockets');
+        this.countEl = document.getElementById('wires-count');
+        this.timerEl = document.getElementById('timer-val');
+        this.canvas = document.getElementById('wires-canvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.colors = [
+          { id: 'cyan', name: 'CYAN', color: '#00ffff' },
+          { id: 'red', name: 'CRIMSON', color: '#ff0055' },
+          { id: 'amber', name: 'AMBER', color: '#ffaa00' },
+          { id: 'purple', name: 'PURPLE', color: '#aa00ff' },
+        ];
+
+        this.connected = {};
+        this.draggingNode = null;
+        this.mousePos = { x: 0, y: 0 };
+        this.timeLeft = 20;
+        this.active = false;
+
+        this.init();
+      }
+
+      init() {
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.setupSockets();
+
+        this.horror.showStartScreen(
+          '#03 NEURAL WIRE CONNECT',
+          'Sol taraftaki kopuk nöral kabloları sağdaki eşleşen renk soketlerine sürükle ve bağla!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.setupEvents();
+            this.render();
+          }
+        );
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight - 60;
+      }
+
+      setupSockets() {
+        // Left
+        this.colors.forEach((c) => {
+          const s = document.createElement('div');
+          s.className = 'wire-socket';
+          s.style.borderColor = c.color;
+          s.innerHTML = `<span>${c.name}</span><div class="socket-node" id="left-${c.id}" style="background: ${c.color};"></div>`;
+          this.leftCol.appendChild(s);
+        });
+
+        // Right Shuffled
+        const shuffled = [...this.colors].sort(() => Math.random() - 0.5);
+        shuffled.forEach((c) => {
+          const s = document.createElement('div');
+          s.className = 'wire-socket';
+          s.style.borderColor = c.color;
+          s.innerHTML = `<div class="socket-node" id="right-${c.id}" style="background: ${c.color};"></div><span>${c.name}</span>`;
+          this.rightCol.appendChild(s);
+        });
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(false, 'ZAMAN TÜKENDİ! Devre aşırı yüklendi.');
+          }
+        }, 1000);
+      }
+
+      setupEvents() {
+        window.addEventListener('mousemove', (e) => {
+          this.mousePos.x = e.clientX;
+          this.mousePos.y = e.clientY - 60;
+        });
+
+        this.colors.forEach((c) => {
+          const node = document.getElementById(`left-${c.id}`);
+          node.addEventListener('mousedown', (e) => {
+            if (this.connected[c.id]) return;
+            this.draggingNode = c;
+            this.audio.playTone(440, 0.05, 'triangle', 0.05);
+          });
+        });
+
+        window.addEventListener('mouseup', (e) => {
+          if (!this.draggingNode) return;
+
+          // Check if dropped near matching right socket
+          const targetNode = document.getElementById(`right-${this.draggingNode.id}`);
+          const rect = targetNode.getBoundingClientRect();
+          const dist = Math.hypot(e.clientX - (rect.left + 11), e.clientY - (rect.top + 11));
+
+          if (dist < 40) {
+            // Connected!
+            this.connected[this.draggingNode.id] = true;
+            this.audio.playTone(880, 0.15, 'sine', 0.1);
+            const count = Object.keys(this.connected).length;
+            this.countEl.textContent = `${count} / 4`;
+
+            if (count >= 4) {
+              this.endGame(true, 'TEBRİKLER! Tüm nöral bağlantılar onarıldı.');
+            }
+          } else {
+            // Wrong or missed
+            this.audio.playTone(180, 0.15, 'sawtooth', 0.1);
+          }
+
+          this.draggingNode = null;
+        });
+      }
+
+      render() {
+        if (!this.active) return;
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // 1. Draw Connected Wires
+        this.colors.forEach((c) => {
+          if (this.connected[c.id]) {
+            const leftEl = document.getElementById(`left-${c.id}`);
+            const rightEl = document.getElementById(`right-${c.id}`);
+            const lRect = leftEl.getBoundingClientRect();
+            const rRect = rightEl.getBoundingClientRect();
+
+            ctx.save();
+            ctx.strokeStyle = c.color;
+            ctx.lineWidth = 6;
+            ctx.shadowColor = c.color;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.moveTo(lRect.left + 11, lRect.top - 60 + 11);
+            ctx.bezierCurveTo(
+              (lRect.left + rRect.left) / 2, lRect.top - 60 + 11,
+              (lRect.left + rRect.left) / 2, rRect.top - 60 + 11,
+              rRect.left + 11, rRect.top - 60 + 11
+            );
+            ctx.stroke();
+            ctx.restore();
+          }
+        });
+
+        // 2. Draw Active Dragging Wire
+        if (this.draggingNode) {
+          const leftEl = document.getElementById(`left-${this.draggingNode.id}`);
+          const lRect = leftEl.getBoundingClientRect();
+
+          ctx.save();
+          ctx.strokeStyle = this.draggingNode.color;
+          ctx.lineWidth = 6;
+          ctx.shadowColor = this.draggingNode.color;
+          ctx.shadowBlur = 15;
+          ctx.beginPath();
+          ctx.moveTo(lRect.left + 11, lRect.top - 60 + 11);
+          ctx.lineTo(this.mousePos.x, this.mousePos.y);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        requestAnimationFrame(this.render.bind(this));
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game3_wires.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new WireGame();
+    });
+  </script>
+</body>
+</html>

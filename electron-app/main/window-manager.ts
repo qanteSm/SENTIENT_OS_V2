@@ -123,16 +123,28 @@ export class WindowManager {
     return this.onboardingWindow;
   }
 
-  public createMinigameWindow(): BrowserWindow {
+  private blackoutWindows: BrowserWindow[] = [];
+
+  public createMinigameWindow(pageName: string = 'hub.html'): BrowserWindow {
     if (this.minigameWindow && !this.minigameWindow.isDestroyed()) {
+      const minigameHtmlPath = path.join(__dirname, `../../renderer/minigame/${pageName}`);
+      this.minigameWindow.loadFile(minigameHtmlPath);
       this.minigameWindow.show();
       return this.minigameWindow;
     }
 
+    const primaryDisplay = screen.getPrimaryDisplay();
+
     this.minigameWindow = new BrowserWindow({
+      x: primaryDisplay.bounds.x,
+      y: primaryDisplay.bounds.y,
+      width: primaryDisplay.bounds.width,
+      height: primaryDisplay.bounds.height,
       fullscreen: true,
+      kiosk: true,
       frame: false,
-      transparent: true,
+      transparent: false,
+      backgroundColor: '#000000',
       alwaysOnTop: true,
       webPreferences: {
         nodeIntegration: false,
@@ -142,15 +154,60 @@ export class WindowManager {
       },
     });
 
-    const minigameHtmlPath = path.join(__dirname, '../../renderer/minigame/index.html');
+    this.minigameWindow.setAlwaysOnTop(true, 'screen-saver');
+
+    const minigameHtmlPath = path.join(__dirname, `../../renderer/minigame/${pageName}`);
     this.minigameWindow.loadFile(minigameHtmlPath);
+
+    // Escape Key Safeguard: Closes minigame window safely and returns to desktop/chat
+    this.minigameWindow.webContents.on('before-input-event', (_event, input) => {
+      if (input.key === 'Escape' && input.type === 'keyDown') {
+        this.closeMinigame();
+      }
+    });
 
     this.minigameWindow.on('closed', () => {
       this.minigameWindow = null;
+      this.closeMultiMonitorBlackout();
     });
 
-    console.log('[WindowManager] Minigame window created.');
+    console.log(`[WindowManager] Minigame window created (${pageName}).`);
     return this.minigameWindow;
+  }
+
+  public spawnMultiMonitorBlackout(): void {
+    this.closeMultiMonitorBlackout();
+    const displays = screen.getAllDisplays();
+    const primary = screen.getPrimaryDisplay();
+
+    for (const display of displays) {
+      if (display.id !== primary.id) {
+        const blackoutWin = new BrowserWindow({
+          x: display.bounds.x,
+          y: display.bounds.y,
+          width: display.bounds.width,
+          height: display.bounds.height,
+          fullscreen: true,
+          kiosk: true,
+          frame: false,
+          backgroundColor: '#000000',
+          alwaysOnTop: true,
+          focusable: false,
+          skipTaskbar: true,
+        });
+        blackoutWin.setAlwaysOnTop(true, 'screen-saver');
+        this.blackoutWindows.push(blackoutWin);
+      }
+    }
+  }
+
+  public closeMultiMonitorBlackout(): void {
+    for (const win of this.blackoutWindows) {
+      if (win && !win.isDestroyed()) {
+        win.close();
+      }
+    }
+    this.blackoutWindows = [];
   }
 
   public getOverlayWindow(): BrowserWindow | null {
@@ -173,10 +230,11 @@ export class WindowManager {
       this.minigameWindow.close();
       this.minigameWindow = null;
     }
+    this.closeMultiMonitorBlackout();
   }
 
   public closeAll(): void {
-    [this.overlayWindow, this.chatWindow, this.onboardingWindow, this.minigameWindow].forEach((win) => {
+    [this.overlayWindow, this.chatWindow, this.onboardingWindow, this.minigameWindow, ...this.blackoutWindows].forEach((win) => {
       if (win && !win.isDestroyed()) {
         win.close();
       }
@@ -185,5 +243,6 @@ export class WindowManager {
     this.chatWindow = null;
     this.onboardingWindow = null;
     this.minigameWindow = null;
+    this.blackoutWindows = [];
   }
 }

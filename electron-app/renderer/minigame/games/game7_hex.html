@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#07 HEX MATRIX BREACH</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .hex-arena {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 60px;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+    .hex-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 60px);
+      gap: 10px;
+      background: rgba(10, 16, 25, 0.95);
+      padding: 20px;
+      border: 2px solid #00ffff;
+      border-radius: 8px;
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+    }
+    .hex-cell {
+      width: 60px;
+      height: 60px;
+      background: #0d1a29;
+      border: 1px solid #1a3a5a;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #88aacc;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.1s ease;
+    }
+    .hex-cell.selectable {
+      color: #00ffff;
+      border-color: #00ffff;
+      background: rgba(0, 255, 255, 0.1);
+    }
+    .hex-cell.selectable:hover {
+      background: #00ffff;
+      color: #000000;
+      box-shadow: 0 0 15px #00ffff;
+    }
+    .hex-cell.used {
+      color: #445566;
+      border-color: #112233;
+      cursor: not-allowed;
+    }
+    .sequence-panel {
+      background: rgba(10, 16, 25, 0.95);
+      border: 2px solid #ff0055;
+      padding: 25px;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 0 25px rgba(255, 0, 85, 0.2);
+    }
+    .seq-box {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .seq-node {
+      flex: 1;
+      height: 48px;
+      background: #0a0e14;
+      border: 1px solid #ff0055;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      color: #ff0055;
+    }
+    .seq-node.matched {
+      background: #00ff88;
+      color: #000000;
+      border-color: #00ff88;
+      box-shadow: 0 0 15px #00ff88;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val warning">#07 HEX MATRIX BREACH</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">30s</span></div>
+    </div>
+  </div>
+
+  <div class="hex-arena">
+    <div class="hex-matrix-grid" id="matrix-grid"></div>
+
+    <div class="sequence-panel">
+      <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 8px;">HEDEF ŞİFRE DİZİSİ</h3>
+      <p style="color: #88aacc; font-size: 12px; margin-bottom: 15px;">Satır ve sütun seçimlerini ardışık olarak eşle.</p>
+      <div class="seq-box" id="target-seq-box"></div>
+      <div style="margin-top: 25px; font-size: 12px; color: #00ffcc;" id="axis-hint">AKTİF MOD: YATAY SATIR</div>
+    </div>
+  </div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class HexGame {
+      constructor() {
+        this.gridEl = document.getElementById('matrix-grid');
+        this.seqBox = document.getElementById('target-seq-box');
+        this.axisHint = document.getElementById('axis-hint');
+        this.timerEl = document.getElementById('timer-val');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.bytes = ['0x1A', '0x4F', '0x7F', '0x9C', '0xEE', '0xBD', '0x55'];
+        this.matrix = [];
+        this.targetSeq = ['0x7F', '0x4F', '0xEE', '0xBD'];
+        this.playerSeq = [];
+
+        this.isRowActive = true;
+        this.activeRow = 0;
+        this.activeCol = 0;
+        this.timeLeft = 30;
+        this.active = false;
+
+        this.init();
+      }
+
+      init() {
+        this.generateMatrix();
+        this.renderTarget();
+
+        this.horror.showStartScreen(
+          '#07 HEX MATRIX BREACH',
+          '6x6 bellek matrisinde yatay ve dikey adımlarla 4 haneli hedef diziyi eşle!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.updateSelectables();
+          }
+        );
+      }
+
+      generateMatrix() {
+        this.gridEl.innerHTML = '';
+        this.matrix = [];
+
+        for (let r = 0; r < 6; r++) {
+          this.matrix[r] = [];
+          for (let c = 0; c < 6; c++) {
+            const val = this.bytes[Math.floor(Math.random() * this.bytes.length)];
+            const cell = document.createElement('div');
+            cell.className = 'hex-cell';
+            cell.textContent = val;
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            cell.addEventListener('click', () => this.handleCellClick(r, c, val));
+
+            this.gridEl.appendChild(cell);
+            this.matrix[r][c] = { val, cell, used: false };
+          }
+        }
+
+        // Ensure target is solvable in row 0
+        this.matrix[0][2].val = '0x7F';
+        this.matrix[0][2].cell.textContent = '0x7F';
+        this.matrix[3][2].val = '0x4F';
+        this.matrix[3][2].cell.textContent = '0x4F';
+      }
+
+      renderTarget() {
+        this.seqBox.innerHTML = '';
+        this.targetSeq.forEach((code, i) => {
+          const n = document.createElement('div');
+          n.className = 'seq-node';
+          n.id = `seq-${i}`;
+          n.textContent = code;
+          this.seqBox.appendChild(n);
+        });
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(false, 'ZAMAN TÜKENDİ! Güvenlik duvarı çöktü.');
+          }
+        }, 1000);
+      }
+
+      updateSelectables() {
+        for (let r = 0; r < 6; r++) {
+          for (let c = 0; c < 6; c++) {
+            const item = this.matrix[r][c];
+            item.cell.classList.remove('selectable');
+
+            if (!item.used) {
+              if (this.isRowActive && r === this.activeRow) {
+                item.cell.classList.add('selectable');
+              } else if (!this.isRowActive && c === this.activeCol) {
+                item.cell.classList.add('selectable');
+              }
+            }
+          }
+        }
+
+        this.axisHint.textContent = this.isRowActive
+          ? `AKTİF MOD: SATIR ${this.activeRow + 1}`
+          : `AKTİF MOD: SÜTUN ${this.activeCol + 1}`;
+      }
+
+      handleCellClick(r, c, val) {
+        if (!this.active) return;
+        const item = this.matrix[r][c];
+        if (item.used) return;
+
+        if (this.isRowActive && r !== this.activeRow) return;
+        if (!this.isRowActive && c !== this.activeCol) return;
+
+        item.used = true;
+        item.cell.classList.add('used');
+        this.audio.playTone(500 + r * 50, 0.1, 'triangle', 0.1);
+
+        // Check if matches next target
+        const nextTarget = this.targetSeq[this.playerSeq.length];
+        if (val === nextTarget) {
+          const matchNode = document.getElementById(`seq-${this.playerSeq.length}`);
+          if (matchNode) matchNode.classList.add('matched');
+          this.playerSeq.push(val);
+
+          if (this.playerSeq.length >= this.targetSeq.length) {
+            this.endGame(true, 'BREACH BAŞARILI! Kök erişim izni alındı.');
+            return;
+          }
+        }
+
+        // Toggle axis
+        this.isRowActive = !this.isRowActive;
+        this.activeRow = r;
+        this.activeCol = c;
+        this.updateSelectables();
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game7_hex.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new HexGame();
+    });
+  </script>
+</body>
+</html>

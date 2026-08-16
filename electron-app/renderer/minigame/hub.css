@@ -1,0 +1,244 @@
+/**
+ * SENTIENT_OS v2 — Cyber-Horror Arcade Hub Styles
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;700&family=Share+Tech+Mono&family=VT323&display=swap');
+
+:root {
+  --bg-dark: #04070d;
+  --panel-bg: rgba(9, 14, 23, 0.9);
+  --color-cyan: #00ffff;
+  --color-purple: #aa00ff;
+  --color-red: #ff0055;
+  --color-amber: #ffaa00;
+  --color-green: #00ff88;
+  --border-glow: rgba(0, 255, 255, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-dark);
+  color: #d0e0ff;
+  font-family: 'Share Tech Mono', monospace;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* CRT Overlay */
+.crt-scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.3) 0px,
+    rgba(0, 0, 0, 0.3) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+.crt-vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, transparent 65%, rgba(0, 0, 0, 0.85) 100%);
+  pointer-events: none;
+  z-index: 101;
+}
+
+.hub-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 24px 36px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Header */
+.hub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #1a2a3a;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.hub-title-group h1 {
+  font-family: 'VT323', monospace;
+  font-size: 38px;
+  color: #ffffff;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px var(--color-cyan);
+}
+
+.hub-subtitle {
+  font-size: 13px;
+  color: #00ffcc;
+  letter-spacing: 1px;
+}
+
+.hub-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  background: rgba(10, 20, 35, 0.8);
+  border: 1px solid #1a3a5a;
+  color: #88aacc;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-btn:hover, .filter-btn.active {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: var(--color-cyan);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+/* Grid of Mini-Game Cards */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.games-grid::-webkit-scrollbar {
+  width: 6px;
+}
+.games-grid::-webkit-scrollbar-thumb {
+  background: #1a3a5a;
+  border-radius: 3px;
+}
+
+.game-card {
+  background: var(--panel-bg);
+  border: 1px solid #1a3048;
+  border-radius: 6px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-cyan);
+  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.05);
+}
+
+.game-card.hardcore:hover {
+  border-color: var(--color-red);
+  box-shadow: 0 8px 25px rgba(255, 0, 85, 0.25), inset 0 0 15px rgba(255, 0, 85, 0.05);
+}
+
+.game-card.medium:hover {
+  border-color: var(--color-purple);
+  box-shadow: 0 8px 25px rgba(170, 0, 255, 0.25);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-num {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: #00ffff;
+}
+
+.card-badge {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+}
+
+.badge-easy { background: rgba(0, 255, 136, 0.15); color: var(--color-green); border: 1px solid var(--color-green); }
+.badge-medium { background: rgba(170, 0, 255, 0.15); color: #d580ff; border: 1px solid var(--color-purple); }
+.badge-hardcore { background: rgba(255, 0, 85, 0.15); color: var(--color-red); border: 1px solid var(--color-red); }
+.badge-boss { background: rgba(255, 170, 0, 0.15); color: var(--color-amber); border: 1px solid var(--color-amber); }
+
+.card-title {
+  font-size: 16px;
+  color: #ffffff;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: #88aacc;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+}
+
+.card-mechanic {
+  font-size: 11px;
+  color: #00e5ff;
+}
+
+.play-btn {
+  background: var(--color-cyan);
+  color: #04070d;
+  border: none;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.play-btn:hover {
+  background: #ffffff;
+  box-shadow: 0 0 12px #00ffff;
+}
+
+/* Hub Footer */
+.hub-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #1a2a3a;
+  padding-top: 14px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #557799;
+}

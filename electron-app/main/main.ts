@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import { IPCBridge } from './ipc-bridge';
@@ -32,11 +32,59 @@ class Application {
     this.setupRendererIPCEvents();
     this.setupPythonWSEvents();
 
+    // Check for direct test flags
+    const gameMap: { [flag: string]: string } = {
+      '--hub': 'hub.html',
+      '--minigame': 'index.html',
+      '--popups': 'popup_game.html',
+      '--game1': 'games/game1_memory.html',
+      '--game2': 'games/game2_slicer.html',
+      '--game3': 'games/game3_wires.html',
+      '--game4': 'games/game4_radar.html',
+      '--game5': 'games/game5_cipher.html',
+      '--game6': 'games/game6_cctv.html',
+      '--game7': 'games/game7_hex.html',
+      '--game8': 'games/game8_maze.html',
+      '--game9': 'games/game9_reactor.html',
+      '--game10': 'games/game10_trial.html',
+    };
+
+    for (const [flag, page] of Object.entries(gameMap)) {
+      if (process.argv.includes(flag)) {
+        console.log(`[MAIN] Running test flag ${flag} -> ${page}`);
+        const win = this.windowManager.createMinigameWindow(page);
+        win.show();
+        win.focus();
+        return;
+      }
+    }
+
+    if (process.env.TEST_MINIGAME === '1') {
+      const win = this.windowManager.createMinigameWindow('index.html');
+      win.show();
+      win.focus();
+      return;
+    }
+
     // 4. Start Python backend
     await this.spawnPythonBackend();
   }
 
   private setupRendererIPCEvents(): void {
+    // Dynamic Minigame Switcher from Arcade Hub
+    ipcMain.on('launch-minigame', (_event, pageName) => {
+      console.log(`[MAIN] Launching minigame from Hub: ${pageName}`);
+      this.windowManager.createMinigameWindow(pageName);
+    });
+
+    ipcMain.on('spawn-blackout', () => {
+      this.windowManager.spawnMultiMonitorBlackout();
+    });
+
+    ipcMain.on('close-blackout', () => {
+      this.windowManager.closeMultiMonitorBlackout();
+    });
+
     // Renderer -> Main -> Python
     ipcMain.on('user-chat', (_event, data) => {
       this.ipcBridge.send('user_input', {
@@ -105,8 +153,15 @@ class Application {
         setTimeout(() => {
           chatWin.webContents.send('ws-message', { type: 'ui_command', payload });
         }, 500);
-      } else if (cmd === 'trigger_minigame') {
-        this.windowManager.createMinigameWindow();
+      } else if (cmd === 'trigger_minigame' || cmd === 'open_minigame') {
+        const page = payload?.params?.page || 'hub.html';
+        const minigameWin = this.windowManager.createMinigameWindow(page);
+        minigameWin.show();
+        minigameWin.focus();
+      } else if (cmd === 'open_arg_site' || cmd === 'open_arg_portal') {
+        const url = payload?.params?.url || 'http://127.0.0.1:6660';
+        console.log(`[MAIN] Opening ARG Portal: ${url}`);
+        shell.openExternal(url);
       } else {
         forwardToAll('ui_command', payload);
       }

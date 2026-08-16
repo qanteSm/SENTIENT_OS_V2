@@ -5,7 +5,20 @@
   "main": "dist/main/main.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc && electron ."
+    "dev": "tsc && electron .",
+    "test:hub": "tsc && electron . --hub",
+    "test:minigame": "tsc && electron . --minigame",
+    "test:popups": "tsc && electron . --popups",
+    "test:game1": "tsc && electron . --game1",
+    "test:game2": "tsc && electron . --game2",
+    "test:game3": "tsc && electron . --game3",
+    "test:game4": "tsc && electron . --game4",
+    "test:game5": "tsc && electron . --game5",
+    "test:game6": "tsc && electron . --game6",
+    "test:game7": "tsc && electron . --game7",
+    "test:game8": "tsc && electron . --game8",
+    "test:game9": "tsc && electron . --game9",
+    "test:game10": "tsc && electron . --game10"
   },
   "keywords": ["horror", "ai", "sentient-os", "electron"],
   "author": "Muhammet Ali Büyük",

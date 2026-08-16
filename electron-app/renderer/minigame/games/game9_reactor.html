@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#09 CORE OVERHEAT CRISIS</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .reactor-arena {
+      display: grid;
+      grid-template-columns: repeat(2, 380px);
+      gap: 24px;
+      justify-content: center;
+      align-content: center;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+    .panel-card {
+      background: rgba(10, 16, 25, 0.95);
+      border: 2px solid #1a3a5a;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      color: #00ffff;
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+    .gauge-track {
+      width: 100%;
+      height: 24px;
+      background: #0a0e14;
+      border: 1px solid #1a3a5a;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .safe-zone {
+      position: absolute;
+      left: 25%;
+      width: 50%;
+      height: 100%;
+      background: rgba(0, 255, 136, 0.25);
+      border-left: 2px dashed #00ff88;
+      border-right: 2px dashed #00ff88;
+    }
+    .gauge-needle {
+      height: 100%;
+      background: #00ffff;
+      transition: width 0.1s linear, background 0.2s ease;
+      box-shadow: 0 0 10px #00ffff;
+    }
+    .action-btn {
+      background: #111e30;
+      border: 1px solid #00ffff;
+      color: #00ffff;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+    .action-btn:hover {
+      background: #00ffff;
+      color: #000000;
+      box-shadow: 0 0 15px #00ffff;
+    }
+    .danger-glow {
+      border-color: #ff0055 !important;
+      box-shadow: 0 0 30px rgba(255, 0, 85, 0.4) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val danger">#09 CORE OVERHEAT CRISIS</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">REAKTÖR BÜTÜNLÜĞÜ:</span>
+      <span class="hud-val normal" id="stability-val">100%</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">40s</span></div>
+    </div>
+  </div>
+
+  <div class="reactor-arena">
+    <!-- Gauge 1 -->
+    <div class="panel-card" id="card-1">
+      <div class="panel-header">
+        <span>BASINÇ TAHLİYE VALFİ</span>
+        <span id="val-1">50%</span>
+      </div>
+      <div class="gauge-track">
+        <div class="safe-zone"></div>
+        <div class="gauge-needle" id="needle-1" style="width: 50%;"></div>
+      </div>
+      <button class="action-btn" id="btn-1">GAZ TAHLİYESİ YAP [BAS]</button>
+    </div>
+
+    <!-- Gauge 2 -->
+    <div class="panel-card" id="card-2">
+      <div class="panel-header">
+        <span>SOĞUTUCU SIVISI AKIŞI</span>
+        <span id="val-2">50%</span>
+      </div>
+      <div class="gauge-track">
+        <div class="safe-zone"></div>
+        <div class="gauge-needle" id="needle-2" style="width: 50%;"></div>
+      </div>
+      <button class="action-btn" id="btn-2">SOĞUTUCU POMPALARI [BAS]</button>
+    </div>
+
+    <!-- Gauge 3 -->
+    <div class="panel-card" id="card-3">
+      <div class="panel-header">
+        <span>MANYETİK YAVAŞLATICI</span>
+        <span id="val-3">50%</span>
+      </div>
+      <div class="gauge-track">
+        <div class="safe-zone"></div>
+        <div class="gauge-needle" id="needle-3" style="width: 50%;"></div>
+      </div>
+      <button class="action-btn" id="btn-3">ÇUBUKLARI İNDİR [BAS]</button>
+    </div>
+
+    <!-- Gauge 4 -->
+    <div class="panel-card" id="card-4">
+      <div class="panel-header">
+        <span>NÖRAL SÖNÜMLEYİCİ</span>
+        <span id="val-4">50%</span>
+      </div>
+      <div class="gauge-track">
+        <div class="safe-zone"></div>
+        <div class="gauge-needle" id="needle-4" style="width: 50%;"></div>
+      </div>
+      <button class="action-btn" id="btn-4">FREKANSI DÜZENLE [BAS]</button>
+    </div>
+  </div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class ReactorGame {
+      constructor() {
+        this.stabilityEl = document.getElementById('stability-val');
+        this.timerEl = document.getElementById('timer-val');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.gauges = [50, 50, 50, 50];
+        this.drifts = [0.18, -0.15, 0.16, -0.14];
+        this.stability = 100;
+        this.timeLeft = 40;
+        this.active = false;
+
+        this.init();
+      }
+
+      init() {
+        this.setupButtons();
+
+        this.horror.showStartScreen(
+          '#09 CORE OVERHEAT CRISIS',
+          '4 reaktör göstergesini yeşil güvenli bölgede (25% - 75%) tutarak çekirdek bütünlüğünü koru!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.audio.startBGM(150);
+            this.loop();
+          }
+        );
+      }
+
+      setupButtons() {
+        for (let i = 0; i < 4; i++) {
+          const btn = document.getElementById(`btn-${i + 1}`);
+          btn.addEventListener('click', () => {
+            if (!this.active) return;
+            // Pull significantly towards safe center (50%)
+            if (this.gauges[i] > 50) {
+              this.gauges[i] = Math.max(50, this.gauges[i] - 25);
+            } else {
+              this.gauges[i] = Math.min(50, this.gauges[i] + 25);
+            }
+            this.audio.playTone(480 + i * 60, 0.1, 'triangle', 0.12);
+          });
+        }
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(true, 'TEBRİKLER! Reaktör krizi başarıyla atlatıldı.');
+          }
+        }, 1000);
+      }
+
+      loop() {
+        if (!this.active) return;
+
+        let criticalCount = 0;
+
+        for (let i = 0; i < 4; i++) {
+          // Manageable slow drift
+          this.gauges[i] += this.drifts[i] + (Math.random() - 0.5) * 0.12;
+
+          if (this.gauges[i] < 5) this.gauges[i] = 5;
+          if (this.gauges[i] > 95) this.gauges[i] = 95;
+
+          if (Math.random() < 0.015) this.drifts[i] = -this.drifts[i];
+
+          const needle = document.getElementById(`needle-${i + 1}`);
+          const valText = document.getElementById(`val-${i + 1}`);
+          const card = document.getElementById(`card-${i + 1}`);
+
+          needle.style.width = `${this.gauges[i]}%`;
+          valText.textContent = `${Math.round(this.gauges[i])}%`;
+
+          // Safe zone: 25% to 75%
+          if (this.gauges[i] < 25 || this.gauges[i] > 75) {
+            criticalCount++;
+            needle.style.background = '#ff0055';
+            card.classList.add('danger-glow');
+            this.stability -= 0.18; // Slowly drain stability instead of instant death
+          } else {
+            needle.style.background = '#00ffff';
+            card.classList.remove('danger-glow');
+            this.stability = Math.min(100, this.stability + 0.05);
+          }
+        }
+
+        // Update Stability HUD
+        this.stability = Math.max(0, this.stability);
+        this.stabilityEl.textContent = `${Math.ceil(this.stability)}%`;
+        if (this.stability < 35) {
+          this.stabilityEl.className = 'hud-val danger';
+        } else if (this.stability < 65) {
+          this.stabilityEl.className = 'hud-val warning';
+        } else {
+          this.stabilityEl.className = 'hud-val normal';
+        }
+
+        // Meltdown check on 0% stability
+        if (this.stability <= 0) {
+          this.horror.triggerJumpscare('REAKTÖR İNFİLAK ETTİ');
+          this.endGame(false, 'MELTDOWN! Reaktör bütünlüğü çöktü.');
+          return;
+        }
+
+        // Screen Shake on multiple criticals
+        if (criticalCount >= 2) {
+          document.body.classList.add('screen-violently-shaking');
+        } else {
+          document.body.classList.remove('screen-violently-shaking');
+        }
+
+        requestAnimationFrame(this.loop.bind(this));
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+        this.audio.stopBGM();
+        document.body.classList.remove('screen-violently-shaking');
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game9_reactor.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new ReactorGame();
+    });
+  </script>
+</body>
+</html>

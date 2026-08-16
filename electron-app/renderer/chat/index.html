@@ -14,8 +14,9 @@
     <!-- Custom Title Bar -->
     <header class="chat-header">
       <div class="header-left">
+        <img src="../../assets/sensient/Logo.png" class="chat-header-logo" alt="SENTIENT" />
         <span class="status-dot"></span>
-        <span class="header-title" id="chat-title">SENTIENT_OS [SECURE_SHELL]</span>
+        <span class="header-title" id="chat-title">SENTIENT_OS [SECURE_SHELL v2.4]</span>
       </div>
       <div class="header-controls">
         <button id="btn-close" class="ctrl-btn btn-x" title="Kapat">✕</button>
@@ -33,10 +34,19 @@
       </div>
     </div>
 
+    <!-- Quick Terminal Command Bar -->
+    <div class="quick-commands-bar">
+      <button class="cmd-chip" data-cmd="/scan">💻 /scan</button>
+      <button class="cmd-chip" data-cmd="/hack">🛡️ /hack</button>
+      <button class="cmd-chip" data-cmd="/cctv">📹 /cctv</button>
+      <button class="cmd-chip" data-cmd="/status">📊 /status</button>
+      <button class="cmd-chip" data-cmd="/help">❓ /help</button>
+    </div>
+
     <!-- Input Bar -->
     <footer class="chat-footer">
-      <input type="text" id="chat-input" placeholder="Bir şey yaz..." autocomplete="off" spellcheck="false">
-      <button id="chat-send-btn">
+      <input type="text" id="chat-input" placeholder="Komut veya mesaj yaz... (/help, /scan, /hack)" autocomplete="off" spellcheck="false">
+      <button id="chat-send-btn" title="Gönder">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="22" y1="2" x2="11" y2="13"></line>
           <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

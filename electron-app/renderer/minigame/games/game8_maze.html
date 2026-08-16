@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#08 2.5D RAYCASTER LABYRINTH</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .raycaster-container {
+      position: fixed;
+      inset: 60px 0 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+      overflow: hidden;
+    }
+    #raycaster-canvas {
+      width: 100vw;
+      height: calc(100vh - 60px);
+      image-rendering: pixelated;
+      display: block;
+    }
+    .maze-controls-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(5, 10, 20, 0.9);
+      border: 1px solid #00ffff;
+      padding: 8px 24px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #00ffff;
+      z-index: 50;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+    .heartbeat-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+      box-shadow: inset 0 0 80px rgba(255, 0, 50, 0);
+      transition: box-shadow 0.2s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+  <div class="heartbeat-vignette" id="danger-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val danger">#08 2.5D RAYCASTER LABYRINTH</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">KÖK ANAHTARLAR:</span>
+      <span class="hud-val warning" id="keys-counter">0 / 4</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">90s</span></div>
+    </div>
+  </div>
+
+  <div class="raycaster-container">
+    <canvas id="raycaster-canvas" width="320" height="240"></canvas>
+  </div>
+
+  <div class="maze-controls-hint">[W / S / ↑ / ↓]: İLERİ/GERİ | [A / D / ← / →]: DÖNÜŞ</div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class RaycasterEngine {
+      constructor() {
+        this.canvas = document.getElementById('raycaster-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.keysEl = document.getElementById('keys-counter');
+        this.timerEl = document.getElementById('timer-val');
+        this.dangerVignette = document.getElementById('danger-vignette');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.width = 320;
+        this.height = 240;
+
+        // Player Position & Direction
+        this.posX = 1.5;
+        this.posY = 1.5;
+        this.dirX = 1.0;
+        this.dirY = 0.0;
+        this.planeX = 0.0;
+        this.planeY = 0.66;
+
+        // Expansive 20x20 Labyrinth
+        this.mapWidth = 20;
+        this.mapHeight = 20;
+        this.map = [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+          [1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+          [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1],
+          [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,0,1],
+          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+          [1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1],
+          [1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0,1],
+          [1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1,0,1,1],
+          [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+          [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+          [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,1],
+          [1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1,0,1],
+          [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+          [1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+          [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,1],
+          [1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1],
+          [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+          [1,0,1,1,1,0,0,0,1,0,0,0,1,0,0,0,1,1,0,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        ];
+
+        // 4 Keys, 1 Exit Portal, 1 Intelligent Stalker Monster
+        this.sprites = [
+          { x: 18.5, y: 1.5, type: 'key', collected: false },
+          { x: 1.5, y: 18.5, type: 'key', collected: false },
+          { x: 11.5, y: 9.5, type: 'key', collected: false },
+          { x: 9.5, y: 17.5, type: 'key', collected: false },
+          { x: 18.5, y: 18.5, type: 'exit' },
+          { x: 17.5, y: 17.5, type: 'stalker' },
+        ];
+
+        this.keysFound = 0;
+        this.totalKeys = 4;
+        this.timeLeft = 90;
+        this.active = false;
+        this.inputs = { forward: false, backward: false, left: false, right: false };
+
+        // Pathfinding path
+        this.stalkerPath = [];
+        this.pathfindTimer = 0;
+
+        this.init();
+      }
+
+      init() {
+        this.setupInputs();
+
+        this.horror.showStartScreen(
+          '#08 2.5D RAYCASTER LABYRINTH',
+          'Büyük 3D karanlık labirentte el fenerinle dolaş, 4 yeşil kök anahtarı topla ve çıkış portalına kaç. Labirentte seni arayan varlıktan kaç!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.audio.startBGM(120);
+            this.loop();
+          }
+        );
+      }
+
+      setupInputs() {
+        const updateKey = (e, isDown) => {
+          const k = e.key ? e.key.toLowerCase() : '';
+          const c = e.code ? e.code.toLowerCase() : '';
+
+          if (k === 'w' || k === 'arrowup' || c === 'keyw' || c === 'arrowup') this.inputs.forward = isDown;
+          if (k === 's' || k === 'arrowdown' || c === 'keys' || c === 'arrowdown') this.inputs.backward = isDown;
+          if (k === 'a' || k === 'arrowleft' || c === 'keya' || c === 'arrowleft') this.inputs.left = isDown;
+          if (k === 'd' || k === 'arrowright' || c === 'keyd' || c === 'arrowright') this.inputs.right = isDown;
+        };
+
+        window.addEventListener('keydown', (e) => updateKey(e, true));
+        window.addEventListener('keyup', (e) => updateKey(e, false));
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(false, 'ZAMAN TÜKENDİ! Labirent kilitlendi.');
+          }
+        }, 1000);
+      }
+
+      isWall(x, y) {
+        const mx = Math.floor(x);
+        const my = Math.floor(y);
+        if (mx < 0 || mx >= this.mapWidth || my < 0 || my >= this.mapHeight) return true;
+        return this.map[my][mx] === 1;
+      }
+
+      canMoveTo(x, y) {
+        const radius = 0.22;
+        return (
+          !this.isWall(x - radius, y - radius) &&
+          !this.isWall(x + radius, y - radius) &&
+          !this.isWall(x - radius, y + radius) &&
+          !this.isWall(x + radius, y + radius)
+        );
+      }
+
+      /**
+       * BFS Pathfinding on the 20x20 grid so the Stalker never gets stuck on walls!
+       */
+      findPathBFS(startX, startY, goalX, goalY) {
+        const startNode = { x: Math.floor(startX), y: Math.floor(startY) };
+        const goalNode = { x: Math.floor(goalX), y: Math.floor(goalY) };
+
+        if (startNode.x === goalNode.x && startNode.y === goalNode.y) return [];
+
+        const queue = [startNode];
+        const visited = Array(this.mapHeight).fill(null).map(() => Array(this.mapWidth).fill(false));
+        const parent = Array(this.mapHeight).fill(null).map(() => Array(this.mapWidth).fill(null));
+
+        visited[startNode.y][startNode.x] = true;
+
+        const dirs = [
+          { x: 1, y: 0 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 0, y: -1 },
+        ];
+
+        let found = false;
+
+        while (queue.length > 0) {
+          const curr = queue.shift();
+
+          if (curr.x === goalNode.x && curr.y === goalNode.y) {
+            found = true;
+            break;
+          }
+
+          for (const d of dirs) {
+            const nx = curr.x + d.x;
+            const ny = curr.y + d.y;
+
+            if (nx >= 0 && nx < this.mapWidth && ny >= 0 && ny < this.mapHeight) {
+              if (!visited[ny][nx] && this.map[ny][nx] === 0) {
+                visited[ny][nx] = true;
+                parent[ny][nx] = curr;
+                queue.push({ x: nx, y: ny });
+              }
+            }
+          }
+        }
+
+        if (!found) return [];
+
+        // Backtrack path
+        const path = [];
+        let curr = goalNode;
+        while (curr && (curr.x !== startNode.x || curr.y !== startNode.y)) {
+          path.push(curr);
+          curr = parent[curr.y][curr.x];
+        }
+
+        return path.reverse();
+      }
+
+      update() {
+        const moveSpeed = 0.07;
+        const rotSpeed = 0.045;
+
+        // Rotation
+        if (this.inputs.left) {
+          const oldDirX = this.dirX;
+          this.dirX = this.dirX * Math.cos(-rotSpeed) - this.dirY * Math.sin(-rotSpeed);
+          this.dirY = oldDirX * Math.sin(-rotSpeed) + this.dirY * Math.cos(-rotSpeed);
+          const oldPlaneX = this.planeX;
+          this.planeX = this.planeX * Math.cos(-rotSpeed) - this.planeY * Math.sin(-rotSpeed);
+          this.planeY = oldPlaneX * Math.sin(-rotSpeed) + this.planeY * Math.cos(-rotSpeed);
+        }
+        if (this.inputs.right) {
+          const oldDirX = this.dirX;
+          this.dirX = this.dirX * Math.cos(rotSpeed) - this.dirY * Math.sin(rotSpeed);
+          this.dirY = oldDirX * Math.sin(rotSpeed) + this.dirY * Math.cos(rotSpeed);
+          const oldPlaneX = this.planeX;
+          this.planeX = this.planeX * Math.cos(rotSpeed) - this.planeY * Math.sin(rotSpeed);
+          this.planeY = oldPlaneX * Math.sin(rotSpeed) + this.planeY * Math.cos(rotSpeed);
+        }
+
+        // Forward / Backward
+        let stepDir = 0;
+        if (this.inputs.forward) stepDir = 1;
+        if (this.inputs.backward) stepDir = -1;
+
+        if (stepDir !== 0) {
+          const nextX = this.posX + this.dirX * moveSpeed * stepDir;
+          const nextY = this.posY + this.dirY * moveSpeed * stepDir;
+
+          if (this.canMoveTo(nextX, this.posY)) this.posX = nextX;
+          if (this.canMoveTo(this.posX, nextY)) this.posY = nextY;
+        }
+
+        // Stalker BFS Pathfinding Update every 20 frames
+        this.pathfindTimer++;
+        const stalker = this.sprites.find((s) => s.type === 'stalker');
+
+        if (stalker) {
+          if (this.pathfindTimer % 20 === 0 || this.stalkerPath.length === 0) {
+            this.stalkerPath = this.findPathBFS(stalker.x, stalker.y, this.posX, this.posY);
+          }
+
+          // Follow next waypoint in BFS path
+          if (this.stalkerPath.length > 0) {
+            const targetNode = this.stalkerPath[0];
+            const targetX = targetNode.x + 0.5;
+            const targetY = targetNode.y + 0.5;
+
+            const tdx = targetX - stalker.x;
+            const tdy = targetY - stalker.y;
+            const distToNode = Math.hypot(tdx, tdy);
+
+            if (distToNode < 0.2) {
+              this.stalkerPath.shift();
+            } else {
+              const stalkerSpeed = 0.022; // Controlled, relentless stalking speed
+              stalker.x += (tdx / distToNode) * stalkerSpeed;
+              stalker.y += (tdy / distToNode) * stalkerSpeed;
+            }
+          }
+        }
+
+        // Check Sprites (Keys, Exit, Stalker Proximity)
+        let stalkerDist = 999;
+
+        this.sprites.forEach((s) => {
+          const dist = Math.hypot(this.posX - s.x, this.posY - s.y);
+
+          if (s.type === 'key' && !s.collected && dist < 0.65) {
+            s.collected = true;
+            this.keysFound++;
+            this.keysEl.textContent = `${this.keysFound} / ${this.totalKeys}`;
+            this.audio.playTone(880, 0.25, 'triangle', 0.2);
+          }
+
+          if (s.type === 'exit' && dist < 0.85 && this.keysFound >= this.totalKeys) {
+            this.endGame(true, 'TEBRİKLER! Tüm 4 kök anahtarla kaçmayı başardın.');
+          }
+
+          if (s.type === 'stalker') {
+            stalkerDist = dist;
+            if (dist < 0.6) {
+              this.horror.triggerJumpscare('YAKALANDIN');
+              this.endGame(false, 'SİSTEM ÇÖKTÜ! Stalker sizi yakaladı.');
+            }
+          }
+        });
+
+        // Danger Vignette & Audio Cue based on stalker distance
+        if (stalkerDist < 4.0) {
+          const intensity = Math.max(0, 1 - stalkerDist / 4.0);
+          this.dangerVignette.style.boxShadow = `inset 0 0 ${Math.floor(intensity * 140)}px rgba(255, 0, 50, ${intensity * 0.85})`;
+          if (Math.random() < 0.06) {
+            this.audio.playTone(90, 0.08, 'sawtooth', 0.05);
+          }
+        } else {
+          this.dangerVignette.style.boxShadow = 'inset 0 0 0px rgba(255, 0, 50, 0)';
+        }
+      }
+
+      render() {
+        const ctx = this.ctx;
+        const w = this.width;
+        const h = this.height;
+
+        // 1. Ceiling and Floor
+        ctx.fillStyle = '#010408';
+        ctx.fillRect(0, 0, w, h / 2);
+        ctx.fillStyle = '#060c14';
+        ctx.fillRect(0, h / 2, w, h / 2);
+
+        const zBuffer = [];
+
+        // 2. DDA Raycaster
+        for (let x = 0; x < w; x++) {
+          const cameraX = (2 * x) / w - 1;
+          const rayDirX = this.dirX + this.planeX * cameraX;
+          const rayDirY = this.dirY + this.planeY * cameraX;
+
+          let mapX = Math.floor(this.posX);
+          let mapY = Math.floor(this.posY);
+
+          const deltaDistX = Math.abs(1 / (rayDirX || 0.0001));
+          const deltaDistY = Math.abs(1 / (rayDirY || 0.0001));
+
+          let stepX, stepY;
+          let sideDistX, sideDistY;
+
+          if (rayDirX < 0) {
+            stepX = -1;
+            sideDistX = (this.posX - mapX) * deltaDistX;
+          } else {
+            stepX = 1;
+            sideDistX = (mapX + 1.0 - this.posX) * deltaDistX;
+          }
+
+          if (rayDirY < 0) {
+            stepY = -1;
+            sideDistY = (this.posY - mapY) * deltaDistY;
+          } else {
+            stepY = 1;
+            sideDistY = (mapY + 1.0 - this.posY) * deltaDistY;
+          }
+
+          let hit = 0;
+          let side = 0;
+
+          while (hit === 0) {
+            if (sideDistX < sideDistY) {
+              sideDistX += deltaDistX;
+              mapX += stepX;
+              side = 0;
+            } else {
+              sideDistY += deltaDistY;
+              mapY += stepY;
+              side = 1;
+            }
+
+            if (mapX < 0 || mapX >= this.mapWidth || mapY < 0 || mapY >= this.mapHeight) {
+              hit = 1;
+            } else if (this.map[mapY][mapX] > 0) {
+              hit = 1;
+            }
+          }
+
+          let perpWallDist;
+          if (side === 0) {
+            perpWallDist = (mapX - this.posX + (1 - stepX) / 2) / rayDirX;
+          } else {
+            perpWallDist = (mapY - this.posY + (1 - stepY) / 2) / rayDirY;
+          }
+
+          zBuffer[x] = perpWallDist;
+
+          const lineHeight = Math.floor(h / (perpWallDist || 0.05));
+          const drawStart = Math.max(0, -lineHeight / 2 + h / 2);
+          const drawEnd = Math.min(h - 1, lineHeight / 2 + h / 2);
+
+          // Fog Shading
+          const intensity = Math.max(0.05, 1.0 - perpWallDist / 8.0);
+          let r = side === 1 ? 0 : Math.floor(15 * intensity);
+          let g = Math.floor((side === 1 ? 130 : 200) * intensity);
+          let b = Math.floor((side === 1 ? 180 : 255) * intensity);
+
+          ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+          ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+
+          if (drawStart > 0) {
+            ctx.fillStyle = `rgba(0, 255, 255, ${intensity * 0.8})`;
+            ctx.fillRect(x, drawStart, 1, 1);
+            ctx.fillRect(x, drawEnd, 1, 1);
+          }
+        }
+
+        // 3. Render 3D Sprites
+        const sortedSprites = this.sprites
+          .map((s) => ({ ...s, dist: Math.hypot(this.posX - s.x, this.posY - s.y) }))
+          .filter((s) => !s.collected)
+          .sort((a, b) => b.dist - a.dist);
+
+        for (const s of sortedSprites) {
+          const spriteX = s.x - this.posX;
+          const spriteY = s.y - this.posY;
+
+          const invDet = 1.0 / (this.planeX * this.dirY - this.dirX * this.planeY);
+          const transformX = invDet * (this.dirY * spriteX - this.dirX * spriteY);
+          const transformY = invDet * (-this.planeY * spriteX + this.planeX * spriteY);
+
+          if (transformY > 0.2) {
+            const spriteScreenX = Math.floor((w / 2) * (1 + transformX / transformY));
+            const spriteHeight = Math.abs(Math.floor(h / transformY));
+            const drawStartY = Math.max(0, -spriteHeight / 2 + h / 2);
+            const drawEndY = Math.min(h - 1, spriteHeight / 2 + h / 2);
+            const spriteWidth = Math.abs(Math.floor(h / transformY));
+            const drawStartX = Math.max(0, -spriteWidth / 2 + spriteScreenX);
+            const drawEndX = Math.min(w - 1, spriteWidth / 2 + spriteScreenX);
+
+            for (let stripe = drawStartX; stripe < drawEndX; stripe++) {
+              if (transformY < zBuffer[stripe]) {
+                ctx.save();
+                if (s.type === 'key') {
+                  ctx.fillStyle = '#00ff88';
+                  ctx.shadowColor = '#00ff88';
+                  ctx.shadowBlur = 12;
+                  ctx.fillRect(stripe, drawStartY + (drawEndY - drawStartY) * 0.35, 1, (drawEndY - drawStartY) * 0.3);
+                } else if (s.type === 'exit') {
+                  ctx.fillStyle = '#00ffff';
+                  ctx.shadowColor = '#00ffff';
+                  ctx.shadowBlur = 18;
+                  ctx.fillRect(stripe, drawStartY, 1, drawEndY - drawStartY);
+                } else if (s.type === 'stalker') {
+                  ctx.fillStyle = '#ff0033';
+                  ctx.shadowColor = '#ff0000';
+                  ctx.shadowBlur = 20;
+                  ctx.fillRect(stripe, drawStartY + (drawEndY - drawStartY) * 0.1, 1, (drawEndY - drawStartY) * 0.8);
+                }
+                ctx.restore();
+              }
+            }
+          }
+        }
+
+        // 4. Mini-Map (Radar Top Left)
+        ctx.save();
+        const mapScale = 3.5;
+        for (let y = 0; y < this.mapHeight; y++) {
+          for (let x = 0; x < this.mapWidth; x++) {
+            if (this.map[y][x] === 1) {
+              ctx.fillStyle = '#004466';
+              ctx.fillRect(x * mapScale + 8, y * mapScale + 8, mapScale, mapScale);
+            }
+          }
+        }
+        // Sprites on minimap
+        this.sprites.forEach((s) => {
+          if (s.type === 'key' && !s.collected) {
+            ctx.fillStyle = '#00ff88';
+            ctx.fillRect(s.x * mapScale + 8, s.y * mapScale + 8, 3, 3);
+          } else if (s.type === 'exit') {
+            ctx.fillStyle = '#00ffff';
+            ctx.fillRect(s.x * mapScale + 8, s.y * mapScale + 8, 3, 3);
+          } else if (s.type === 'stalker') {
+            ctx.fillStyle = '#ff0033';
+            ctx.fillRect(s.x * mapScale + 8, s.y * mapScale + 8, 4, 4);
+          }
+        });
+        // Player dot & direction line
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(this.posX * mapScale + 8, this.posY * mapScale + 8, 3, 3);
+        ctx.strokeStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.moveTo(this.posX * mapScale + 9, this.posY * mapScale + 9);
+        ctx.lineTo((this.posX + this.dirX * 1.5) * mapScale + 9, (this.posY + this.dirY * 1.5) * mapScale + 9);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      loop() {
+        if (!this.active) return;
+        this.update();
+        this.render();
+        requestAnimationFrame(this.loop.bind(this));
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+        this.audio.stopBGM();
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game8_maze.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new RaycasterEngine();
+    });
+  </script>
+</body>
+</html>

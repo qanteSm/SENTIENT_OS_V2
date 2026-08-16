@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#02 MALWARE FILE SLICER</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .slice-arena {
+      position: fixed;
+      inset: 60px 0 0 0;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    .threat-file {
+      position: absolute;
+      background: #111a26;
+      border: 2px solid #00ffff;
+      border-radius: 6px;
+      padding: 10px 16px;
+      color: #ffffff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.05s linear;
+    }
+    .threat-file.glitch-file {
+      border-color: #ff0055;
+      color: #ff0055;
+      box-shadow: 0 0 20px #ff0055;
+      animation: fileGlitch 0.1s infinite alternate;
+    }
+    @keyframes fileGlitch {
+      from { transform: skewX(-4deg); }
+      to { transform: skewX(4deg); }
+    }
+    .laser-line {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #ff0055;
+      box-shadow: 0 0 15px #ff0055;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val normal">#02 MALWARE FILE SLICER</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">İMHA EDİLEN:</span>
+      <span class="hud-val warning" id="score-counter">0 / 25</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">CAN:</span>
+      <div id="player-lives" style="color: #ff0055; font-size: 18px;">❤❤❤</div>
+    </div>
+  </div>
+
+  <div class="slice-arena" id="slice-arena"></div>
+  <div class="laser-line"></div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class SlicerGame {
+      constructor() {
+        this.arena = document.getElementById('slice-arena');
+        this.scoreEl = document.getElementById('score-counter');
+        this.livesEl = document.getElementById('player-lives');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.score = 0;
+        this.target = 25;
+        this.lives = 3;
+        this.files = [];
+        this.active = false;
+
+        this.init();
+      }
+
+      init() {
+        this.horror.showStartScreen(
+          '#02 MALWARE FILE SLICER',
+          'Aşağı düşen zararlı virüs ve solucan dosyalarını alt çizgiye ulaşmadan tıkla/parçala!',
+          () => {
+            this.active = true;
+            this.audio.startBGM(140);
+            this.startSpawning();
+            this.loop();
+          }
+        );
+      }
+
+      startSpawning() {
+        this.spawnTimer = setInterval(() => {
+          if (!this.active) return;
+          this.createThreatFile();
+        }, 850);
+      }
+
+      createThreatFile() {
+        const isCreepy = Math.random() < 0.18;
+        const names = ['trojan_backdoor.dll', 'worm_exploit.vbs', 'spyware_agent.bin', 'keylogger_0x7F.sys', 'payload.raw'];
+        const name = isCreepy ? 'SENI_GORDUM.exe' : names[Math.floor(Math.random() * names.length)];
+
+        const fileEl = document.createElement('div');
+        fileEl.className = `threat-file ${isCreepy ? 'glitch-file' : ''}`;
+        fileEl.innerHTML = `<span>${isCreepy ? '👁' : '☣'}</span><span>${name}</span>`;
+
+        const maxX = window.innerWidth - 220;
+        const x = Math.max(30, Math.floor(Math.random() * maxX));
+        let y = -50;
+        const speed = 2.5 + Math.random() * 2.2;
+
+        fileEl.style.left = `${x}px`;
+        fileEl.style.top = `${y}px`;
+
+        const slice = () => {
+          if (!this.active) return;
+          fileEl.remove();
+          this.score++;
+          this.scoreEl.textContent = `${this.score} / ${this.target}`;
+          this.audio.playTone(isCreepy ? 120 : 660, 0.1, 'triangle', 0.1);
+
+          if (isCreepy) {
+            this.horror.triggerJumpscare('İZLENİYORSUN');
+          }
+
+          if (this.score >= this.target) {
+            this.endGame(true, 'TEBRİKLER! Tüm zararlı dosyalar imha edildi.');
+          }
+        };
+
+        fileEl.addEventListener('mousedown', slice);
+        fileEl.addEventListener('mouseenter', (e) => {
+          if (e.buttons === 1) slice(); // Drag slice
+        });
+
+        this.arena.appendChild(fileEl);
+        this.files.push({ el: fileEl, x, y, speed, isCreepy });
+      }
+
+      loop() {
+        if (!this.active) return;
+
+        for (let i = this.files.length - 1; i >= 0; i--) {
+          const f = this.files[i];
+          f.y += f.speed;
+          f.el.style.top = `${f.y}px`;
+
+          // Hit bottom boundary
+          if (f.y > window.innerHeight - 80) {
+            f.el.remove();
+            this.files.splice(i, 1);
+            this.lives--;
+            this.audio.playPlayerHurt();
+            this.updateLives();
+
+            if (this.lives <= 0) {
+              this.endGame(false, 'SİSTEM ÇÖKTÜ! Tehditler savunmayı aştı.');
+              return;
+            }
+          }
+        }
+
+        requestAnimationFrame(this.loop.bind(this));
+      }
+
+      updateLives() {
+        let h = '';
+        for (let i = 0; i < this.lives; i++) h += '❤';
+        this.livesEl.textContent = h || '💀';
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.spawnTimer);
+        this.audio.stopBGM();
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game2_slicer.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new SlicerGame();
+    });
+  </script>
+</body>
+</html>

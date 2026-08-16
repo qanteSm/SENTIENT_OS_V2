@@ -12,9 +12,9 @@ def test_pacing_delays():
     bus = EventBus()
     timeline = Timeline(event_bus=bus, base_interval=30.0)
 
-    # Active user: 30 * 1.5 = 45s
+    # Active user: 30 * 1.25 = 37.5s
     timeline.set_idle_state(is_idle=False)
-    assert timeline.calculate_next_delay() == 45.0
+    assert timeline.calculate_next_delay() == 37.5
 
     # Idle user (>30s): 30 * 0.6 = 18s
     timeline.set_idle_state(is_idle=True, idle_seconds=40.0)

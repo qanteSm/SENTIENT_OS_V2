@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#04 SONAR RADAR SWEEP</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .radar-arena {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+    #radar-canvas {
+      background: #02080a;
+      border: 2px solid #00ff88;
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.25);
+      cursor: crosshair;
+      margin-bottom: 16px;
+    }
+    .radar-guide-bar {
+      color: #00ff88;
+      font-size: 14px;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid #00ff88;
+      padding: 6px 20px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val normal">#04 SONAR RADAR SWEEP</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">İMHA EDİLEN TEHDİT:</span>
+      <span class="hud-val warning" id="blip-count">0 / 6</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">45s</span></div>
+    </div>
+  </div>
+
+  <div class="radar-arena">
+    <canvas id="radar-canvas" width="560" height="560"></canvas>
+    <div class="radar-guide-bar">▶ Dönen radar ışını kırmızı tehditleri aydınlattığında üzerlerine TIKLA!</div>
+  </div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class RadarGame {
+      constructor() {
+        this.canvas = document.getElementById('radar-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.countEl = document.getElementById('blip-count');
+        this.timerEl = document.getElementById('timer-val');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.centerX = 280;
+        this.centerY = 280;
+        this.radius = 260;
+        this.angle = 0;
+
+        this.score = 0;
+        this.target = 6;
+        this.timeLeft = 45;
+        this.blips = [];
+        this.particles = [];
+        this.active = false;
+
+        this.init();
+      }
+
+      init() {
+        this.horror.showStartScreen(
+          '#04 SONAR RADAR SWEEP',
+          'Karanlık radarda dönen yeşil ışın anomalileri ortaya çıkarır. Merkeze ulaşmadan kırmızı tehditlerin üzerine tıkla!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.setupClick();
+            this.spawnBlip();
+            this.loop();
+          }
+        );
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(false, 'ZAMAN TÜKENDİ! Tehditler merkeze sızdı.');
+          }
+        }, 1000);
+      }
+
+      spawnBlip() {
+        if (!this.active) return;
+        const ang = Math.random() * Math.PI * 2;
+        const dist = 220 + Math.random() * 30;
+        this.blips.push({
+          x: this.centerX + Math.cos(ang) * dist,
+          y: this.centerY + Math.sin(ang) * dist,
+          dist,
+          ang,
+          alpha: 0.15,
+          speed: 0.14 + Math.random() * 0.08, // Slow, peaceful drift
+        });
+
+        if (this.blips.length < 4) {
+          setTimeout(() => this.spawnBlip(), 1600);
+        }
+      }
+
+      setupClick() {
+        this.canvas.addEventListener('mousedown', (e) => {
+          if (!this.active) return;
+          const rect = this.canvas.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+
+          for (let i = this.blips.length - 1; i >= 0; i--) {
+            const b = this.blips[i];
+            const d = Math.hypot(mx - b.x, my - b.y);
+
+            // Generous 45px hitbox
+            if (d < 45 && b.alpha > 0.2) {
+              for (let p = 0; p < 14; p++) {
+                this.particles.push({
+                  x: b.x,
+                  y: b.y,
+                  vx: (Math.random() - 0.5) * 4.5,
+                  vy: (Math.random() - 0.5) * 4.5,
+                  life: 25,
+                });
+              }
+
+              this.blips.splice(i, 1);
+              this.score++;
+              this.countEl.textContent = `${this.score} / ${this.target}`;
+              this.audio.playTone(880, 0.15, 'triangle', 0.15);
+
+              if (this.score >= this.target) {
+                this.endGame(true, 'TEBRİKLER! Tüm radar tehditleri imha edildi.');
+              } else {
+                setTimeout(() => this.spawnBlip(), 600);
+              }
+              return;
+            }
+          }
+
+          this.audio.playTone(160, 0.05, 'sine', 0.05);
+        });
+      }
+
+      loop() {
+        if (!this.active) return;
+
+        this.angle += 0.032;
+        if (this.angle > Math.PI * 2) this.angle -= Math.PI * 2;
+
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, 560, 560);
+
+        // 1. Draw Radar Grid
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 255, 136, 0.2)';
+        ctx.lineWidth = 1;
+
+        for (let r = 60; r <= 240; r += 60) {
+          ctx.beginPath();
+          ctx.arc(this.centerX, this.centerY, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(this.centerX, 20); ctx.lineTo(this.centerX, 540);
+        ctx.moveTo(20, this.centerY); ctx.lineTo(540, this.centerY);
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Sweeping Beam
+        ctx.save();
+        const grad = ctx.createRadialGradient(this.centerX, this.centerY, 10, this.centerX, this.centerY, 260);
+        grad.addColorStop(0, 'rgba(0, 255, 136, 0.5)');
+        grad.addColorStop(1, 'rgba(0, 255, 136, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(this.centerX, this.centerY);
+        ctx.arc(this.centerX, this.centerY, 260, this.angle - 0.45, this.angle);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // 3. Update & Draw Blips
+        for (let i = this.blips.length - 1; i >= 0; i--) {
+          const b = this.blips[i];
+          b.dist -= b.speed;
+          b.x = this.centerX + Math.cos(b.ang) * b.dist;
+          b.y = this.centerY + Math.sin(b.ang) * b.dist;
+
+          let diff = Math.abs(this.angle - (b.ang < 0 ? b.ang + Math.PI * 2 : b.ang));
+          if (diff < 0.25) {
+            b.alpha = 1.0;
+            this.audio.playTone(600, 0.04, 'sine', 0.03);
+          } else {
+            b.alpha = Math.max(0.12, b.alpha - 0.005);
+          }
+
+          // Draw Glowing Target Box
+          ctx.save();
+          ctx.fillStyle = `rgba(255, 0, 85, ${b.alpha})`;
+          ctx.shadowColor = '#ff0055';
+          ctx.shadowBlur = 16;
+
+          // Center Dot
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 9, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (b.alpha > 0.35) {
+            // Target Crosshair Frame
+            ctx.strokeStyle = '#ff0055';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(b.x - 18, b.y - 18, 36, 36);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠ VUR', b.x, b.y - 22);
+          }
+          ctx.restore();
+
+          if (b.dist < 25) {
+            this.horror.triggerJumpscare('RADAR İŞGALİ');
+            this.endGame(false, 'SİSTEM ÇÖKTÜ! Varlık merkeze ulaştı.');
+            return;
+          }
+        }
+
+        // 4. Update & Draw Particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life--;
+
+          ctx.save();
+          ctx.fillStyle = '#00ff88';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          if (p.life <= 0) this.particles.splice(i, 1);
+        }
+
+        requestAnimationFrame(this.loop.bind(this));
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game4_radar.html',
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new RadarGame();
+    });
+  </script>
+</body>
+</html>

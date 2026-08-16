@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#06 CCTV PARANORMAL ROOM</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../common/horror.css">
+  <style>
+    .cctv-container {
+      display: flex;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+    }
+    .cctv-screen-panel {
+      flex: 1;
+      background: #000000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .cctv-canvas {
+      width: 100%;
+      height: 100%;
+      background: #080c10;
+    }
+    .cctv-cam-tag {
+      position: absolute;
+      top: 20px;
+      left: 25px;
+      color: #00ff88;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px #00ff88;
+    }
+    .cctv-rec-dot {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      color: #ff0055;
+      font-weight: bold;
+      animation: blinkRec 1s infinite alternate;
+    }
+    @keyframes blinkRec { from { opacity: 0.2; } to { opacity: 1; } }
+    .cctv-nav-panel {
+      width: 280px;
+      background: rgba(10, 16, 25, 0.95);
+      border-left: 2px solid #1a3a5a;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .cam-btn {
+      background: #0d1a29;
+      border: 1px solid #1a3a5a;
+      color: #88aacc;
+      padding: 12px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .cam-btn.active, .cam-btn:hover {
+      background: rgba(0, 255, 255, 0.15);
+      border-color: #00ffff;
+      color: #ffffff;
+    }
+    .anomaly-indicator {
+      float: right;
+      color: #ff0055;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- HUD -->
+  <div class="game-hud">
+    <div class="hud-group">
+      <span class="hud-tag">MİNİ OYUN:</span>
+      <span class="hud-val warning">#06 CCTV PARANORMAL ROOM</span>
+    </div>
+    <div class="hud-group">
+      <span class="hud-tag">ANOMALİ TESPİTİ:</span>
+      <span class="hud-val normal" id="anomaly-counter">0 / 4</span>
+    </div>
+    <div class="hud-group hud-right">
+      <span class="hud-tag">SÜRE:</span>
+      <div class="hud-timer"><span id="timer-val">50s</span></div>
+    </div>
+  </div>
+
+  <div class="cctv-container">
+    <div class="cctv-screen-panel">
+      <canvas id="cctv-canvas" class="cctv-canvas"></canvas>
+      <div class="cctv-cam-tag" id="cam-name">CAM 01 // ANA GİRİŞ</div>
+      <div class="cctv-rec-dot">● CANLI KAYIT [REC]</div>
+    </div>
+
+    <div class="cctv-nav-panel">
+      <h3 style="color: #00ffff; font-size: 14px; margin-bottom: 10px;">KAMERA KANALLARI</h3>
+      <button class="cam-btn active" data-cam="1">CAM 01 // ANA GİRİŞ</button>
+      <button class="cam-btn" data-cam="2">CAM 02 // SUNUCU ODASI</button>
+      <button class="cam-btn" data-cam="3">CAM 03 // ARAŞTIRMA LABI</button>
+      <button class="cam-btn" data-cam="4">CAM 04 // KARANLIK KORİDOR</button>
+      <button class="cam-btn" data-cam="5">CAM 05 // HAVALANDIRMA</button>
+      <button class="cam-btn" data-cam="6">CAM 06 // GÜVENLİK KAPISI</button>
+    </div>
+  </div>
+
+  <script src="../audio/synth.js"></script>
+  <script src="../common/horror_fx.js"></script>
+  <script>
+    class CCTVGame {
+      constructor() {
+        this.canvas = document.getElementById('cctv-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.camNameEl = document.getElementById('cam-name');
+        this.counterEl = document.getElementById('anomaly-counter');
+        this.timerEl = document.getElementById('timer-val');
+
+        this.audio = new MinigameAudio();
+        this.horror = new HorrorFX(this.audio);
+
+        this.currentCam = 1;
+        this.score = 0;
+        this.target = 4;
+        this.timeLeft = 50;
+        this.active = false;
+
+        // Anomalies state
+        this.anomalies = {
+          2: { active: true, name: 'Gölge Varlık', x: 0.45, y: 0.5, found: false },
+          3: { active: true, name: 'Gözetleyen Manken', x: 0.65, y: 0.45, found: false },
+          5: { active: true, name: 'Kanlı Glitch Sembolü', x: 0.35, y: 0.35, found: false },
+          6: { active: true, name: 'Açık Güvenlik Kapısı', x: 0.5, y: 0.6, found: false },
+        };
+
+        this.init();
+      }
+
+      init() {
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.setupButtons();
+        this.setupCanvasClick();
+
+        this.horror.showStartScreen(
+          '#06 CCTV PARANORMAL ROOM',
+          'Kameralar arasında geçiş yap ve odalardaki 4 paranormal anormalliği tespit edip üzerlerine tıkla!',
+          () => {
+            this.active = true;
+            this.startTimer();
+            this.loop();
+          }
+        );
+      }
+
+      resize() {
+        this.canvas.width = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+      }
+
+      setupButtons() {
+        document.querySelectorAll('.cam-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            if (!this.active) return;
+            document.querySelectorAll('.cam-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            const camId = parseInt(btn.dataset.cam, 10);
+            this.currentCam = camId;
+            this.camNameEl.textContent = btn.textContent;
+            this.audio.playTone(300, 0.08, 'sawtooth', 0.05);
+
+            // CAM 4 Jumpscare condition
+            if (camId === 4) {
+              this.horror.triggerJumpscare('KAMERAYA BAKMA');
+            }
+          });
+        });
+      }
+
+      setupCanvasClick() {
+        this.canvas.addEventListener('mousedown', (e) => {
+          if (!this.active) return;
+          const rect = this.canvas.getBoundingClientRect();
+          const clickX = (e.clientX - rect.left) / rect.width;
+          const clickY = (e.clientY - rect.top) / rect.height;
+
+          const anom = this.anomalies[this.currentCam];
+          if (anom && anom.active && !anom.found) {
+            const dist = Math.hypot(clickX - anom.x, clickY - anom.y);
+            if (dist < 0.15) {
+              anom.found = true;
+              this.score++;
+              this.counterEl.textContent = `${this.score} / ${this.target}`;
+              this.audio.playTone(880, 0.2, 'triangle', 0.1);
+
+              if (this.score >= this.target) {
+                this.endGame(true, 'TEBRİKLER! Tüm anomaliler tespit edildi.');
+              }
+              return;
+            }
+          }
+
+          this.audio.playTone(180, 0.08, 'sine', 0.05);
+        });
+      }
+
+      startTimer() {
+        this.timer = setInterval(() => {
+          if (!this.active) return;
+          this.timeLeft--;
+          this.timerEl.textContent = `${this.timeLeft}s`;
+          if (this.timeLeft <= 0) {
+            this.endGame(false, 'ZAMAN TÜKENDİ! Varlık güvenlik odasına sızdı.');
+          }
+        }, 1000);
+      }
+
+      loop() {
+        if (!this.active) return;
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // 1. Draw Static Noise & Room Wireframe
+        ctx.save();
+        ctx.fillStyle = '#0a1018';
+        ctx.fillRect(0, 0, w, h);
+
+        // Perspective room lines
+        ctx.strokeStyle = 'rgba(0, 255, 136, 0.15)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.2, h * 0.2); ctx.lineTo(w * 0.8, h * 0.2);
+        ctx.lineTo(w * 0.8, h * 0.8); ctx.lineTo(w * 0.2, h * 0.8);
+        ctx.closePath();
+        ctx.moveTo(0, 0); ctx.lineTo(w * 0.2, h * 0.2);
+        ctx.moveTo(w, 0); ctx.lineTo(w * 0.8, h * 0.2);
+        ctx.moveTo(w, h); ctx.lineTo(w * 0.8, h * 0.8);
+        ctx.moveTo(0, h); ctx.lineTo(w * 0.2, h * 0.8);
+        ctx.stroke();
+
+        // 2. Draw Active Anomaly
+        const anom = this.anomalies[this.currentCam];
+        if (anom && anom.active && !anom.found) {
+          ctx.save();
+          ctx.fillStyle = '#ff0055';
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 20;
+
+          // Shadow entity / symbol
+          const ax = w * anom.x;
+          const ay = h * anom.y;
+          ctx.beginPath();
+          ctx.arc(ax, ay, 24, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('⚠ ANOMALİ ⚠', ax, ay - 35);
+          ctx.restore();
+        }
+
+        ctx.restore();
+        requestAnimationFrame(this.loop.bind(this));
+      }
+
+      endGame(success, msg) {
+        this.active = false;
+        clearInterval(this.timer);
+
+        const onFinish = () => {
+          if (window.sentientAPI && window.sentientAPI.sendEvent) {
+            window.sentientAPI.sendEvent('minigame-result', {
+              success: Boolean(success),
+              score: this.score || (success ? 100 : 0),
+              message: msg || '',
+              game: 'games/game6_cctv.html',
+              anomaly_cleared: Boolean(success),
+            });
+          } else {
+            window.location.href = '../hub.html';
+          }
+        };
+
+        if (success) {
+          this.audio.playVictory();
+          setTimeout(onFinish, 800);
+        } else {
+          this.horror.triggerFakeBSOD(() => {
+            onFinish();
+          });
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new CCTVGame();
+    });
+  </script>
+</body>
+</html>

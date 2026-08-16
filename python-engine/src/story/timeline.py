@@ -10,9 +10,9 @@ from src.story.scenes.first_contact import FIRST_CONTACT_EVENTS, SceneEvent
 
 logger = get_logger("timeline")
 
-BASE_INTERVAL = 30.0
-IDLE_COMPRESSION = 0.4    # If idle > 30s, accelerate pacing by 40% (18s)
-ACTIVE_EXTENSION = 1.5    # If active, relax pacing by 50% (45s)
+BASE_INTERVAL = 14.0
+IDLE_COMPRESSION = 0.4    # If idle > 20s, accelerate pacing by 40% (8.4s)
+ACTIVE_EXTENSION = 1.25   # If active, relax pacing by 25% (17.5s)
 
 
 class Timeline:

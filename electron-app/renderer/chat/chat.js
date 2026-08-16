@@ -22,6 +22,17 @@ class ChatManager {
       }
     });
 
+    // Quick Command Chips
+    document.querySelectorAll('.cmd-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const cmd = chip.dataset.cmd;
+        if (cmd) {
+          this.input.value = cmd;
+          this.handleSend();
+        }
+      });
+    });
+
     // Close button intercept — does not close, reports to AI
     this.closeBtn.addEventListener('click', () => {
       if (window.sentientAPI && window.sentientAPI.sendEvent) {
@@ -59,7 +70,7 @@ class ChatManager {
     if (msg.type === 'ai_response') {
       const p = msg.payload || {};
       this.hideTypingIndicator();
-      this.addAIMessage(p.speech || '', p.emotion || 'curious');
+      this.addAIMessage(p.speech || '', p.emotion || 'curious', p.actions || []);
     } else if (msg.type === 'ui_command') {
       const p = msg.payload || {};
       if (p.command === 'change_chat_theme') {
@@ -85,7 +96,7 @@ class ChatManager {
     this.scrollToBottom();
   }
 
-  addAIMessage(text, emotion = 'curious') {
+  addAIMessage(text, emotion = 'curious', actions = []) {
     const row = document.createElement('div');
     row.className = 'msg-row ai';
     const sender = document.createElement('span');
@@ -100,6 +111,10 @@ class ChatManager {
     this.messagesContainer.appendChild(row);
     this.scrollToBottom();
 
+    if (text.includes('başardın') || text.includes('Başarısız') || text.includes('sınavını') || text.includes('İnanılmaz')) {
+      this.markPreviousActionCardsCompleted();
+    }
+
     // Dynamically react with theme shifts and window tension
     if (emotion === 'angry') {
       this.changeTheme('bloody');
@@ -112,7 +127,65 @@ class ChatManager {
     }
 
     this.typewriter.animate(bubble, text, emotion, () => {
+      // Check if message contains trial invitation or action cards
+      this.attachActionCardsIfNeeded(bubble, text, actions);
       this.scrollToBottom();
+    });
+  }
+
+  attachActionCardsIfNeeded(bubble, text, actions) {
+    // Never attach cards to victory or failure outcome reports
+    if (text.includes('başardın') || text.includes('Başarısız') || text.includes('Şifreli Log')) {
+      return;
+    }
+
+    let targetGame = null;
+    let trialTitle = 'SİSTEM SINAVINI BAŞLAT';
+
+    // Only check explicit actions from director
+    if (Array.isArray(actions)) {
+      for (const act of actions) {
+        if (act.type === 'trigger_trial' && act.params?.game) {
+          targetGame = act.params.game;
+          trialTitle = act.params.title || '🚨 ACİL DURUM SINAVI';
+          break;
+        }
+      }
+    }
+
+    if (targetGame) {
+      const card = document.createElement('div');
+      card.className = 'action-card';
+      card.innerHTML = `
+        <div class="action-card-header">SİSTEM TEHLİKE PROTOKOLÜ</div>
+        <button class="action-card-btn">▶ ${trialTitle}</button>
+      `;
+      const btn = card.querySelector('.action-card-btn');
+      btn.addEventListener('click', () => {
+        btn.disabled = true;
+        btn.textContent = '⌛ BAĞLANTI KURULUYOR...';
+        btn.style.animation = 'none';
+        btn.style.background = '#2a3a4a';
+        btn.style.boxShadow = 'none';
+        btn.style.cursor = 'default';
+        if (window.sentientAPI && window.sentientAPI.sendEvent) {
+          window.sentientAPI.sendEvent('launch-minigame', targetGame);
+        }
+      });
+      bubble.appendChild(card);
+    }
+  }
+
+  markPreviousActionCardsCompleted() {
+    document.querySelectorAll('.action-card-btn:not([disabled])').forEach((btn) => {
+      btn.disabled = true;
+      btn.textContent = '✅ PROTOKOL TAMAMLANDI';
+      btn.style.animation = 'none';
+      btn.style.background = 'rgba(0, 255, 128, 0.2)';
+      btn.style.borderColor = '#00ff88';
+      btn.style.color = '#00ff88';
+      btn.style.boxShadow = 'none';
+      btn.style.cursor = 'default';
     });
   }
 

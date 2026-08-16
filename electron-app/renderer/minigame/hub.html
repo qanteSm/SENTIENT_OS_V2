@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT_OS — KERNEL ARCADE HUB</title>
+  <link rel="stylesheet" href="hub.css">
+  <link rel="stylesheet" href="common/horror.css">
+</head>
+<body>
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <div class="hub-container">
+    <!-- Header -->
+    <header class="hub-header">
+      <div class="hub-title-group">
+        <h1>SENTIENT // KERNEL ARCADE PROTOCOL</h1>
+        <div class="hub-subtitle">SİSTEM TEHDİTLERİ, TEST MATRİSLERİ VE KORKU MİNİ OYUNLARI</div>
+      </div>
+      <div class="hub-nav">
+        <button class="filter-btn active" data-filter="all">HEPSİ (12)</button>
+        <button class="filter-btn" data-filter="easy">KOLAY (4)</button>
+        <button class="filter-btn" data-filter="medium">ORTA (3)</button>
+        <button class="filter-btn" data-filter="hardcore">HARDCORE (3)</button>
+        <button class="filter-btn" data-filter="boss">BOSS (2)</button>
+      </div>
+    </header>
+
+    <!-- Mini Games Card Grid -->
+    <main class="games-grid" id="games-grid">
+      <!-- Injected dynamically via hub.js -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="hub-footer">
+      <div>ESC: Pencerelerden Çıkış / Geri Dön | CTRL + SHIFT + Q: Acil Çıkış</div>
+      <div>SENTIENT_OS v2.0.4 CORE READY</div>
+    </footer>
+  </div>
+
+  <script src="audio/synth.js"></script>
+  <script src="common/horror_fx.js"></script>
+  <script src="hub.js"></script>
+</body>
+</html>
