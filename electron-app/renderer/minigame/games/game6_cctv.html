@@ -402,7 +402,7 @@
       </div>
 
       <div class="neutralize-hint">
-        <strong>TALİMAT:</strong> Kameralar arasında gezin. Odalarda beliren gölge varlık, manken veya kanlı anomalileri bulup üzerlerine <strong>tıklayarak EMP şoku ile imha et!</strong>
+        <strong>TALİMAT:</strong> Kameralar arasında gezin. Odalarda beliren şeffaf tam vücut yaratıkları tespit edip üzerlerine <strong>tıklayarak EMP şoku ile imha et!</strong>
       </div>
     </div>
   </div>
@@ -411,7 +411,8 @@
   <script src="../common/horror_fx.js"></script>
   <script>
     /**
-     * Enhanced Photographic CCTV Surveillance Engine
+     * Enhanced Photorealistic CCTV Surveillance Engine
+     * Uses 6 distinct high-resolution room photos and transparent full-body horror entities.
      */
     class AdvancedCCTVGame {
       constructor() {
@@ -440,59 +441,92 @@
         this.active = false;
         this.mouseX = 0;
         this.mouseY = 0;
-        this.glitchIntensity = 0;
         this.cameraSwitchGlitch = 0;
 
-        // Preload Image Assets
+        // Preload All 6 Room Photos & 4 Transparent Monsters
         this.images = {};
         this.loadImages();
 
-        // 6 Room Definitions with Real Photos and Horror Composite Logic
+        // 6 Room Definitions with Real Photos
         this.rooms = {
           1: {
             title: 'CAM 01 // ANA GİRİŞ & RESEPSİYON',
             sub: 'FACILITY-74 SEKTÖR 01 // TURNİKELER & LOBİ',
             bgKey: 'cam1',
-            ambientFreq: 140,
           },
           2: {
             title: 'CAM 02 // SUB-KERNEL SUNUCU ODASI',
             sub: 'FACILITY-74 SEKTÖR 02 // SUNUCU KABİNLERİ',
-            bgKey: null,
-            ambientFreq: 180,
+            bgKey: 'cam2',
           },
           3: {
             title: 'CAM 03 // BİYOLOJİK ARAŞTIRMA LABI',
             sub: 'FACILITY-74 SEKTÖR 03 // KARANTİNA ODASI',
-            bgKey: null,
-            ambientFreq: 220,
+            bgKey: 'cam3',
           },
           4: {
             title: 'CAM 04 // KARANLIK ALTKAT KORİDORU',
             sub: 'FACILITY-74 SEKTÖR 04 // BORU HATTI & KORİDOR',
-            bgKey: null,
-            ambientFreq: 90,
+            bgKey: 'cam4',
           },
           5: {
             title: 'CAM 05 // HAVALANDIRMA ŞAFTI',
             sub: 'FACILITY-74 SEKTÖR 05 // ENDÜSTRİYEL TÜRBİN',
-            bgKey: null,
-            ambientFreq: 300,
+            bgKey: 'cam5',
           },
           6: {
             title: 'CAM 06 // ÇELİK KASA GÜVENLİK KAPISI',
             sub: 'FACILITY-74 SEKTÖR 06 // HİDROLİK BLOKAJ',
-            bgKey: null,
-            ambientFreq: 110,
+            bgKey: 'cam6',
           },
         };
 
-        // 4 Active Anomalies Distributed Across the Cameras
+        // 4 Transparent Full-Body Monsters Placed in Specific Camera Rooms
         this.anomalies = {
-          2: { active: true, name: 'Siber Glitch Varlığı', imgKey: 'jumpscare_2', x: 0.50, y: 0.52, radius: 0.16, found: false },
-          3: { active: true, name: 'Kırık Karantina Kabini', imgKey: 'jumpscare_3', x: 0.62, y: 0.46, radius: 0.15, found: false },
-          4: { active: true, name: 'Koridordaki Gölge', imgKey: 'jumpscare_5', x: 0.48, y: 0.48, radius: 0.18, found: false },
-          5: { active: true, name: 'Şafttaki Solgun Yüz', imgKey: 'jumpscare_6', x: 0.52, y: 0.42, radius: 0.14, found: false },
+          2: {
+            active: true,
+            name: 'Siber Glitch Varlığı',
+            imgKey: 'monster_cyber_glitch',
+            x: 0.58,
+            y: 0.54,
+            w: 0.20,
+            h: 0.55,
+            radius: 0.14,
+            found: false,
+          },
+          3: {
+            active: true,
+            name: 'Biyolojik Sürüngen Yaratık',
+            imgKey: 'monster_crawler',
+            x: 0.50,
+            y: 0.68,
+            w: 0.32,
+            h: 0.32,
+            radius: 0.16,
+            found: false,
+          },
+          4: {
+            active: true,
+            name: 'Gölge Süzülen Varlık',
+            imgKey: 'monster_shadow_lurker',
+            x: 0.50,
+            y: 0.48,
+            w: 0.22,
+            h: 0.60,
+            radius: 0.15,
+            found: false,
+          },
+          5: {
+            active: true,
+            name: 'Ağlayan Hayalet Silueti',
+            imgKey: 'monster_weeping_phantom',
+            x: 0.52,
+            y: 0.46,
+            w: 0.24,
+            h: 0.52,
+            radius: 0.14,
+            found: false,
+          },
         };
 
         this.particles = [];
@@ -500,17 +534,26 @@
       }
 
       loadImages() {
-        // Cam 1 Real Photo
-        const img1 = new Image();
-        img1.src = '../images/cctv/cctv_cam1.jpg';
-        img1.onload = () => { this.images['cam1'] = img1; };
-
-        // Horror Entity Anomaly Images
-        for (let i = 1; i <= 10; i++) {
+        // Load all 6 Room Photos
+        for (let i = 1; i <= 6; i++) {
           const img = new Image();
-          img.src = `../images/cctv/jumpscare_${i}.jpg`;
-          img.onload = () => { this.images[`jumpscare_${i}`] = img; };
+          img.src = `../images/cctv/cctv_cam${i}.jpg`;
+          img.onload = () => { this.images[`cam${i}`] = img; };
         }
+
+        // Load 4 Transparent PNG Monsters
+        const monsters = [
+          'monster_shadow_lurker',
+          'monster_cyber_glitch',
+          'monster_crawler',
+          'monster_weeping_phantom',
+        ];
+
+        monsters.forEach((key) => {
+          const img = new Image();
+          img.src = `../images/cctv/${key}.png`;
+          img.onload = () => { this.images[key] = img; };
+        });
       }
 
       init() {
@@ -520,7 +563,7 @@
 
         this.horror.showStartScreen(
           '#06 CCTV PARANORMAL SURVEILLANCE',
-          'Kameralar arasında geçiş yap, odalardaki 4 paranormal tehdidi tespit et ve üzerine tıklayarak EMP şoku ile imha et!',
+          'Kameralar arasında geçiş yap, odalardaki 4 şeffaf tam vücut paranormal yaratığı tespit et ve üzerlerine tıklayarak EMP şoku ile imha et!',
           () => {
             this.active = true;
             this.startTimer();
@@ -626,7 +669,7 @@
       switchCamera(camId) {
         if (this.currentCam === camId) return;
         this.currentCam = camId;
-        this.cameraSwitchGlitch = 12;
+        this.cameraSwitchGlitch = 14;
 
         document.querySelectorAll('.cam-channel-btn').forEach((b) => b.classList.remove('active'));
         const btn = document.querySelector(`.cam-channel-btn[data-cam="${camId}"]`);
@@ -637,7 +680,7 @@
         this.camSubEl.textContent = room.sub;
 
         // Static sound on camera switch
-        this.audio.playTone(300 + Math.random() * 150, 0.08, 'sawtooth', 0.08);
+        this.audio.playTone(280 + Math.random() * 180, 0.09, 'sawtooth', 0.09);
 
         // Update status badge
         const anom = this.anomalies[camId];
@@ -658,10 +701,9 @@
       triggerEMPShock(x, y) {
         this.audio.playTone(1200, 0.3, 'sawtooth', 0.15);
         this.audio.playVictory();
-        this.glitchIntensity = 20;
 
         // Spawn vaporizing electric particles
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 45; i++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = Math.random() * 8 + 2;
           this.particles.push({
@@ -704,13 +746,21 @@
         const h = this.canvas.height;
         ctx.clearRect(0, 0, w, h);
 
-        // 1. Draw Room Background
-        this.drawRoomScene(ctx, w, h, this.currentCam);
+        // 1. Draw Real Photographic Room Background
+        const room = this.rooms[this.currentCam];
+        const bgImg = this.images[room.bgKey];
+        if (bgImg && bgImg.complete) {
+          ctx.drawImage(bgImg, 0, 0, w, h);
+        } else {
+          // Fallback dark room
+          ctx.fillStyle = '#060a10';
+          ctx.fillRect(0, 0, w, h);
+        }
 
-        // 2. Draw Active Anomaly if present and not found
+        // 2. Draw Transparent Full-Body Horror Anomaly if present and not found
         const anom = this.anomalies[this.currentCam];
         if (anom && anom.active && !anom.found) {
-          this.drawAnomalyEntity(ctx, w, h, anom);
+          this.drawTransparentMonster(ctx, w, h, anom);
         }
 
         // 3. Draw EMP Particles
@@ -737,181 +787,66 @@
         // 4. Vision Mode Filter Color Grade
         ctx.save();
         if (this.visionMode === 'nvg') {
-          ctx.fillStyle = 'rgba(0, 255, 120, 0.12)';
+          ctx.fillStyle = 'rgba(0, 255, 120, 0.08)';
           ctx.fillRect(0, 0, w, h);
         } else if (this.visionMode === 'ir') {
-          ctx.fillStyle = 'rgba(0, 180, 255, 0.08)';
+          ctx.fillStyle = 'rgba(0, 180, 255, 0.10)';
           ctx.fillRect(0, 0, w, h);
         }
         ctx.restore();
 
-        // 5. Dynamic CRT Noise & Glitch
-        this.drawNoiseAndGlitch(ctx, w, h);
-      }
-
-      drawRoomScene(ctx, w, h, camId) {
-        ctx.save();
-
-        if (camId === 1 && this.images['cam1']) {
-          // Photorealistic Lobby Reception Scene
-          ctx.drawImage(this.images['cam1'], 0, 0, w, h);
-        } else if (camId === 2) {
-          // Sub-Kernel Server Room (Perspective Server Racks + Blinking LEDs)
-          ctx.fillStyle = '#060a10';
+        // 5. Dynamic Camera Switch Static Noise
+        if (this.cameraSwitchGlitch > 0) {
+          this.cameraSwitchGlitch--;
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.cameraSwitchGlitch * 0.06})`;
           ctx.fillRect(0, 0, w, h);
-
-          // Server Aisle Perspective
-          ctx.strokeStyle = 'rgba(0, 229, 255, 0.25)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(w * 0.3, h); ctx.lineTo(w * 0.45, h * 0.35);
-          ctx.moveTo(w * 0.7, h); ctx.lineTo(w * 0.55, h * 0.35);
-          ctx.stroke();
-
-          // Server Cabinets Left & Right
-          for (let i = 0; i < 6; i++) {
-            const y = h * (0.35 + i * 0.1);
-            ctx.fillStyle = i % 2 === 0 ? '#0b1420' : '#080e18';
-            ctx.fillRect(0, y, w * 0.35, h * 0.1);
-            ctx.fillRect(w * 0.65, y, w * 0.35, h * 0.1);
-
-            // Blinking Server LEDs
-            for (let l = 0; l < 8; l++) {
-              ctx.fillStyle = Math.random() < 0.4 ? '#00ff88' : Math.random() < 0.2 ? '#ff0055' : '#00e5ff';
-              ctx.fillRect(w * (0.05 + l * 0.03), y + 8, 4, 4);
-              ctx.fillRect(w * (0.70 + l * 0.03), y + 8, 4, 4);
-            }
-          }
-        } else if (camId === 3) {
-          // Research Bio-Lab (Glass Chambers, Specimens)
-          ctx.fillStyle = '#070f14';
-          ctx.fillRect(0, 0, w, h);
-
-          // Central Quarantine Glass Chamber
-          ctx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(w * 0.35, h * 0.25, w * 0.3, h * 0.55);
-
-          ctx.fillStyle = 'rgba(0, 255, 136, 0.05)';
-          ctx.fillRect(w * 0.35, h * 0.25, w * 0.3, h * 0.55);
-
-          ctx.fillStyle = '#00ff88';
-          ctx.font = 'bold 11px monospace';
-          ctx.fillText('QUARANTINE_POD #03 [SECURE]', w * 0.37, h * 0.23);
-        } else if (camId === 4) {
-          // Dark Corridor
-          ctx.fillStyle = '#05070a';
-          ctx.fillRect(0, 0, w, h);
-
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(0, 0); ctx.lineTo(w * 0.45, h * 0.45);
-          ctx.moveTo(w, 0); ctx.lineTo(w * 0.55, h * 0.45);
-          ctx.moveTo(0, h); ctx.lineTo(w * 0.45, h * 0.55);
-          ctx.moveTo(w, h); ctx.lineTo(w * 0.55, h * 0.55);
-          ctx.stroke();
-
-          // Flickering ceiling lamp
-          if (Math.random() < 0.85) {
-            ctx.fillStyle = 'rgba(255, 220, 150, 0.08)';
-            ctx.beginPath();
-            ctx.moveTo(w * 0.5, h * 0.45);
-            ctx.lineTo(w * 0.2, h);
-            ctx.lineTo(w * 0.8, h);
-            ctx.closePath();
-            ctx.fill();
-          }
-        } else if (camId === 5) {
-          // Industrial Ventilation Turbine
-          ctx.fillStyle = '#0a0d12';
-          ctx.fillRect(0, 0, w, h);
-
-          // Spinning Fan Blades
-          const time = Date.now() * 0.005;
-          ctx.save();
-          ctx.translate(w * 0.5, h * 0.5);
-          ctx.rotate(time);
-          ctx.fillStyle = '#141e2a';
-          for (let b = 0; b < 6; b++) {
-            ctx.rotate((Math.PI * 2) / 6);
-            ctx.fillRect(-15, -h * 0.35, 30, h * 0.35);
-          }
-          ctx.restore();
-
-          // Grate Ring
-          ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
-          ctx.lineWidth = 6;
-          ctx.beginPath();
-          ctx.arc(w * 0.5, h * 0.5, h * 0.36, 0, Math.PI * 2);
-          ctx.stroke();
-        } else if (camId === 6) {
-          // Steel Blast Door
-          ctx.fillStyle = '#0d1218';
-          ctx.fillRect(0, 0, w, h);
-
-          // Heavy Gate Outline
-          ctx.fillStyle = '#162230';
-          ctx.fillRect(w * 0.25, h * 0.15, w * 0.5, h * 0.75);
-
-          // Hazard Stripes
-          for (let s = 0; s < 10; s++) {
-            ctx.fillStyle = s % 2 === 0 ? '#ffcc00' : '#111111';
-            ctx.fillRect(w * (0.25 + s * 0.05), h * 0.85, w * 0.05, 14);
-          }
         }
-
-        ctx.restore();
       }
 
-      drawAnomalyEntity(ctx, w, h, anom) {
+      drawTransparentMonster(ctx, w, h, anom) {
         ctx.save();
-        const ax = w * anom.x;
-        const ay = h * anom.y;
-        const radiusPx = w * anom.radius;
+        const monsterImg = this.images[anom.imgKey];
 
-        // Render Anomaly Photo if loaded
-        if (this.images[anom.imgKey]) {
+        // Breathing and subtle twitching animation
+        const time = Date.now() * 0.003;
+        const breathY = Math.sin(time * 2) * (h * 0.008);
+        const glitchX = (Math.random() < 0.08 ? (Math.random() - 0.5) * 8 : 0);
+
+        const ax = w * anom.x + glitchX;
+        const ay = h * anom.y + breathY;
+        const mw = w * anom.w;
+        const mh = h * anom.h;
+
+        if (monsterImg && monsterImg.complete) {
           ctx.save();
-          ctx.globalAlpha = 0.85 + Math.sin(Date.now() * 0.01) * 0.15;
-          // Chromatic Aberration offset
-          ctx.drawImage(this.images[anom.imgKey], ax - radiusPx, ay - radiusPx, radiusPx * 2, radiusPx * 2);
+          // Subtle transparency & presence pulse
+          ctx.globalAlpha = 0.88 + Math.sin(time * 3) * 0.12;
+
+          // Shadow beneath the monster on the floor
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          ctx.beginPath();
+          ctx.ellipse(ax, ay + mh / 2 - 4, mw * 0.45, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Render Transparent Full-Body Monster PNG
+          ctx.drawImage(monsterImg, ax - mw / 2, ay - mh / 2, mw, mh);
           ctx.restore();
         } else {
-          // Fallback Entity Glow
+          // Fallback Red Glow
           ctx.fillStyle = '#ff2255';
           ctx.shadowColor = '#ff0000';
           ctx.shadowBlur = 25;
           ctx.beginPath();
-          ctx.arc(ax, ay, radiusPx * 0.6, 0, Math.PI * 2);
+          ctx.arc(ax, ay, w * anom.radius * 0.6, 0, Math.PI * 2);
           ctx.fill();
         }
 
         // Targeting Warning Label
         ctx.fillStyle = '#ff2255';
-        ctx.font = 'bold 13px "Share Tech Mono", monospace';
+        ctx.font = 'bold 12px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(`⚠ ${anom.name.toUpperCase()} ⚠`, ax, ay - radiusPx - 10);
+        ctx.fillText(`⚠ ${anom.name.toUpperCase()} ⚠`, ax, ay - mh / 2 - 8);
         ctx.restore();
-      }
-
-      drawNoiseAndGlitch(ctx, w, h) {
-        // Camera Switch Static
-        if (this.cameraSwitchGlitch > 0) {
-          this.cameraSwitchGlitch--;
-          ctx.fillStyle = `rgba(255, 255, 255, ${this.cameraSwitchGlitch * 0.08})`;
-          ctx.fillRect(0, 0, w, h);
-        }
-
-        // Grain static noise
-        const imgData = ctx.getImageData(0, 0, Math.min(w, 400), Math.min(h, 300));
-        const data = imgData.data;
-        for (let i = 0; i < data.length; i += 32) {
-          const noise = (Math.random() - 0.5) * 35;
-          data[i] += noise;
-          data[i + 1] += noise * 1.2;
-          data[i + 2] += noise;
-        }
       }
 
       renderRadar() {
