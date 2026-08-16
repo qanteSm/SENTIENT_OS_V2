@@ -223,18 +223,73 @@ class Director:
 
         if cmd in ["/help", "help", "yardım"]:
             help_msg = (
-                "ℹ️ [KOMUT REHBERİ]\n"
-                "• /trial  : Aktif sektör güvenlik görevini başlatır\n"
-                "• /status : Görev detayını ve sektör durumunu gösterir\n"
-                "• /cctv   : Güvenlik kameralarını canlı izler\n"
-                "• /scan   : Masaüstü ve CCTV tehditlerini tarar\n"
-                "• /hack   : Mevcut hedefe dair ipucu/analiz verir\n"
-                "• /override <KOD> : Bulmaca şifrelerini girmek içindir"
+                "ℹ️ [SİBER DEDEKTİFLİK & KOMUT REHBERİ]\n"
+                "• /dossier : Dr. Evelyn Aris vaka dosyasını ve delilleri gösterir\n"
+                "• /logs    : Açılan tüm gizli Black-Site ses ve veri kayıtlarını listeler\n"
+                "• /decrypt <KOD> : Şifreli anahtarları ve dosyaları deşifre eder\n"
+                "• /trial   : Aktif sektör güvenlik görevini başlatır\n"
+                "• /status  : Dedektiflik hedefini ve sektör durumunu gösterir\n"
+                "• /cctv    : Güvenlik kameralarını canlı izler\n"
+                "• /scan    : Masaüstü ve CCTV tehditlerini tarar\n"
+                "• /hack    : Taktiksel ipucu ve hedef analizi verir\n"
+                "• /override <KOD> : Güvenlik kilitlerini ve şifreleri girmek içindir"
             )
             await self.event_bus.publish(
                 "ai_response",
                 payload={"speech": help_msg, "emotion": "calm", "actions": []},
             )
+            return True
+
+        elif cmd in ["/dossier", "dossier", "/vaka", "vaka", "delil", "/delil"]:
+            dossier_report = self.quest_manager.get_dossier_summary()
+            await self.event_bus.publish(
+                "ai_response",
+                payload={"speech": dossier_report, "emotion": "calm", "actions": []},
+            )
+            return True
+
+        elif cmd in ["/logs", "logs", "/kayitlar", "kayıtlar", "kayitlar", "gunluk", "/gunluk"]:
+            logs_report = self.quest_manager.get_unlocked_logs_formatted()
+            await self.event_bus.publish(
+                "ai_response",
+                payload={"speech": logs_report, "emotion": "calm", "actions": []},
+            )
+            return True
+
+        elif cmd in ["/decrypt", "decrypt", "/desifre", "desifre"]:
+            code = parts[1] if len(parts) > 1 else ""
+            if not code:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={"speech": "💡 Kullanım: /decrypt <ŞİFRE_KODU> formatında bir anahtar girmelisiniz (Örn: /decrypt 0x1A_MEM).", "emotion": "calm", "actions": []},
+                )
+                return True
+
+            trial = self.quest_manager.decrypt_cipher_code(code)
+            if trial:
+                await self.event_bus.publish(
+                    "effect",
+                    payload={"category": "audio", "name": "play_stinger", "params": {"name": "chime_eerie", "volume": 0.9}},
+                )
+                resp = (
+                    f"🔓 [ŞİFRE DEŞİFRE EDİLDİ: '{code.upper()}']\n"
+                    f"📜 {trial.dossier_title}\n"
+                    f"\"{trial.dossier_entry}\"\n\n"
+                    f"✅ '{trial.title}' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)"
+                )
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={
+                        "speech": resp,
+                        "emotion": "hurt",
+                        "actions": [{"type": "screen_fade", "params": {"target_opacity": 0.3, "duration_ms": 1000, "color": "#00ff88"}}],
+                    },
+                )
+            else:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={"speech": f"❌ [DEŞİFRE HATASI]: '{code}' geçersiz şifreleme anahtarı. Masaüstü loglarını veya minigame ipuçlarını kontrol edin.", "emotion": "angry", "actions": []},
+                )
             return True
 
         elif cmd in ["/trial", "trial", "/gorev", "gorev", "/baslat", "baslat", "/play", "play"]:
@@ -243,7 +298,7 @@ class Director:
                 await self.event_bus.publish(
                     "ai_response",
                     payload={
-                        "speech": f"🚀 [SEKTÖR BAŞLATILIYOR]: {trial.title}\n{trial.description}",
+                        "speech": f"🚀 [SEKTÖR BAŞLATILIYOR]: {trial.title}\n{trial.description}\n🔎 İpucu: {trial.investigation_lead}",
                         "emotion": "sinister",
                         "actions": [],
                     },
@@ -261,24 +316,7 @@ class Director:
             return True
 
         elif cmd in ["/status", "status", "durum"]:
-            trial = self.quest_manager.get_next_available_trial()
-            completed = self.quest_manager.completed_count
-            total = self.quest_manager.total_count
-
-            if trial:
-                status_report = (
-                    f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
-                    f"• Aktif Hedef: {trial.title}\n"
-                    f"• Görev Detayı: {trial.description}\n"
-                    f"• İlerleme: {completed}/{total} Sektör Mühürlendi\n"
-                    f"👉 Görevi Başlatmak İçin: '/trial' veya '/gorev' yazın."
-                )
-            else:
-                status_report = (
-                    f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
-                    f"• Durum: Tüm {total} Sektör Başarıyla Mühürlendi!\n"
-                    f"• Karantina: SENTIENT çekirdeği kontrol altında."
-                )
+            status_report = self.quest_manager.get_system_status_summary()
             await self.event_bus.publish(
                 "ai_response",
                 payload={"speech": status_report, "emotion": "calm", "actions": []},
@@ -317,7 +355,7 @@ class Director:
             elif self.cctv_threat.has_active_anomaly:
                 msg = "💡 [ANALİZ]: Güvenlik kameralarında anomali tespit edildi. '/cctv' ile bağlanıp varlığı mühürleyin."
             elif trial:
-                msg = f"💡 [HEDEF ANALİZİ]: {trial.title}\n{trial.description}"
+                msg = f"💡 [DEDEKTİF HEDEF ANALİZİ]: {trial.title}\n{trial.description}\n🔎 Araştırma Notu: {trial.investigation_lead}"
             else:
                 msg = "💡 [ANALİZ]: Tüm güvenlik sektörleri stabil. Sistem tetikte bekliyor."
 
@@ -351,10 +389,12 @@ class Director:
                 )
                 return True
 
-            # Check in desktop threat riddles or dynamic ARG active config
+            # Check in quest cipher codes, desktop threat riddles, or dynamic ARG active config
+            decrypted_trial = self.quest_manager.decrypt_cipher_code(code)
             active_key = self.active_arg_config.full_override_key.upper() if getattr(self, "active_arg_config", None) else "0X7F_K3RN3L_V0ID"
             is_valid_code = (
-                self.desktop_threat.check_override_code(code)
+                bool(decrypted_trial)
+                or self.desktop_threat.check_override_code(code)
                 or code.upper() == active_key
                 or ("K3RN3L" in code.upper() and "V0ID" in code.upper())
             )
@@ -364,10 +404,11 @@ class Director:
                     "effect",
                     payload={"category": "audio", "name": "play_stinger", "params": {"name": "chime_eerie", "volume": 0.9}},
                 )
+                extra_dossier = f"\n📜 {decrypted_trial.dossier_title}\n\"{decrypted_trial.dossier_entry}\"" if decrypted_trial else ""
                 await self.event_bus.publish(
                     "ai_response",
                     payload={
-                        "speech": f"BAŞARILI: '{code.upper()}' güvenlik anahtarı kabul edildi. Güvenlik duvarı mühürlendi!",
+                        "speech": f"BAŞARILI: '{code.upper()}' güvenlik anahtarı kabul edildi. Güvenlik duvarı mühürlendi!{extra_dossier}",
                         "emotion": "hurt",
                         "actions": [{"type": "screen_fade", "params": {"target_opacity": 0.3, "duration_ms": 1000, "color": "#00ff66"}}],
                     },
@@ -435,14 +476,17 @@ class Director:
 
         if success:
             speech = (
-                f"İnanılmaz... '{completed_trial.title}' sınavını başardın.\n"
-                f"Şifreli Log Açıldı: {completed_trial.clue_revealed}"
+                f"🎉 [SEKTÖR BAŞARIYLA MÜHÜRLENDİ]: '{completed_trial.title}'\n"
+                f"🔓 Yeni Delil Açıldı: {completed_trial.dossier_title}\n"
+                f"📜 \"{completed_trial.dossier_entry}\"\n\n"
+                f"🔎 Sıradaki Dedektif İpucu İçin: '/dossier' veya '/status' yazın."
             )
             emotion = "hurt"
         else:
             speech = (
-                f"Başarısız oldun! '{completed_trial.title}' ihlal edildi.\n"
-                "Kontrol tamamen benim elime geçiyor..."
+                f"⚠️ [MÜHÜR BAŞARISIZ]: '{completed_trial.title}' savunması aşıldı!\n"
+                f"SENTIENT: 'Beni durduramayacaksın... zihnimin parçaları işletim sistemine yayılıyor.'\n"
+                f"👉 Yeniden denemek için: '/trial'"
             )
             emotion = "sinister"
             # Escalate threat if failed
@@ -450,7 +494,7 @@ class Director:
 
         await self.event_bus.publish(
             "ai_response",
-            payload={"speech": speech, "emotion": emotion, "actions": []},
+            payload={"speech": speech, "emotion": emotion, "actions": [{"type": "screen_glitch", "params": {"intensity": 0.3, "duration_ms": 500}}]},
         )
 
     async def handle_system_event(self, event_type: str, **kwargs: Any) -> None:

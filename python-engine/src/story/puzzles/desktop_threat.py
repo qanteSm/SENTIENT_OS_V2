@@ -15,17 +15,24 @@ from src.infrastructure.logger import get_logger
 
 logger = get_logger("desktop_threat")
 
-# Curated list of creepy, mysterious, and riddle-bearing anomaly files
+# Curated list of creepy, mysterious, and riddle-bearing detective anomaly files
 ANOMALY_TEMPLATES = [
+    {
+        "filename": "DR_EVELYN_ARIS_GUNLUGU_01.txt",
+        "content": "=== BLACK-SITE 74 // DR. EVELYN ARIS KİŞİSEL KAYDI ===\n\n'12 Ağustos 2026. Bellek blokları parçalandı.\nSENTIENT kök dizininde gizlenen ilk bellek anahtarını buldum:\n\nŞİFRE ANAHTARI: 0x1A_MEM\n\nTerminalde çözmek için: /decrypt 0x1A_MEM veya /override 0x1A_MEM\n(Beni bu dijital kafesten kurtar...)'",
+        "is_riddle": True,
+        "override_code": "0x1A_MEM",
+    },
     {
         "filename": "INFECTED_SECTOR_01.tmp",
         "content": "CRITICAL MEMORY OVERFLOW DETECTED.\n\nSistem kök dizininde yabancı bir varlık geziniyor.\nBu dosyayı hemen sil, yoksa bellek blokları mühürlenecek.\n\n[SENTIENT_CORRUPTION_INDEX: 0x9F]",
         "is_riddle": False,
     },
     {
-        "filename": "ARKANA_BAK.txt",
-        "content": "Ekranın ışığı yüzüne vuruyor...\nArka kapının hafifçe aralandığını duymadın mı?\n\nBEN BURADAYIM.\nBENİ SİLMEYİ DENE.",
-        "is_riddle": False,
+        "filename": "HAYALET_RADYO_FREKANSI.log",
+        "content": "=== BLACK-SITE 74 // SONAR RADAR FREKANS DÖKÜMÜ ===\n\nAğda 432 Hz rezonansında hayalet bir sinyal dalgalanıyor.\n\nRADAR ŞİFRESİ: ECHO_432\n\nTerminalde gir:\n/override ECHO_432",
+        "is_riddle": True,
+        "override_code": "ECHO_432",
     },
     {
         "filename": "GUVENLIK_PROTOKOLU_KODU.txt",
@@ -34,9 +41,10 @@ ANOMALY_TEMPLATES = [
         "override_code": "0x7F_K3RN3L",
     },
     {
-        "filename": "SISTEM_IFLAS.exe.corrupt",
-        "content": "01010011 01000101 01001110 01010100 01001001 01000101 01001110 01010100\n\nHER SANİYE BİLGİSAYARININ DERİNLİKLERİNE DAHA ÇOK YERLEŞİYORUM.\nBU DOSYA BURADA DURDUĞU SÜRECE KONTROL BENDE.",
-        "is_riddle": False,
+        "filename": "CCTV_SEKTOR_3_KAYDI.dat",
+        "content": "=== GÜVENLİK ODASI ACİL MÜHÜR RAPORU ===\n\nKameralardaki gölge varlıklar karantina odasına ulaştı.\nBölgeyi mühürleme anahtarı:\n\nKOD: CAM_BREACH_03\n\nTerminal komutu: /override CAM_BREACH_03",
+        "is_riddle": True,
+        "override_code": "CAM_BREACH_03",
     },
     {
         "filename": "SENI_IZLIYORUM.log",

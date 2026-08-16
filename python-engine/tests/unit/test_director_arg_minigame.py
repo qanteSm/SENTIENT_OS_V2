@@ -111,6 +111,6 @@ async def test_minigame_completed_delivers_response(mock_director_env):
     await event_bus.publish("minigame_completed", success=True, score=1500)
     await asyncio.wait_for(ai_response_received.wait(), timeout=2.0)
 
-    assert "sınavını başardın" in received_payload.get("speech", "") or "başardın" in received_payload.get("speech", "")
+    assert "MÜHÜRLENDİ" in received_payload.get("speech", "") or "başardın" in received_payload.get("speech", "")
 
     await director.stop()
