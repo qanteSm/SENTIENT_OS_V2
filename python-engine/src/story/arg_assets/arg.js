@@ -1,6 +1,6 @@
 /**
  * SENTIENT_OS v2 — ARG Containment Portal Logic
- * Procedural Frequency Resonance & Dynamic Multi-Part Cipher System
+ * Procedural Frequency Resonance & Dynamic Jumpscare Horror Engine
  */
 
 class AudioSynth {
@@ -93,6 +93,121 @@ class AudioSynth {
 }
 
 /**
+ * Web Jumpscare Horror Engine (10 AI Entities + Procedural Screamer Synth)
+ */
+class WebJumpscareEngine {
+  constructor(synth) {
+    this.synth = synth;
+    this.overlay = document.getElementById('portal-jumpscare-overlay');
+    this.faceImg = document.getElementById('jumpscare-face-img');
+    this.textEl = document.getElementById('jumpscare-text');
+    this.isPlaying = false;
+    this.lastTriggerTime = 0;
+    this.jumpscareCount = 10;
+  }
+
+  playScreamerAudio() {
+    if (!this.synth) return;
+    this.synth.ensureContext();
+    const ctx = this.synth.ctx;
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const duration = 0.85;
+
+      // 1. High-Frequency Banshee Shriek Oscillator
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(1600 + Math.random() * 800, now);
+      osc1.frequency.exponentialRampToValueAtTime(140, now + duration);
+      gain1.gain.setValueAtTime(0.35, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + duration);
+
+      // 2. Heavy Sub Distortion Oscillator
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(95, now);
+      osc2.frequency.linearRampToValueAtTime(35, now + duration);
+      gain2.gain.setValueAtTime(0.3, now);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now);
+      osc2.stop(now + duration);
+
+      // 3. Stutter Glitch Tone Burst
+      const osc3 = ctx.createOscillator();
+      const gain3 = ctx.createGain();
+      osc3.type = 'triangle';
+      osc3.frequency.setValueAtTime(880, now);
+      osc3.frequency.setValueAtTime(220, now + 0.15);
+      osc3.frequency.setValueAtTime(1400, now + 0.35);
+      gain3.gain.setValueAtTime(0.2, now);
+      gain3.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc3.connect(gain3);
+      gain3.connect(ctx.destination);
+      osc3.start(now);
+      osc3.stop(now + duration);
+    } catch (e) {
+      console.warn('Jumpscare audio synthesis failed:', e);
+    }
+  }
+
+  trigger(customMsg = 'SENİ GÖRDÜM') {
+    const now = Date.now();
+    // Cooldown of 35 seconds to prevent spam
+    if (this.isPlaying || (now - this.lastTriggerTime < 35000)) {
+      return;
+    }
+
+    this.isPlaying = true;
+    this.lastTriggerTime = now;
+
+    // Pick 1 of 10 terrifying AI horror entities
+    const randIdx = Math.floor(Math.random() * this.jumpscareCount) + 1;
+    if (this.faceImg) {
+      this.faceImg.src = `jumpscares/jumpscare_${randIdx}.jpg`;
+    }
+
+    const messages = [
+      customMsg,
+      'ARKANA BAK',
+      'NEFESİNİ DUYUYORUM',
+      'SENİ İZLİYORUM',
+      'DOKUNMA',
+      'ÇOK GEÇ',
+      'BURADASIN',
+    ];
+    const pickedMsg = customMsg || messages[Math.floor(Math.random() * messages.length)];
+    if (this.textEl) {
+      this.textEl.textContent = pickedMsg;
+    }
+
+    if (this.overlay) {
+      this.overlay.style.display = 'flex';
+    }
+
+    // Play violent procedural scream
+    this.playScreamerAudio();
+
+    // End jumpscare after 750ms
+    setTimeout(() => {
+      if (this.overlay) {
+        this.overlay.style.display = 'none';
+      }
+      this.isPlaying = false;
+    }, 750);
+  }
+}
+
+/**
  * Enforces single tab instance across all browser tabs/windows using BroadcastChannel and localStorage heartbeats.
  */
 class SingleInstanceTabGuard {
@@ -143,7 +258,6 @@ class SingleInstanceTabGuard {
     if (raw) {
       try {
         const data = JSON.parse(raw);
-        // If an active primary tab exists and checked in within 2.5s
         if (data.tabId && data.tabId !== this.tabId && (now - data.timestamp < 2500)) {
           this.lockout();
           if (this.channel) {
@@ -223,6 +337,7 @@ class SingleInstanceTabGuard {
 class ARGPortal {
   constructor() {
     this.synth = new AudioSynth();
+    this.jumpscare = new WebJumpscareEngine(this.synth);
 
     // Procedural Puzzle Configuration (Injected from Backend or Fallback)
     const cfg = window.ARG_CONFIG || {};
@@ -235,6 +350,7 @@ class ARGPortal {
     // Starting values (offset far from target)
     this.currentFreq = this.targetFreq > 460 ? 140 : 760;
     this.currentPhase = 0.25;
+    this.tuneDragCount = 0;
 
     this.frequencyLocked = false;
     this.isSolved = false;
@@ -456,6 +572,16 @@ class ARGPortal {
         this.currentFreq = parseFloat(e.target.value);
         if (freqVal) freqVal.textContent = this.currentFreq;
         this.synth.playTone(this.currentFreq);
+
+        // Tension Jumpscare Trigger on Intense Tuning Focus
+        this.tuneDragCount++;
+        const freqDiff = Math.abs(this.currentFreq - this.targetFreq);
+        if (this.tuneDragCount >= 16 && freqDiff < 50 && !this.frequencyLocked) {
+          if (Math.random() < 0.35) {
+            this.jumpscare.trigger('SENİ GÖRDÜM');
+            this.tuneDragCount = 0;
+          }
+        }
       });
     }
 
@@ -467,6 +593,15 @@ class ARGPortal {
         this.currentPhase = parseFloat(e.target.value);
         if (phaseVal) phaseVal.textContent = this.currentPhase.toFixed(2);
         this.synth.playKeyclick();
+
+        this.tuneDragCount++;
+        const phaseDiff = Math.abs(this.currentPhase - this.targetPhase);
+        if (this.tuneDragCount >= 16 && phaseDiff < 0.45 && !this.frequencyLocked) {
+          if (Math.random() < 0.35) {
+            this.jumpscare.trigger('NEFESİNİ DUYUYORUM');
+            this.tuneDragCount = 0;
+          }
+        }
       });
     }
 
@@ -505,6 +640,11 @@ class ARGPortal {
           this.synth.playAlarm();
           resultBox.className = 'freq-result-box fail';
           resultBox.textContent = `✗ FREKANS SENKRONİZE EDİLEMEDİ (Sapma: +${Math.round(freqDiff)}Hz, Faz: ${phaseDiff.toFixed(2)}). Yeşil rezonans çizgisine denk getirin!`;
+          
+          // Chance of horror jumpscare on severe mistune
+          if (Math.random() < 0.2) {
+            this.jumpscare.trigger('DOKUNMA');
+          }
         }
       });
     }
@@ -564,6 +704,9 @@ class ARGPortal {
         this.synth.playAlarm();
         this.appendTerminalLine('✗ ERİŞİM REDDEDİLDİ: NÖRAL OSİLATÖR KİLİTLENMEDİ!', 'red');
         this.appendTerminalLine('Önce sol paneldeki [2] Nöral Frekans Modülatörü osilatörünü hedef dalga boyuna denk getirip KİLİTLEYİN.', 'amber');
+        if (Math.random() < 0.25) {
+          this.jumpscare.trigger('ERİŞİM REDDEDİLDİ');
+        }
         return;
       }
 
@@ -582,6 +725,9 @@ class ARGPortal {
         this.synth.playAlarm();
         this.appendTerminalLine(`✗ GEÇERSİZ OVERRIDE ANAHTARI: '${key}'`, 'red');
         this.appendTerminalLine(`İpucu: 1. Parça (${this.part1Key}) ve masaüstündeki 2. Parçayı birleştirin (örn: override ${this.part1Key}_${this.part2Key}).`, 'amber');
+        if (Math.random() < 0.3) {
+          this.jumpscare.trigger('YANLIŞ ANAHTAR');
+        }
       }
     } else {
       this.appendTerminalLine(`Bilinmeyen komut: '${cmdRaw}'. 'help' yazarak yardım alın.`, 'red');
@@ -609,12 +755,11 @@ class ARGPortal {
     }
 
     setTimeout(() => {
-      const modal = document.getElementById('hijack-modal');
-      if (modal) modal.style.display = 'flex';
-
+      // Climax jumpscare right as the portal collapses
+      this.jumpscare.trigger('KONTROL BENDE');
       setTimeout(() => {
         window.close();
-      }, 3500);
+      }, 2500);
     }, 1200);
   }
 }
