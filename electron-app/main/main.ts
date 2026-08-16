@@ -11,6 +11,7 @@ class Application {
   private ipcBridge: IPCBridge;
   private windowManager: WindowManager;
   private isShuttingDown = false;
+  private lastArgOpenTime = 0;
 
   constructor() {
     this.ipcBridge = new IPCBridge();
@@ -174,6 +175,12 @@ class Application {
         minigameWin.focus();
       } else if (cmd === 'open_arg_site' || cmd === 'open_arg_portal') {
         const url = payload?.params?.url || 'http://127.0.0.1:6660';
+        const now = Date.now();
+        if (now - this.lastArgOpenTime < 6000) {
+          console.log(`[MAIN] ARG Portal open request debounced, skipping duplicate launch.`);
+          return;
+        }
+        this.lastArgOpenTime = now;
         console.log(`[MAIN] Opening ARG Portal: ${url}`);
         shell.openExternal(url);
       } else {

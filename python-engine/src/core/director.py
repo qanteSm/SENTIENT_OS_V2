@@ -471,12 +471,11 @@ class Director:
             },
         )
 
-        # 4. Open ARG Web Portal in browser or Electron
+        # 4. Open ARG Web Portal via Electron UI command (Single Dispatch)
         await self.event_bus.publish(
             "ui_command",
             payload={"command": "open_arg_site", "params": {"url": self.arg_server.url}},
         )
-        self.arg_server.launch_browser()
 
     async def _on_arg_puzzle_solved(self, event_type: str, **kwargs: Any) -> None:
         """Called when user cracks the ARG containment cipher."""

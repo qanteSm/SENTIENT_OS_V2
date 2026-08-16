@@ -72,7 +72,6 @@ async def test_phase_1_triggers_arg_boss_puzzle(mock_director_env):
 
     desktop_arg.deploy_puzzle_files.assert_called_once()
     arg_server.start.assert_called_once()
-    arg_server.launch_browser.assert_called_once()
 
     await director.stop()
 
