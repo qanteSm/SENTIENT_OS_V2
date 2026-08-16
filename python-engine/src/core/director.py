@@ -14,7 +14,7 @@ from src.infrastructure.platform.windows.window_info import WindowsWindowInfo
 from src.infrastructure.ws_server import WebSocketServer
 from src.story.arg_server import ARGServer
 from src.story.puzzles.cctv_threat import CCTVThreatEngine
-from src.story.puzzles.desktop_arg import DesktopARGPuzzle
+from src.story.puzzles.desktop_arg import DesktopARGPuzzle, generate_random_arg_puzzle
 from src.story.puzzles.desktop_threat import DesktopThreatManager
 from src.story.quest_manager import QuestManager
 from src.story.effect_decider import EffectDecider
@@ -317,8 +317,15 @@ class Director:
                 )
                 return True
 
-            # Check in desktop threat riddles or ARG
-            if self.desktop_threat.check_override_code(code) or "K3RN3L" in code.upper() or "V0ID" in code.upper():
+            # Check in desktop threat riddles or dynamic ARG active config
+            active_key = self.active_arg_config.full_override_key.upper() if getattr(self, "active_arg_config", None) else "0X7F_K3RN3L_V0ID"
+            is_valid_code = (
+                self.desktop_threat.check_override_code(code)
+                or code.upper() == active_key
+                or ("K3RN3L" in code.upper() and "V0ID" in code.upper())
+            )
+
+            if is_valid_code:
                 await self.event_bus.publish(
                     "effect",
                     payload={"category": "audio", "name": "play_stinger", "params": {"name": "chime_eerie", "volume": 0.9}},
@@ -448,15 +455,20 @@ class Director:
 
     async def _on_phase_1_completed(self, event_type: str, **kwargs: Any) -> None:
         """Called when Phase 1 timeline finishes. Triggers Phase 1 ARG Boss Puzzle before Phase 2!"""
-        logger.info("Phase 1 scripted timeline completed. Launching Phase 1 ARG Boss Puzzle...")
+        logger.info("Phase 1 scripted timeline completed. Launching Phase 1 ARG Boss Puzzle with procedural keys...")
 
-        # 1. Deploy secret ARG clue files to Desktop
-        self.desktop_arg.deploy_puzzle_files()
+        # 1. Generate unpredictable procedural frequency & cipher keys
+        puzzle_config = generate_random_arg_puzzle()
+        self.active_arg_config = puzzle_config
 
-        # 2. Start Localhost ARG Web Server (Port 6660)
+        # 2. Deploy secret ARG clue files to Desktop
+        self.desktop_arg.deploy_puzzle_files(puzzle_config)
+
+        # 3. Start Localhost ARG Web Server with procedural puzzle config
+        self.arg_server.set_puzzle_config(puzzle_config)
         await self.arg_server.start()
 
-        # 3. Dispatch visual alert & sound to overlay
+        # 4. Dispatch visual alert & sound to overlay
         await self.event_bus.publish(
             "effect",
             payload={
@@ -471,7 +483,7 @@ class Director:
             },
         )
 
-        # 4. Open ARG Web Portal via Electron UI command (Single Dispatch)
+        # 5. Open ARG Web Portal via Electron UI command (Single Dispatch)
         await self.event_bus.publish(
             "ui_command",
             payload={"command": "open_arg_site", "params": {"url": self.arg_server.url}},

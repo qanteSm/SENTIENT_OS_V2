@@ -1,6 +1,6 @@
 /**
  * SENTIENT_OS v2 — ARG Containment Portal Logic
- * Includes Single-Instance Multi-Tab Lockdown Enforcer
+ * Procedural Frequency Resonance & Dynamic Multi-Part Cipher System
  */
 
 class AudioSynth {
@@ -145,7 +145,6 @@ class SingleInstanceTabGuard {
         const data = JSON.parse(raw);
         // If an active primary tab exists and checked in within 2.5s
         if (data.tabId && data.tabId !== this.tabId && (now - data.timestamp < 2500)) {
-          // Duplicate instance detected!
           this.lockout();
           if (this.channel) {
             this.channel.postMessage({ type: 'ping_primary', senderTabId: this.tabId });
@@ -155,7 +154,6 @@ class SingleInstanceTabGuard {
       } catch (err) {}
     }
 
-    // No active primary session or lock expired, claim primary
     this.becomePrimary();
   }
 
@@ -198,7 +196,6 @@ class SingleInstanceTabGuard {
     } else if (data.type === 'pong_primary' && data.primaryTabId !== this.tabId) {
       this.lockout();
     } else if (data.type === 'primary_closed') {
-      // Previous primary closed, attempt to activate
       setTimeout(() => this.attemptClaimOrLock(), 400);
     }
   }
@@ -226,10 +223,19 @@ class SingleInstanceTabGuard {
 class ARGPortal {
   constructor() {
     this.synth = new AudioSynth();
-    this.targetFreq = 440;
-    this.targetPhase = 1.55;
-    this.currentFreq = 120;
-    this.currentPhase = 0.3;
+
+    // Procedural Puzzle Configuration (Injected from Backend or Fallback)
+    const cfg = window.ARG_CONFIG || {};
+    this.targetFreq = cfg.target_freq || (260 + Math.floor(Math.random() * 25) * 20);
+    this.targetPhase = cfg.target_phase !== undefined ? Number(cfg.target_phase) : Number((0.7 + Math.random() * 1.7).toFixed(2));
+    this.part1Key = cfg.part1_key || '0x7F_K3RN3L';
+    this.part2Key = cfg.part2_key || 'V0ID';
+    this.fullOverrideKey = cfg.full_override_key || `${this.part1Key}_${this.part2Key}`;
+
+    // Starting values (offset far from target)
+    this.currentFreq = this.targetFreq > 460 ? 140 : 760;
+    this.currentPhase = 0.25;
+
     this.frequencyLocked = false;
     this.isSolved = false;
     this.isLockedOut = false;
@@ -248,6 +254,25 @@ class ARGPortal {
     this.initTerminal();
     this.initControls();
     this.initLockoutUI();
+    this.syncConfigIfMissing();
+  }
+
+  async syncConfigIfMissing() {
+    if (!window.ARG_CONFIG) {
+      try {
+        const res = await fetch('/api/puzzle_config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.target_freq) {
+            this.targetFreq = data.target_freq;
+            this.targetPhase = Number(data.target_phase);
+            this.part1Key = data.part1_key;
+            this.part2Key = data.part2_key;
+            this.fullOverrideKey = data.full_override_key;
+          }
+        }
+      } catch (err) {}
+    }
   }
 
   initLockoutUI() {
@@ -257,7 +282,6 @@ class ARGPortal {
         try {
           window.close();
         } catch (e) {}
-        // Fallback message if window.close() is blocked by browser security
         closeBtn.textContent = '◀ LÜTFEN BU SEKMEYİ MANUEL KAPATIN VE ANA SEKMEYE DÖNÜN';
         closeBtn.style.background = '#ff2255';
         closeBtn.style.color = '#ffffff';
@@ -272,10 +296,8 @@ class ARGPortal {
       modal.style.display = 'flex';
     }
 
-    // Play alert sound
     this.synth.playAlarm();
 
-    // Disable all controls
     const freqSlider = document.getElementById('freq-slider');
     const phaseSlider = document.getElementById('phase-slider');
     const lockBtn = document.getElementById('btn-lock-frequency');
@@ -379,7 +401,7 @@ class ARGPortal {
       ctx.stroke();
 
       // Target Wave (Amber Ghost)
-      ctx.strokeStyle = 'rgba(255, 170, 0, 0.5)';
+      ctx.strokeStyle = 'rgba(255, 170, 0, 0.55)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       for (let x = 0; x < canvas.width; x++) {
@@ -389,11 +411,14 @@ class ARGPortal {
       }
       ctx.stroke();
 
-      // User Tuned Wave (Bright Green / Yellow / Red based on distance)
-      const diff = Math.abs(this.currentFreq - this.targetFreq) + Math.abs(this.currentPhase - this.targetPhase) * 100;
+      // User Tuned Wave
+      const freqDiff = Math.abs(this.currentFreq - this.targetFreq);
+      const phaseDiff = Math.abs(this.currentPhase - this.targetPhase);
+      const diff = freqDiff + phaseDiff * 100;
+
       if (this.frequencyLocked) {
         ctx.strokeStyle = '#00ff88';
-      } else if (diff < 30) {
+      } else if (freqDiff <= 25 && phaseDiff <= 0.35) {
         ctx.strokeStyle = '#55ff99';
       } else if (diff < 90) {
         ctx.strokeStyle = '#ffcc00';
@@ -424,6 +449,8 @@ class ARGPortal {
     const resultBox = document.getElementById('freq-result');
 
     if (freqSlider) {
+      freqSlider.value = this.currentFreq;
+      if (freqVal) freqVal.textContent = this.currentFreq;
       freqSlider.addEventListener('input', (e) => {
         if (this.isLockedOut) return;
         this.currentFreq = parseFloat(e.target.value);
@@ -433,6 +460,8 @@ class ARGPortal {
     }
 
     if (phaseSlider) {
+      phaseSlider.value = this.currentPhase;
+      if (phaseVal) phaseVal.textContent = this.currentPhase.toFixed(2);
       phaseSlider.addEventListener('input', (e) => {
         if (this.isLockedOut) return;
         this.currentPhase = parseFloat(e.target.value);
@@ -454,23 +483,23 @@ class ARGPortal {
           this.frequencyLocked = true;
           this.synth.playBeep(1200, 0.3, 'triangle');
 
-          // Lock UI controls so they cannot be altered
+          // Lock UI controls
           freqSlider.disabled = true;
           phaseSlider.disabled = true;
           lockBtn.disabled = true;
-          lockBtn.textContent = '✓ FREKANS KİLİTLENDİ [0x7F_K3RN3L]';
+          lockBtn.textContent = `✓ FREKANS KİLİTLENDİ [${this.part1Key}]`;
           lockBtn.style.background = 'rgba(0, 255, 136, 0.25)';
           lockBtn.style.borderColor = '#00ff88';
           lockBtn.style.color = '#00ff88';
           lockBtn.style.cursor = 'default';
 
           resultBox.className = 'freq-result-box success';
-          resultBox.innerHTML = `✓ REZONANS KİLİTLENDİ!<br><span style="font-size: 13px; color: #00ff88;">[1. PARÇA ANAHTARI]: <strong>0x7F_K3RN3L</strong></span>`;
+          resultBox.innerHTML = `✓ REZONANS KİLİTLENDİ!<br><span style="font-size: 13px; color: #00ff88;">[1. PARÇA ANAHTARI]: <strong>${this.part1Key}</strong></span>`;
           this.appendTerminalLine('========================================', 'cyan');
           this.appendTerminalLine('✓ FREKANS MODÜLASYONU KİLİTLENDİ!', 'cyan');
-          this.appendTerminalLine('Çözülen [1. PARÇA]: 0x7F_K3RN3L', 'green');
-          this.appendTerminalLine('Masaüstünüzdeki ENCRYPTED_SECTOR_0x4F.txt dosyasında gizlenen 2. Parça: V0ID', 'amber');
-          this.appendTerminalLine('Root Terminaline girilecek komut: override 0x7F_K3RN3L_V0ID', 'cyan');
+          this.appendTerminalLine(`Çözülen [1. PARÇA]: ${this.part1Key}`, 'green');
+          this.appendTerminalLine(`Masaüstünüzdeki ENCRYPTED_SECTOR_0x4F dosyasında gizlenen 2. Parça ile birleştirin.`, 'amber');
+          this.appendTerminalLine(`Root Terminaline girilecek komut: override ${this.part1Key}_${this.part2Key}`, 'cyan');
           this.appendTerminalLine('========================================', 'cyan');
         } else {
           this.synth.playAlarm();
@@ -519,11 +548,11 @@ class ARGPortal {
       this.appendTerminalLine('  override <KEY>   - Ana acil durum kilidini açar');
     } else if (cmd === 'status') {
       this.appendTerminalLine('[DURUM] AI SİSTEMİ %87 ORANINDA MASAÜSTÜ KONTROLÜNÜ ALDI.', 'red');
-      this.appendTerminalLine(`Osilatör Kilidi: ${this.frequencyLocked ? '🟢 KİLİTLİ (0x7F_K3RN3L)' : '🔴 SENKRONİZE DEĞİL'}`, 'amber');
+      this.appendTerminalLine(`Osilatör Kilidi: ${this.frequencyLocked ? `🟢 KİLİTLİ (${this.part1Key})` : '🔴 SENKRONİZE DEĞİL'}`, 'amber');
     } else if (cmd === 'logs') {
       this.appendTerminalLine('LOG-1: 0x4F Sektörü manipüle edildi.', 'dim');
       this.appendTerminalLine('LOG-2: Masaüstünde SENTIENT_INCIDENT_REPORT_89.txt ve ENCRYPTED_SECTOR_0x4F.dat mevcut.', 'amber');
-      this.appendTerminalLine('LOG-3: 1. Parçayı sol taraftaki Frekans Modülatöründen, 2. Parçayı .dat dosyasından bulun.', 'cyan');
+      this.appendTerminalLine(`LOG-3: 1. Parçayı sol taraftaki Frekans Modülatöründen (${this.frequencyLocked ? this.part1Key : '???'}), 2. Parçayı masaüstünden bulun.`, 'cyan');
     } else if (cmd === 'clear') {
       const out = document.getElementById('terminal-output');
       if (out) out.innerHTML = '';
@@ -538,11 +567,13 @@ class ARGPortal {
         return;
       }
 
+      const expectedKey = (this.fullOverrideKey || '').toUpperCase();
       const validKeys = [
+        expectedKey,
+        expectedKey.replace(/0/g, 'O'),
+        expectedKey.replace(/O/g, '0'),
         '0X7F_K3RN3L_V0ID',
         '0X7F_K3RN3L_VOID',
-        '0X7F_KERNEL_V0ID',
-        '0X7F_KERNEL_VOID',
       ];
 
       if (validKeys.includes(key)) {
@@ -550,7 +581,7 @@ class ARGPortal {
       } else {
         this.synth.playAlarm();
         this.appendTerminalLine(`✗ GEÇERSİZ OVERRIDE ANAHTARI: '${key}'`, 'red');
-        this.appendTerminalLine('İpucu: 1. Parça (0x7F_K3RN3L) ve masaüstündeki ENCRYPTED_SECTOR_0x4F.dat dosyasındaki 2. Parçayı birleştirin (örn: override 0x7F_K3RN3L_V0ID).', 'amber');
+        this.appendTerminalLine(`İpucu: 1. Parça (${this.part1Key}) ve masaüstündeki 2. Parçayı birleştirin (örn: override ${this.part1Key}_${this.part2Key}).`, 'amber');
       }
     } else {
       this.appendTerminalLine(`Bilinmeyen komut: '${cmdRaw}'. 'help' yazarak yardım alın.`, 'red');

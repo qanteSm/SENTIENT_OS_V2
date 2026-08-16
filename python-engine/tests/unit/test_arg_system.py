@@ -49,12 +49,22 @@ async def test_arg_server_lifecycle_and_endpoints():
     await arg_server.start()
     assert arg_server.is_running
 
-    # Test GET index.html
+    # Test GET /api/puzzle_config
+    cfg_req = urllib.request.Request(f"{arg_server.url}/api/puzzle_config")
+    with urllib.request.urlopen(cfg_req, timeout=3.0) as resp:
+        assert resp.status == 200
+        cfg_json = json.loads(resp.read().decode("utf-8"))
+        assert "target_freq" in cfg_json
+        assert "full_override_key" in cfg_json
+        assert len(cfg_json["full_override_key"]) > 5
+
+    # Test GET index.html (injected config)
     req = urllib.request.Request(arg_server.url)
     with urllib.request.urlopen(req, timeout=3.0) as resp:
         assert resp.status == 200
         html = resp.read().decode("utf-8")
         assert "SENTIENT CORE" in html
+        assert "window.ARG_CONFIG" in html
 
     # Test POST /api/verify_key
     post_data = json.dumps({"key": "0x7F_K3RN3L_V0ID", "solved": True}).encode("utf-8")
