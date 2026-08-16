@@ -128,8 +128,12 @@ class ARGServer:
         logger.info(f"ARG Containment Portal running at {self.url}")
 
     def launch_browser(self) -> None:
-        """Open default system web browser to the ARG containment portal."""
+        """Open default system web browser to the ARG containment portal if not already open."""
+        if getattr(self, "_browser_launched", False):
+            logger.info("ARG browser already launched, skipping duplicate launch.")
+            return
         try:
+            self._browser_launched = True
             webbrowser.open(self.url)
             logger.info(f"Launched web browser for ARG portal at {self.url}")
         except Exception as e:

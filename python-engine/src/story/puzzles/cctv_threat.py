@@ -14,11 +14,36 @@ from src.infrastructure.logger import get_logger
 logger = get_logger("cctv_threat")
 
 ANOMALY_ROOMS = [
-    {"cam": 2, "name": "CAM 02 // SUNUCU ODASI", "desc": "Sunucu kabinleri arasında gölge varlık"},
-    {"cam": 3, "name": "CAM 03 // ARAŞTIRMA LABI", "desc": "Gözetleme camına bakan manken"},
-    {"cam": 4, "name": "CAM 04 // KARANLIK KORİDOR", "desc": "Koridorda yaklaşan siluet"},
-    {"cam": 5, "name": "CAM 05 // HAVALANDIRMA", "desc": "Izgarada kanlı glitch sembolü"},
-    {"cam": 6, "name": "CAM 06 // GÜVENLİK KAPISI", "desc": "Kilitli kapının aralanması"},
+    {
+        "cam": 2,
+        "name": "CAM 02 // SUNUCU ODASI",
+        "desc": "Sunucu kabinleri arasında siber glitch varlık",
+        "monster": "monster_cyber_glitch",
+    },
+    {
+        "cam": 3,
+        "name": "CAM 03 // ARAŞTIRMA LABI",
+        "desc": "Karantina camına bakan sürüngen yaratık",
+        "monster": "monster_crawler",
+    },
+    {
+        "cam": 4,
+        "name": "CAM 04 // KARANLIK KORİDOR",
+        "desc": "Koridorda yaklaşan gölge süzülen siluet",
+        "monster": "monster_shadow_lurker",
+    },
+    {
+        "cam": 5,
+        "name": "CAM 05 // HAVALANDIRMA",
+        "desc": "Izgarada ağlayan hayalet silueti",
+        "monster": "monster_weeping_phantom",
+    },
+    {
+        "cam": 6,
+        "name": "CAM 06 // GÜVENLİK KAPISI",
+        "desc": "Hidrolik blokajda beliren gölge varlık",
+        "monster": "monster_shadow_lurker",
+    },
 ]
 
 
@@ -72,6 +97,7 @@ class CCTVThreatEngine:
             "cam": picked["cam"],
             "name": picked["name"],
             "desc": picked["desc"],
+            "monster": picked.get("monster", "monster_shadow_lurker"),
         }
         self.anomaly_spawn_time = time.time()
         logger.info(f"[CCTV] Paranormal Anomaly spawned on {picked['name']}: {picked['desc']} (3 min timeout)")
@@ -158,7 +184,7 @@ class CCTVThreatEngine:
                 # 2. If no anomaly, spawn one every ~100 seconds (25 ticks of 4s)
                 if tick >= 25:
                     tick = 0
-                    self.spawn_random_anomaly()
+                    anom = self.spawn_random_anomaly()
                     # Creepy hint in chat
                     hints = [
                         "Güvenlik kameralarından birinin sinyali bozuluyor...",
@@ -168,4 +194,8 @@ class CCTVThreatEngine:
                     await self.event_bus.publish(
                         "ai_response",
                         payload={"speech": random.choice(hints), "emotion": "sinister", "actions": []},
+                    )
+                    await self.event_bus.publish(
+                        "cctv_anomaly_update",
+                        payload={"active": True, "anomaly": anom},
                     )

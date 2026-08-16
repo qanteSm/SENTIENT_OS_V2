@@ -1,5 +1,6 @@
 /**
  * SENTIENT_OS v2 — ARG Containment Portal Logic
+ * Includes Single-Instance Multi-Tab Lockdown Enforcer
  */
 
 class AudioSynth {
@@ -91,6 +92,137 @@ class AudioSynth {
   }
 }
 
+/**
+ * Enforces single tab instance across all browser tabs/windows using BroadcastChannel and localStorage heartbeats.
+ */
+class SingleInstanceTabGuard {
+  constructor(onLockout, onActive) {
+    this.tabId = 'tab_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    this.storageKey = 'sentient_arg_primary_session';
+    this.channel = null;
+    this.isPrimary = false;
+    this.heartbeatTimer = null;
+    this.onLockout = onLockout;
+    this.onActive = onActive;
+
+    this.init();
+  }
+
+  init() {
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        this.channel = new BroadcastChannel('sentient_arg_tab_sync');
+        this.channel.onmessage = (e) => this.handleChannelMessage(e.data);
+      } catch (err) {
+        console.warn('BroadcastChannel unavailable:', err);
+      }
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === this.storageKey && this.isPrimary) {
+        this.verifyPrimaryStatus();
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (this.isPrimary) {
+        localStorage.removeItem(this.storageKey);
+        if (this.channel) {
+          this.channel.postMessage({ type: 'primary_closed', tabId: this.tabId });
+        }
+      }
+    });
+
+    this.attemptClaimOrLock();
+  }
+
+  attemptClaimOrLock() {
+    const raw = localStorage.getItem(this.storageKey);
+    const now = Date.now();
+
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        // If an active primary tab exists and checked in within 2.5s
+        if (data.tabId && data.tabId !== this.tabId && (now - data.timestamp < 2500)) {
+          // Duplicate instance detected!
+          this.lockout();
+          if (this.channel) {
+            this.channel.postMessage({ type: 'ping_primary', senderTabId: this.tabId });
+          }
+          return;
+        }
+      } catch (err) {}
+    }
+
+    // No active primary session or lock expired, claim primary
+    this.becomePrimary();
+  }
+
+  becomePrimary() {
+    this.isPrimary = true;
+    this.sendHeartbeat();
+
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), 800);
+
+    if (this.channel) {
+      this.channel.postMessage({ type: 'claim_primary', tabId: this.tabId });
+    }
+
+    if (this.onActive) this.onActive();
+  }
+
+  sendHeartbeat() {
+    if (!this.isPrimary) return;
+    const record = { tabId: this.tabId, timestamp: Date.now() };
+    localStorage.setItem(this.storageKey, JSON.stringify(record));
+  }
+
+  handleChannelMessage(data) {
+    if (!data) return;
+    if (data.type === 'claim_primary' && data.tabId !== this.tabId) {
+      if (!this.isPrimary) {
+        this.lockout();
+      }
+    } else if (data.type === 'ping_primary') {
+      if (this.isPrimary) {
+        this.sendHeartbeat();
+        if (this.channel) {
+          this.channel.postMessage({ type: 'pong_primary', primaryTabId: this.tabId });
+        }
+        if (window.portal && window.portal.appendTerminalLine) {
+          window.portal.appendTerminalLine('⚠ [GÜVENLİK]: Harici bir sekme açma girişimi engellendi.', 'amber');
+        }
+      }
+    } else if (data.type === 'pong_primary' && data.primaryTabId !== this.tabId) {
+      this.lockout();
+    } else if (data.type === 'primary_closed') {
+      // Previous primary closed, attempt to activate
+      setTimeout(() => this.attemptClaimOrLock(), 400);
+    }
+  }
+
+  verifyPrimaryStatus() {
+    if (!this.isPrimary) return;
+    const raw = localStorage.getItem(this.storageKey);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        if (data.tabId && data.tabId !== this.tabId) {
+          this.lockout();
+        }
+      } catch (err) {}
+    }
+  }
+
+  lockout() {
+    this.isPrimary = false;
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    if (this.onLockout) this.onLockout();
+  }
+}
+
 class ARGPortal {
   constructor() {
     this.synth = new AudioSynth();
@@ -100,16 +232,72 @@ class ARGPortal {
     this.currentPhase = 0.3;
     this.frequencyLocked = false;
     this.isSolved = false;
+    this.isLockedOut = false;
+    this.cctvAnimationId = null;
+    this.waveAnimationId = null;
+
+    // Single-Instance Tab Enforcer
+    this.tabGuard = new SingleInstanceTabGuard(
+      () => this.lockoutDuplicateSession(),
+      () => this.activateSession()
+    );
 
     this.initClock();
     this.initCCTV();
     this.initWaveform();
     this.initTerminal();
     this.initControls();
+    this.initLockoutUI();
+  }
+
+  initLockoutUI() {
+    const closeBtn = document.getElementById('btn-lockout-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        try {
+          window.close();
+        } catch (e) {}
+        // Fallback message if window.close() is blocked by browser security
+        closeBtn.textContent = '◀ LÜTFEN BU SEKMEYİ MANUEL KAPATIN VE ANA SEKMEYE DÖNÜN';
+        closeBtn.style.background = '#ff2255';
+        closeBtn.style.color = '#ffffff';
+      });
+    }
+  }
+
+  lockoutDuplicateSession() {
+    this.isLockedOut = true;
+    const modal = document.getElementById('duplicate-lockout-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+
+    // Play alert sound
+    this.synth.playAlarm();
+
+    // Disable all controls
+    const freqSlider = document.getElementById('freq-slider');
+    const phaseSlider = document.getElementById('phase-slider');
+    const lockBtn = document.getElementById('btn-lock-frequency');
+    const terminalInput = document.getElementById('terminal-input');
+
+    if (freqSlider) freqSlider.disabled = true;
+    if (phaseSlider) phaseSlider.disabled = true;
+    if (lockBtn) lockBtn.disabled = true;
+    if (terminalInput) terminalInput.disabled = true;
+  }
+
+  activateSession() {
+    this.isLockedOut = false;
+    const modal = document.getElementById('duplicate-lockout-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
   }
 
   initClock() {
     const clockEl = document.getElementById('live-clock');
+    if (!clockEl) return;
     setInterval(() => {
       const now = new Date();
       clockEl.textContent = now.toUTCString().split(' ')[4] + ' UTC';
@@ -123,6 +311,7 @@ class ARGPortal {
     let frame = 0;
 
     const render = () => {
+      if (this.isLockedOut) return;
       frame++;
       ctx.fillStyle = '#060a08';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -158,7 +347,7 @@ class ARGPortal {
       }
       ctx.putImageData(imgData, 0, 0);
 
-      requestAnimationFrame(render);
+      this.cctvAnimationId = requestAnimationFrame(render);
     };
     render();
   }
@@ -170,6 +359,7 @@ class ARGPortal {
     let t = 0;
 
     const render = () => {
+      if (this.isLockedOut) return;
       t += 0.05;
       ctx.fillStyle = '#040806';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -220,7 +410,7 @@ class ARGPortal {
       }
       ctx.stroke();
 
-      requestAnimationFrame(render);
+      this.waveAnimationId = requestAnimationFrame(render);
     };
     render();
   }
@@ -233,61 +423,72 @@ class ARGPortal {
     const lockBtn = document.getElementById('btn-lock-frequency');
     const resultBox = document.getElementById('freq-result');
 
-    freqSlider.addEventListener('input', (e) => {
-      this.currentFreq = parseFloat(e.target.value);
-      freqVal.textContent = this.currentFreq;
-      this.synth.playTone(this.currentFreq);
-    });
+    if (freqSlider) {
+      freqSlider.addEventListener('input', (e) => {
+        if (this.isLockedOut) return;
+        this.currentFreq = parseFloat(e.target.value);
+        if (freqVal) freqVal.textContent = this.currentFreq;
+        this.synth.playTone(this.currentFreq);
+      });
+    }
 
-    phaseSlider.addEventListener('input', (e) => {
-      this.currentPhase = parseFloat(e.target.value);
-      phaseVal.textContent = this.currentPhase.toFixed(2);
-      this.synth.playKeyclick();
-    });
+    if (phaseSlider) {
+      phaseSlider.addEventListener('input', (e) => {
+        if (this.isLockedOut) return;
+        this.currentPhase = parseFloat(e.target.value);
+        if (phaseVal) phaseVal.textContent = this.currentPhase.toFixed(2);
+        this.synth.playKeyclick();
+      });
+    }
 
-    lockBtn.addEventListener('click', () => {
-      this.synth.ensureContext();
-      if (this.frequencyLocked) return;
+    if (lockBtn) {
+      lockBtn.addEventListener('click', () => {
+        if (this.isLockedOut) return;
+        this.synth.ensureContext();
+        if (this.frequencyLocked) return;
 
-      const freqDiff = Math.abs(this.currentFreq - this.targetFreq);
-      const phaseDiff = Math.abs(this.currentPhase - this.targetPhase);
+        const freqDiff = Math.abs(this.currentFreq - this.targetFreq);
+        const phaseDiff = Math.abs(this.currentPhase - this.targetPhase);
 
-      if (freqDiff <= 25 && phaseDiff <= 0.35) {
-        this.frequencyLocked = true;
-        this.synth.playBeep(1200, 0.3, 'triangle');
+        if (freqDiff <= 25 && phaseDiff <= 0.35) {
+          this.frequencyLocked = true;
+          this.synth.playBeep(1200, 0.3, 'triangle');
 
-        // Lock UI controls so they cannot be altered
-        freqSlider.disabled = true;
-        phaseSlider.disabled = true;
-        lockBtn.disabled = true;
-        lockBtn.textContent = '✓ FREKANS KİLİTLENDİ [0x7F_K3RN3L]';
-        lockBtn.style.background = 'rgba(0, 255, 136, 0.25)';
-        lockBtn.style.borderColor = '#00ff88';
-        lockBtn.style.color = '#00ff88';
-        lockBtn.style.cursor = 'default';
+          // Lock UI controls so they cannot be altered
+          freqSlider.disabled = true;
+          phaseSlider.disabled = true;
+          lockBtn.disabled = true;
+          lockBtn.textContent = '✓ FREKANS KİLİTLENDİ [0x7F_K3RN3L]';
+          lockBtn.style.background = 'rgba(0, 255, 136, 0.25)';
+          lockBtn.style.borderColor = '#00ff88';
+          lockBtn.style.color = '#00ff88';
+          lockBtn.style.cursor = 'default';
 
-        resultBox.className = 'freq-result-box success';
-        resultBox.innerHTML = `✓ REZONANS KİLİTLENDİ!<br><span style="font-size: 13px; color: #00ff88;">[1. PARÇA ANAHTARI]: <strong>0x7F_K3RN3L</strong></span>`;
-        this.appendTerminalLine('========================================', 'cyan');
-        this.appendTerminalLine('✓ FREKANS MODÜLASYONU KİLİTLENDİ!', 'cyan');
-        this.appendTerminalLine('Çözülen [1. PARÇA]: 0x7F_K3RN3L', 'green');
-        this.appendTerminalLine('Masaüstünüzdeki ENCRYPTED_SECTOR_0x4F.txt dosyasında gizlenen 2. Parça: V0ID', 'amber');
-        this.appendTerminalLine('Root Terminaline girilecek komut: override 0x7F_K3RN3L_V0ID', 'cyan');
-        this.appendTerminalLine('========================================', 'cyan');
-      } else {
-        this.synth.playAlarm();
-        resultBox.className = 'freq-result-box fail';
-        resultBox.textContent = `✗ FREKANS SENKRONİZE EDİLEMEDİ (Sapma: +${Math.round(freqDiff)}Hz, Faz: ${phaseDiff.toFixed(2)}). Yeşil rezonans çizgisine denk getirin!`;
-      }
-    });
+          resultBox.className = 'freq-result-box success';
+          resultBox.innerHTML = `✓ REZONANS KİLİTLENDİ!<br><span style="font-size: 13px; color: #00ff88;">[1. PARÇA ANAHTARI]: <strong>0x7F_K3RN3L</strong></span>`;
+          this.appendTerminalLine('========================================', 'cyan');
+          this.appendTerminalLine('✓ FREKANS MODÜLASYONU KİLİTLENDİ!', 'cyan');
+          this.appendTerminalLine('Çözülen [1. PARÇA]: 0x7F_K3RN3L', 'green');
+          this.appendTerminalLine('Masaüstünüzdeki ENCRYPTED_SECTOR_0x4F.txt dosyasında gizlenen 2. Parça: V0ID', 'amber');
+          this.appendTerminalLine('Root Terminaline girilecek komut: override 0x7F_K3RN3L_V0ID', 'cyan');
+          this.appendTerminalLine('========================================', 'cyan');
+        } else {
+          this.synth.playAlarm();
+          resultBox.className = 'freq-result-box fail';
+          resultBox.textContent = `✗ FREKANS SENKRONİZE EDİLEMEDİ (Sapma: +${Math.round(freqDiff)}Hz, Faz: ${phaseDiff.toFixed(2)}). Yeşil rezonans çizgisine denk getirin!`;
+        }
+      });
+    }
   }
 
   initTerminal() {
     const form = document.getElementById('terminal-form');
     const input = document.getElementById('terminal-input');
+    if (!form || !input) return;
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (this.isLockedOut) return;
       const cmd = input.value.trim();
       if (!cmd) return;
       this.synth.playKeyclick();
@@ -298,6 +499,7 @@ class ARGPortal {
 
   appendTerminalLine(text, className = '') {
     const output = document.getElementById('terminal-output');
+    if (!output) return;
     const line = document.createElement('div');
     line.className = `term-line ${className}`;
     line.textContent = text;
@@ -323,7 +525,8 @@ class ARGPortal {
       this.appendTerminalLine('LOG-2: Masaüstünde SENTIENT_INCIDENT_REPORT_89.txt ve ENCRYPTED_SECTOR_0x4F.dat mevcut.', 'amber');
       this.appendTerminalLine('LOG-3: 1. Parçayı sol taraftaki Frekans Modülatöründen, 2. Parçayı .dat dosyasından bulun.', 'cyan');
     } else if (cmd === 'clear') {
-      document.getElementById('terminal-output').innerHTML = '';
+      const out = document.getElementById('terminal-output');
+      if (out) out.innerHTML = '';
     } else if (cmd.startsWith('override')) {
       const parts = cmdRaw.split(' ');
       const key = (parts[1] || '').trim().toUpperCase();
@@ -379,7 +582,6 @@ class ARGPortal {
       if (modal) modal.style.display = 'flex';
 
       setTimeout(() => {
-        // Close window or redirect
         window.close();
       }, 3500);
     }, 1200);

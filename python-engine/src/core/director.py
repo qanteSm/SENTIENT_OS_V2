@@ -291,17 +291,25 @@ class Director:
             return True
 
         elif cmd in ["/cctv", "cctv", "kamera"]:
-            await self._launch_trial_by_file("games/game6_cctv.html")
             if self.cctv_threat.has_active_anomaly:
-                msg = "🚨 [CCTV ALARMI]: Kameralardan birinde gölge anomali tespit edildi! 3 dakika dolmadan hemen yakala!"
-                actions = [{"type": "trigger_trial", "params": {"game": "games/game6_cctv.html", "title": "📹 CCTV ANOMALİSİNİ YAKALA"}}]
+                active_anom = self.cctv_threat.active_anomaly
+                cam_id = active_anom.get("cam", 2)
+                monster_id = active_anom.get("monster", "monster_cyber_glitch")
+                await self._launch_trial_by_file(f"games/game6_cctv.html?anomaly={cam_id}&monster={monster_id}&mode=surveillance")
+                rem_sec = int(self.cctv_threat.time_remaining_sec)
+                msg = (
+                    f"🚨 [CCTV GÜVENLİK ALARMI]: Kameralardan birinde şüpheli hareketlilik algılandı!\n"
+                    f"Kalan Süre: {rem_sec}s. Sektörleri tara ve varlığı derhal mühürle!"
+                )
+                actions = []
             else:
-                msg = "🟢 [CCTV GÖZETLEME]: Kameralara bağlanıldı. Şu an odalarda anomali görünmüyor."
+                await self._launch_trial_by_file("games/game6_cctv.html?anomaly=none&mode=surveillance")
+                msg = "🟢 [CCTV GÖZETLEME]: Güvenlik kameraları devrede. Şu an tüm sektörler temiz görünüyor."
                 actions = []
 
             await self.event_bus.publish(
                 "ai_response",
-                payload={"speech": msg, "emotion": "sinister", "actions": actions},
+                payload={"speech": msg, "emotion": "calm" if not self.cctv_threat.has_active_anomaly else "sinister", "actions": actions},
             )
             return True
 

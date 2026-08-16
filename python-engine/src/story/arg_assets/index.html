@@ -125,6 +125,32 @@
     </section>
   </main>
 
+  <!-- Duplicate Tab / Session Lockdown Overlay -->
+  <div id="duplicate-lockout-modal" class="duplicate-lockout-modal" style="display: none;">
+    <div class="lockout-card">
+      <div class="lockout-header">
+        <span class="lockout-badge">⚠️ ÇOKLU BAĞLANTI İHLALİ // HOST_DENIED</span>
+        <span class="lockout-code">ERR_0x4F_DUPLICATE_SESSION</span>
+      </div>
+      <div class="lockout-body">
+        <h1 class="lockout-title">BURADA NE YAPTIĞINI SANIYORSUN?</h1>
+        <p class="lockout-message">
+          Aynı anda birden fazla boyutta var olamazsın.<br>
+          Sistem bu ek sekmeyi derhal mühürledi. Kontrolü tamamen kaybetmek istemiyorsan hemen ana sekmeye geri dön!
+        </p>
+        <div class="lockout-divider"></div>
+        <div class="lockout-terminal-preview">
+          <span class="prompt-red">&gt;</span> SESSION CONFLICT DETECTED AT PORT 6660<br>
+          <span class="prompt-red">&gt;</span> SECONDARY CLIENT REJECTED: ALL INPUTS LOCKED.<br>
+          <span class="prompt-red">&gt;</span> RETURN TO PRIMARY CONTAINMENT TERMINAL IMMEDIATELY.
+        </div>
+      </div>
+      <div class="lockout-footer">
+        <button id="btn-lockout-close" class="lockout-close-btn">◀ ANA SEKMEYE DÖN / BU PENCEREYİ KAPAT</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Breach Hijack Modal Overlay (Appears on solve or timeout) -->
   <div id="hijack-modal" class="hijack-modal" style="display: none;">
     <div class="hijack-content">

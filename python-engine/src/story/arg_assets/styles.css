@@ -501,3 +501,134 @@ input[type="range"] {
   from { width: 0%; }
   to { width: 100%; }
 }
+
+/* ==========================================================================
+   Duplicate Session Lockout Horror Overlay
+   ========================================================================== */
+.duplicate-lockout-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 4, 8, 0.98);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  padding: 24px;
+}
+
+.lockout-card {
+  max-width: 620px;
+  width: 100%;
+  background: #080d12;
+  border: 2px solid #ff2255;
+  border-radius: 8px;
+  box-shadow: 0 0 60px rgba(255, 34, 85, 0.5), inset 0 0 25px rgba(255, 34, 85, 0.15);
+  overflow: hidden;
+  position: relative;
+  animation: lockoutCardShake 0.4s ease-out;
+}
+
+@keyframes lockoutCardShake {
+  0% { transform: scale(0.92); opacity: 0; }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.lockout-header {
+  background: rgba(255, 34, 85, 0.18);
+  border-bottom: 1px solid rgba(255, 34, 85, 0.5);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lockout-badge {
+  background: #ff2255;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.lockout-code {
+  font-size: 11px;
+  color: #ff88aa;
+  letter-spacing: 1px;
+}
+
+.lockout-body {
+  padding: 28px 24px 20px 24px;
+}
+
+.lockout-title {
+  font-family: var(--font-display);
+  font-size: 38px;
+  color: #ff2255;
+  text-shadow: 0 0 20px rgba(255, 34, 85, 0.8);
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.lockout-message {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e0d0d8;
+  margin-bottom: 16px;
+}
+
+.lockout-divider {
+  height: 1px;
+  background: linear-gradient(90deg, #ff2255, transparent);
+  margin: 16px 0;
+}
+
+.lockout-terminal-preview {
+  background: #03060a;
+  border: 1px solid #1a2a3a;
+  padding: 12px 14px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #88aacc;
+  line-height: 1.5;
+}
+
+.lockout-terminal-preview .prompt-red {
+  color: #ff2255;
+  font-weight: bold;
+}
+
+.lockout-footer {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.lockout-close-btn {
+  background: rgba(255, 34, 85, 0.2);
+  border: 1px solid #ff2255;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(255, 34, 85, 0.3);
+  outline: none;
+}
+
+.lockout-close-btn:hover {
+  background: #ff2255;
+  color: #ffffff;
+  box-shadow: 0 0 25px rgba(255, 34, 85, 0.8);
+  transform: translateY(-2px);
+}

@@ -59,6 +59,8 @@ logs/
 temp/
 tmp/
 *.tmp
+.old/
+**/.old/
 
 # ===== Database =====
 *.db

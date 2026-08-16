@@ -126,9 +126,15 @@ export class WindowManager {
   private blackoutWindows: BrowserWindow[] = [];
 
   public createMinigameWindow(pageName: string = 'hub.html'): BrowserWindow {
+    const [relativePath, queryString] = pageName.split('?');
+    const minigameHtmlPath = path.join(__dirname, `../../renderer/minigame/${relativePath}`);
+
     if (this.minigameWindow && !this.minigameWindow.isDestroyed()) {
-      const minigameHtmlPath = path.join(__dirname, `../../renderer/minigame/${pageName}`);
-      this.minigameWindow.loadFile(minigameHtmlPath);
+      if (queryString) {
+        this.minigameWindow.loadFile(minigameHtmlPath, { search: queryString });
+      } else {
+        this.minigameWindow.loadFile(minigameHtmlPath);
+      }
       this.minigameWindow.show();
       return this.minigameWindow;
     }
@@ -156,8 +162,11 @@ export class WindowManager {
 
     this.minigameWindow.setAlwaysOnTop(true, 'screen-saver');
 
-    const minigameHtmlPath = path.join(__dirname, `../../renderer/minigame/${pageName}`);
-    this.minigameWindow.loadFile(minigameHtmlPath);
+    if (queryString) {
+      this.minigameWindow.loadFile(minigameHtmlPath, { search: queryString });
+    } else {
+      this.minigameWindow.loadFile(minigameHtmlPath);
+    }
 
     // Escape Key Safeguard: Closes minigame window safely and returns to desktop/chat
     this.minigameWindow.webContents.on('before-input-event', (_event, input) => {
@@ -216,6 +225,10 @@ export class WindowManager {
 
   public getChatWindow(): BrowserWindow | null {
     return this.chatWindow;
+  }
+
+  public getMinigameWindow(): BrowserWindow | null {
+    return this.minigameWindow;
   }
 
   public closeOnboarding(): void {

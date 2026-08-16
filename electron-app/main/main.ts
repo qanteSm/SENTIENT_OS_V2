@@ -114,6 +114,11 @@ class Application {
       this.ipcBridge.send('minigame_completed', data);
     });
 
+    ipcMain.on('close-minigame', () => {
+      console.log('[MAIN] Closing minigame window via renderer request');
+      this.windowManager.closeMinigame();
+    });
+
     ipcMain.on('app-exit', () => {
       this.shutdown();
     });
@@ -135,6 +140,11 @@ class Application {
       if (chatWin && !chatWin.isDestroyed()) {
         chatWin.webContents.send('ws-message', { type, payload });
       }
+
+      const minigameWin = this.windowManager.getMinigameWindow();
+      if (minigameWin && !minigameWin.isDestroyed()) {
+        minigameWin.webContents.send('ws-message', { type, payload });
+      }
     };
 
     this.ipcBridge.on('effect', (payload) => {
@@ -143,6 +153,10 @@ class Application {
 
     this.ipcBridge.on('ambient_change', (payload) => {
       forwardToAll('ambient_change', payload);
+    });
+
+    this.ipcBridge.on('cctv_anomaly_update', (payload) => {
+      forwardToAll('cctv_anomaly_update', payload);
     });
 
     this.ipcBridge.on('ui_command', (payload) => {
