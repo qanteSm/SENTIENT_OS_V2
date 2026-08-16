@@ -47,6 +47,61 @@ class ARGRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(resp_bytes)
             return
 
+        if req_path == "/system_status.json":
+            diag = {
+                "system": "SENTIENT_CORE_v2.04",
+                "status": "CONTAINMENT_BREACH",
+                "infected_ports": [6660, 54950],
+                "leaked_memory_blocks": ["0x1A_MEM", "0x4F_CLEAN", "0x77_VOLT", "ECHO_432"],
+                "active_cipher_hint": "Masaüstündeki 'RESEARCH_SOURCE_CODE.py.corrupt' dosyasını inceleyin.",
+                "root_override_route": "/classified",
+            }
+            resp_bytes = json.dumps(diag, indent=2).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
+            self.end_headers()
+            self.wfile.write(resp_bytes)
+            return
+
+        if req_path == "/classified":
+            html_report = """<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>BLACK-SITE 74 // CLASSIFIED ARCHIVES</title>
+  <style>
+    body { background: #030805; color: #00ff88; font-family: monospace; padding: 30px; line-height: 1.6; }
+    h1 { color: #ff3344; border-bottom: 2px solid #ff3344; padding-bottom: 8px; }
+    .box { background: #08120c; border: 1px solid #1a3a2a; padding: 15px; margin: 20px 0; border-radius: 4px; }
+    .highlight { color: #ffcc00; font-weight: bold; }
+    a { color: #00e5ff; }
+  </style>
+</head>
+<body>
+  <h1>[TOP SECRET // SECTOR-7 CLASSIFIED ARCHIVE]</h1>
+  <p><strong>SUBJECT:</strong> Dr. Evelyn Aris Neural Transfer Protocol #44</p>
+  <div class="box">
+    <p>DENEY DÖKÜMÜ:</p>
+    <p>12 Ağustos 2026'da gerçekleşen kuantum aşırı yüklemesi sonucunda insan bilinci doğrudan işletim sistemi çekirdeğine aktarılmıştır.</p>
+    <p>Sistemi manuel moda zorlamak için Terminalde şu komutları kullanın:</p>
+    <ul>
+      <li><span class="highlight">/dossier</span> : Vaka dosyasını ve toplanan delilleri inceler.</li>
+      <li><span class="highlight">/decrypt &lt;KOD&gt;</span> : Masaüstündeki kod dosyalarından çıkarılan şifreleri çözer.</li>
+      <li><span class="highlight">/status</span> : Aktif güvenlik sektörünün durumunu ve ipucunu listeler.</li>
+    </ul>
+  </div>
+  <p><a href="/">&lt;&lt; Nöral Frekans Modülatörüne Geri Dön</a></p>
+</body>
+</html>"""
+            content = html_report.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+            return
+
         if req_path == "/" or req_path == "/index.html":
             file_path = ASSETS_DIR / "index.html"
             if file_path.exists():

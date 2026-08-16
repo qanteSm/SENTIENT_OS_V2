@@ -87,21 +87,25 @@ async def test_director_orchestration(tmp_path):
     await director.handle_user_input("user_input", text="/help")
     assert "KOMUT REHBERİ" in ai_responses[-1]["speech"]
 
-    # 7. Test /trial command
+    # 7. Test /trial locked without decrypt
+    await director.handle_user_input("user_input", text="/trial")
+    assert "KİLİTLİ" in ai_responses[-1]["speech"]
+
+    # 8. Test /decrypt command to unlock firewall
+    await director.handle_user_input("user_input", text="/decrypt 0x1A_MEM")
+    assert "DEŞİFRE EDİLDİ" in ai_responses[-1]["speech"]
+
+    # 9. Test /trial command now unlocked and launching
     await director.handle_user_input("user_input", text="/trial")
     assert "SEKTÖR BAŞLATILIYOR" in ai_responses[-1]["speech"]
 
-    # 8. Test /dossier command
+    # 10. Test /dossier command
     await director.handle_user_input("user_input", text="/dossier")
     assert "VAKA DOSYASI" in ai_responses[-1]["speech"]
 
-    # 9. Test /logs command
+    # 11. Test /logs command
     await director.handle_user_input("user_input", text="/logs")
     assert "GİZLİ KAYITLAR" in ai_responses[-1]["speech"]
-
-    # 10. Test /decrypt command
-    await director.handle_user_input("user_input", text="/decrypt 0x1A_MEM")
-    assert "DEŞİFRE EDİLDİ" in ai_responses[-1]["speech"]
 
     # Cleanup
     await director.stop()

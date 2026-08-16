@@ -295,10 +295,24 @@ class Director:
         elif cmd in ["/trial", "trial", "/gorev", "gorev", "/baslat", "baslat", "/play", "play"]:
             trial = self.quest_manager.get_next_available_trial()
             if trial:
+                if not trial.is_unlocked:
+                    lock_msg = (
+                        f"🔒 [GÜVENLİK DUVARI KİLİTLİ // ERİŞİM ENGELLENDİ]\n"
+                        f"• Hedef Sektör: {trial.title}\n"
+                        f"• İpucu Kaynağı: {trial.clue_source}\n"
+                        f"👉 {trial.investigation_lead}\n\n"
+                        f"💡 Şifreyi bulduğunuzda '/decrypt <KOD>' komutuyla güvenlik duvarını kırın!"
+                    )
+                    await self.event_bus.publish(
+                        "ai_response",
+                        payload={"speech": lock_msg, "emotion": "sinister", "actions": [{"type": "screen_shake", "params": {"intensity": 0.2, "duration_ms": 300}}]},
+                    )
+                    return True
+
                 await self.event_bus.publish(
                     "ai_response",
                     payload={
-                        "speech": f"🚀 [SEKTÖR BAŞLATILIYOR]: {trial.title}\n{trial.description}\n🔎 İpucu: {trial.investigation_lead}",
+                        "speech": f"🚀 [SEKTÖR BAŞLATILIYOR]: {trial.title}\n{trial.description}",
                         "emotion": "sinister",
                         "actions": [],
                     },
@@ -475,6 +489,8 @@ class Director:
             return
 
         if success:
+            # Spawn next sector forensic clues on Desktop
+            self.desktop_threat.spawn_sector_forensics(self.quest_manager.current_sector)
             speech = (
                 f"🎉 [SEKTÖR BAŞARIYLA MÜHÜRLENDİ]: '{completed_trial.title}'\n"
                 f"🔓 Yeni Delil Açıldı: {completed_trial.dossier_title}\n"

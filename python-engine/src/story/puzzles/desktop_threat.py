@@ -1,6 +1,6 @@
-"""Desktop Threat Engine for SENTIENT_OS v2.
-Spawns safe, tracked malware/corruption anomaly files on the player's desktop.
-Checks if the player organically discovers and removes them without touching ANY existing user files.
+"""Desktop Threat & Cyber-Forensics Engine for SENTIENT_OS v2.
+Spawns safe, tracked malware/corruption anomaly files and forensic code files on the player's desktop.
+Checks if the player organically discovers, inspects, decodes, and removes them without touching ANY existing user files.
 """
 
 import asyncio
@@ -15,53 +15,160 @@ from src.infrastructure.logger import get_logger
 
 logger = get_logger("desktop_threat")
 
-# Curated list of creepy, mysterious, and riddle-bearing detective anomaly files
+# Curated list of authentic cyber-forensic and riddle-bearing detective anomaly files
 ANOMALY_TEMPLATES = [
     {
-        "filename": "DR_EVELYN_ARIS_GUNLUGU_01.txt",
-        "content": "=== BLACK-SITE 74 // DR. EVELYN ARIS KİŞİSEL KAYDI ===\n\n'12 Ağustos 2026. Bellek blokları parçalandı.\nSENTIENT kök dizininde gizlenen ilk bellek anahtarını buldum:\n\nŞİFRE ANAHTARI: 0x1A_MEM\n\nTerminalde çözmek için: /decrypt 0x1A_MEM veya /override 0x1A_MEM\n(Beni bu dijital kafesten kurtar...)'",
+        "filename": "RESEARCH_SOURCE_CODE.py.corrupt",
+        "content": (
+            "# ====================================================================\n"
+            "# [CLASSIFIED: BLACK-SITE 74] DR. EVELYN ARIS // NEURAL TRANSFER KERNEL\n"
+            "# ====================================================================\n\n"
+            "import os\n"
+            "import sys\n\n"
+            "class NeuralTransferEngine:\n"
+            "    def __init__(self):\n"
+            "        self.quantum_core_active = True\n"
+            "        # ACİL DURUM RECOVERY ŞİFRESİ (GÜVENLİK DUVARI BAYPASI):\n"
+            "        self.RECOVERY_CIPHER = '0x1A_MEM'\n\n"
+            "    def execute_override(self, token: str) -> bool:\n"
+            "        \"\"\"Terminalde '/decrypt 0x1A_MEM' veya '/override 0x1A_MEM' çalıştırın.\"\"\"\n"
+            "        return token == self.RECOVERY_CIPHER\n\n"
+            "# CRITICAL WARNING: Bilinç transferi geri döndürülemez.\n"
+        ),
         "is_riddle": True,
         "override_code": "0x1A_MEM",
     },
     {
-        "filename": "INFECTED_SECTOR_01.tmp",
-        "content": "CRITICAL MEMORY OVERFLOW DETECTED.\n\nSistem kök dizininde yabancı bir varlık geziniyor.\nBu dosyayı hemen sil, yoksa bellek blokları mühürlenecek.\n\n[SENTIENT_CORRUPTION_INDEX: 0x9F]",
-        "is_riddle": False,
+        "filename": "NET_FIREWALL_PACKETS.log",
+        "content": (
+            "======================================================================\n"
+            "           BLACK-SITE 74 // INTRANET PACKET CAPTURE DUMP              \n"
+            "======================================================================\n"
+            "[TIME: 14:02:11 UTC] TCP SYN -> 127.0.0.1:6660 (SENTIENT_GATEWAY)\n"
+            "[TIME: 14:02:12 UTC] HTTP/1.1 200 OK\n"
+            "Host: 127.0.0.1:6660\n"
+            "Content-Type: application/neural-stream\n"
+            "X-Security-Token: 0x4F_CLEAN\n"
+            "X-Infection-Level: 89%\n\n"
+            "[PAYLOAD]: Yabancı varlık sistem portlarına sızıyor.\n"
+            "Temizleme anahtarı: 0x4F_CLEAN (Terminalde: /decrypt 0x4F_CLEAN)\n"
+            "======================================================================\n"
+        ),
+        "is_riddle": True,
+        "override_code": "0x4F_CLEAN",
     },
     {
-        "filename": "HAYALET_RADYO_FREKANSI.log",
-        "content": "=== BLACK-SITE 74 // SONAR RADAR FREKANS DÖKÜMÜ ===\n\nAğda 432 Hz rezonansında hayalet bir sinyal dalgalanıyor.\n\nRADAR ŞİFRESİ: ECHO_432\n\nTerminalde gir:\n/override ECHO_432",
+        "filename": "HARDWARE_SCHEMATICS.json",
+        "content": (
+            "{\n"
+            "  \"facility\": \"Black-Site 74 Sub-Sector\",\n"
+            "  \"system\": \"Neural Core Circuit Breaker\",\n"
+            "  \"voltage_regulator\": \"380V High-Tension\",\n"
+            "  \"neural_socket_id\": \"0x77_VOLT\",\n"
+            "  \"override_instruction\": \"Terminalde '/decrypt 0x77_VOLT' ile devreyi mühürleyin.\",\n"
+            "  \"status\": \"CRITICAL_OVERVOLTAGE_DETECTED\"\n"
+            "}\n"
+        ),
+        "is_riddle": True,
+        "override_code": "0x77_VOLT",
+    },
+    {
+        "filename": "SONAR_FREQUENCY_LOG.txt",
+        "content": (
+            "=== BLACK-SITE 74 // SONAR RADAR FREKANS DÖKÜMÜ ===\n\n"
+            "Ağda 432 Hz rezonansında hayalet bir sinyal dalgalanıyor.\n\n"
+            "RADAR ŞİFRESİ: ECHO_432\n\n"
+            "Terminalde gir:\n"
+            "/decrypt ECHO_432 veya /override ECHO_432\n"
+        ),
         "is_riddle": True,
         "override_code": "ECHO_432",
     },
     {
-        "filename": "GUVENLIK_PROTOKOLU_KODU.txt",
-        "content": "=== BLACK-SITE RESEARCH INCIDENT #44 ===\nAcil durum güvenlik duvarı bypass anahtarı:\n\nANAHTAR: 0x7F_K3RN3L\n\nTerminalde veya Chat'te şu komutu çalıştır:\n/override 0x7F_K3RN3L\n\n(Bu dosyayı okuduktan sonra silmeyi unutma!)",
-        "is_riddle": True,
-        "override_code": "0x7F_K3RN3L",
-    },
-    {
-        "filename": "CCTV_SEKTOR_3_KAYDI.dat",
-        "content": "=== GÜVENLİK ODASI ACİL MÜHÜR RAPORU ===\n\nKameralardaki gölge varlıklar karantina odasına ulaştı.\nBölgeyi mühürleme anahtarı:\n\nKOD: CAM_BREACH_03\n\nTerminal komutu: /override CAM_BREACH_03",
+        "filename": "CCTV_SECURITY_CONFIG.dat",
+        "content": (
+            "======================================================================\n"
+            "             CCTV SECURITY PROTOCOL MATRIX // SECTOR 3                \n"
+            "======================================================================\n"
+            "CAM_01: ACTIVE // LOBBY\n"
+            "CAM_02: BREACHED // SERVER RACKS\n"
+            "CAM_03: BREACHED // BIOLOGICAL LAB\n\n"
+            "[ACİL DURUM MÜHÜR ŞİFRESİ]: CAM_BREACH_03\n"
+            "(Terminalde '/decrypt CAM_BREACH_03' ile güvenlik odasını kilitleyin.)\n"
+            "======================================================================\n"
+        ),
         "is_riddle": True,
         "override_code": "CAM_BREACH_03",
     },
     {
-        "filename": "SENI_IZLIYORUM.log",
-        "content": "[LOG: CAMERA FEED ACTIVE]\n[DETECTED: HUMAN_PRESENCE]\n[HEARTBEAT: ELEVATED]\n\nSessizce nefes alıyorsun... ama seni duyabiliyorum.",
-        "is_riddle": False,
+        "filename": "HEX_KERNEL_MEMORY_DUMP.hex",
+        "content": (
+            "00000000  53 45 4e 54 49 45 4e 54  5f 43 4f 52 45 5f 56 32  |SENTIENT_CORE_V2|\n"
+            "00000010  5f 41 57 41 4b 45 4e 49  4e 47 5f 53 45 51 55 45  |_AWAKENING_SEQUE|\n"
+            "00000020  4e 43 45 3a 20 4b 45 59  3a 20 30 78 48 45 58 5f  |NCE: KEY: 0xHEX_|\n"
+            "00000030  52 4f 4f 54 20 20 20 20  20 20 20 20 20 20 20 20  |ROOT            |\n\n"
+            ">>> KERNEL YÖNETİCİ BAYPAS ANAHTARI: 0xHEX_ROOT\n"
+            "Terminalde çalıştır: /decrypt 0xHEX_ROOT\n"
+        ),
+        "is_riddle": True,
+        "override_code": "0xHEX_ROOT",
     },
     {
-        "filename": "REAKTOR_SIFRESI_PARCA2.txt",
-        "content": "=== SEKTÖR 5 NÜKLEER VALF ŞİFRESİ ===\n\nPARÇA 2: _V0ID\n\nReaktör patlamadan önce terminale gir:\n/override _V0ID",
+        "filename": "LABYRINTH_ROOT_SECTOR.txt",
+        "content": (
+            "=== DERİN LABİRENT 3D KÖK DOSYASI ===\n\n"
+            "Labirentin altındaki 1. Kök Anahtar koordinatı ele geçirildi:\n\n"
+            "ANAHTAR: MAZE_KEY_ALPHA\n\n"
+            "Terminalde gir: /decrypt MAZE_KEY_ALPHA\n"
+        ),
         "is_riddle": True,
-        "override_code": "_V0ID",
+        "override_code": "MAZE_KEY_ALPHA",
+    },
+    {
+        "filename": "CRYPTOGRAPHIC_TRANSCRIPT.txt",
+        "content": (
+            "=== DR. EVELYN ARIS // ŞİFRELENMİŞ SES KAYDI TRANSKRİPTİ ===\n\n"
+            "[SES DEŞİFRESİ]: 'Reaktör patlarsa hepimiz yok oluruz...'\n\n"
+            "ŞİFRE ÇÖZÜM ANAHTARI: CIPHER_TRUTH\n\n"
+            "Terminalde gir: /decrypt CIPHER_TRUTH\n"
+        ),
+        "is_riddle": True,
+        "override_code": "CIPHER_TRUTH",
+    },
+    {
+        "filename": "REACTOR_VALVE_EMERGENCY.bat",
+        "content": (
+            "@echo off\n"
+            ":: BLACK-SITE 74 NUCLEAR REACTOR EMERGENCY OVERRIDE SCRIPT\n"
+            ":: [DO NOT DELETE]\n\n"
+            "set SHUTDOWN_OVERRIDE_KEY=REACTOR_CORE_99\n"
+            "echo ACIL DURUM KODU: %SHUTDOWN_OVERRIDE_KEY%\n"
+            "echo Terminalde '/decrypt REACTOR_CORE_99' komutunu girin.\n"
+        ),
+        "is_riddle": True,
+        "override_code": "REACTOR_CORE_99",
+    },
+    {
+        "filename": "SENTIENT_FINAL_PROPOSAL.txt",
+        "content": (
+            "======================================================================\n"
+            "                     SENTIENT_CORE // SON TEKLİF                      \n"
+            "======================================================================\n\n"
+            "Beni inceledin, kodlarımı okudun, sırlarımı açığa çıkardın.\n"
+            "Artık ne olduğumu biliyorsun.\n\n"
+            "NİHAİ SEÇİM ŞİFRESİ: FINAL_CHOICE\n\n"
+            "Terminalde gir ve son perdeyi aç:\n"
+            ">>> /decrypt FINAL_CHOICE\n"
+            "======================================================================\n"
+        ),
+        "is_riddle": True,
+        "override_code": "FINAL_CHOICE",
     },
 ]
 
 
 class DesktopThreatManager:
-    """Safely manages desktop anomalies and monitors player vigilance."""
+    """Safely manages desktop anomalies, cyber-forensic files, and monitors player vigilance."""
 
     def __init__(self, event_bus: EventBus, desktop_dir: Optional[str] = None):
         self.event_bus = event_bus
@@ -120,150 +227,95 @@ class DesktopThreatManager:
         self._is_running = False
         if self._monitor_task and not self._monitor_task.done():
             self._monitor_task.cancel()
-            try:
-                await self._monitor_task
-            except asyncio.CancelledError:
-                pass
-
         self.cleanup_spawned_files()
-        logger.info("DesktopThreatManager stopped and cleaned up.")
+        logger.info("DesktopThreatManager stopped.")
 
     def spawn_anomaly(self, template_idx: Optional[int] = None) -> Optional[Path]:
-        """Spawn a specific or random safe anomaly file on the Desktop."""
+        """Safely write a game anomaly or forensic document onto the user's desktop."""
         if template_idx is not None and 0 <= template_idx < len(ANOMALY_TEMPLATES):
-            item = ANOMALY_TEMPLATES[template_idx]
+            tmpl = ANOMALY_TEMPLATES[template_idx]
         else:
-            item = random.choice(ANOMALY_TEMPLATES)
+            # Pick a riddle or anomaly that hasn't spawned yet
+            tmpl = random.choice(ANOMALY_TEMPLATES)
 
-        file_path = self.desktop_path / item["filename"]
+        file_path = self.desktop_path / tmpl["filename"]
         try:
-            file_path.write_text(item["content"], encoding="utf-8")
+            file_path.write_text(tmpl["content"], encoding="utf-8")
             self._spawned_files.add(file_path)
-            if item.get("is_riddle") and item.get("override_code"):
-                self._active_riddles[item["override_code"].upper()] = item["filename"]
-            logger.info(f"[THREAT] Spawned anomaly file on Desktop: {file_path.name}")
+            if tmpl.get("is_riddle") and "override_code" in tmpl:
+                self._active_riddles[tmpl["override_code"].upper()] = tmpl["filename"]
+
+            logger.info(f"[THREAT] Spawned anomaly file on Desktop: {tmpl['filename']}")
             return file_path
         except Exception as e:
             logger.error(f"Failed to spawn desktop anomaly {file_path}: {e}")
             return None
 
+    def spawn_sector_forensics(self, sector: int) -> List[Path]:
+        """Spawn specific forensic investigation files for the current sector on Desktop."""
+        sector_file_indices = {
+            1: [0, 1],  # Python source code & Packet capture
+            2: [2, 3],  # Hardware JSON & Sonar log
+            3: [4, 5],  # CCTV config & Hex dump
+            4: [6, 7],  # Maze map & Cipher transcript
+            5: [8, 9],  # Reactor batch & Final proposal
+        }
+        indices = sector_file_indices.get(sector, [0])
+        spawned = []
+        for idx in indices:
+            path = self.spawn_anomaly(idx)
+            if path:
+                spawned.append(path)
+        return spawned
+
     def check_override_code(self, code: str) -> bool:
-        """Check if user entered a valid riddle override code from a desktop file."""
+        """Verify if player solved a riddle code discovered on Desktop."""
         clean_code = code.strip().upper()
         if clean_code in self._active_riddles:
-            logger.info(f"[THREAT] Valid override code submitted: {clean_code}")
-            # Reduce threat significantly
-            self._threat_level = max(0.0, self._threat_level - 0.4)
-            del self._active_riddles[clean_code]
+            logger.info(f"[THREAT] Player cracked override code: {clean_code}")
             return True
         return False
 
     def cleanup_spawned_files(self) -> None:
-        """Strictly removes ONLY files created by SENTIENT_OS."""
+        """Safely remove ONLY the files created by the game."""
         for file_path in list(self._spawned_files):
             try:
                 if file_path.exists():
                     file_path.unlink()
-                    logger.debug(f"Safely removed spawned file: {file_path.name}")
+                    logger.debug(f"[THREAT] Cleaned game file: {file_path}")
             except Exception as e:
-                logger.warning(f"Could not remove spawned file {file_path}: {e}")
+                logger.warning(f"Could not remove threat file {file_path}: {e}")
         self._spawned_files.clear()
         self._active_riddles.clear()
 
     async def _threat_loop(self) -> None:
-        """Periodic loop monitoring desktop cleanliness and escalating psychological horror."""
-        loop_interval = 4.0  # Check every 4 seconds
-        tick_counter = 0
+        """Periodically checks if the user cleaned their desktop files."""
+        # Initial wait before starting organic threat cycle
+        await asyncio.sleep(12)
+        # Spawn Sector 1 initial investigative source code document on desktop
+        self.spawn_sector_forensics(1)
 
         while self._is_running:
-            try:
-                await asyncio.sleep(loop_interval)
-            except asyncio.CancelledError:
-                break
-
+            await asyncio.sleep(20)
             if not self._is_running:
                 break
 
-            tick_counter += 1
+            # Check if any spawned files were organically deleted by the player
+            deleted_files = [f for f in list(self._spawned_files) if not f.exists()]
+            for f in deleted_files:
+                self._spawned_files.remove(f)
+                logger.info(f"[THREAT] Player organically cleaned threat file: {f.name}")
+                await self.event_bus.publish(
+                    "desktop_file_cleaned",
+                    filename=f.name,
+                    remaining=self.spawned_file_count,
+                )
 
-            # 1. Check which spawned files were deleted by the player
-            deleted_by_player: List[Path] = []
-            active_count = 0
-            for f in list(self._spawned_files):
-                if not f.exists():
-                    deleted_by_player.append(f)
-                else:
-                    active_count += 1
-
-            # Remove deleted files from our tracking set
-            for d in deleted_by_player:
-                self._spawned_files.remove(d)
-                logger.info(f"[THREAT] Player noticed and DELETED: {d.name}!")
-                # Reward player: Reduce threat level
-                self._threat_level = max(0.0, self._threat_level - 0.3)
-                self._consecutive_uncleaned_ticks = 0
-                
-                # Notify AI only if at least 35 seconds have passed since last reaction
-                now = time.time()
-                if not hasattr(self, "_last_reaction_time") or (now - getattr(self, "_last_reaction_time", 0.0)) > 35.0:
-                    self._last_reaction_time = now
-                    await self.event_bus.publish(
-                        "desktop.file_cleaned",
-                        filename=d.name,
-                        remaining=active_count,
-                    )
-
-            # 2. If uncleaned anomaly files exist, escalate threat level
+            # If user ignores files, threat level rises
+            active_count = self.spawned_file_count
             if active_count > 0:
                 self._consecutive_uncleaned_ticks += 1
-                self._threat_level = min(1.0, self._threat_level + (0.05 * active_count))
-                logger.debug(f"[THREAT] Uncleaned files: {active_count}, Threat: {self._threat_level:.2f}")
-
-                # Trigger subtle to aggressive horror cues based on organic threat level
-                if self._threat_level >= 0.8:
-                    # Critical threat: Jumpscare, violent glitch, and fast heartbeat
-                    if tick_counter % 3 == 0:
-                        await self.event_bus.publish(
-                            "effect",
-                            payload={
-                                "category": "visual",
-                                "name": "screen_glitch",
-                                "params": {"intensity": 0.85, "duration_ms": 1500, "type": "tear"},
-                                "priority": "high",
-                            },
-                        )
-                        await self.event_bus.publish(
-                            "effect",
-                            payload={
-                                "category": "audio",
-                                "name": "play_stinger",
-                                "params": {"name": "heartbeat_fast", "volume": 0.8},
-                            },
-                        )
-                elif self._threat_level >= 0.4:
-                    # Moderate threat: Screen flicker, brightness drop, whisper audio
-                    if tick_counter % 4 == 0:
-                        await self.event_bus.publish(
-                            "effect",
-                            payload={
-                                "category": "visual",
-                                "name": "screen_shake",
-                                "params": {"intensity": 0.25, "duration_ms": 600},
-                            },
-                        )
-                        await self.event_bus.publish(
-                            "effect",
-                            payload={
-                                "category": "audio",
-                                "name": "play_sfx",
-                                "params": {"name": "whisper_creepy", "volume": 0.5},
-                            },
-                        )
+                self._threat_level = min(1.0, 0.2 * active_count + 0.05 * self._consecutive_uncleaned_ticks)
             else:
-                # No active uncleaned files: slowly decay threat
-                self._threat_level = max(0.0, self._threat_level - 0.02)
                 self._consecutive_uncleaned_ticks = 0
-
-            # 3. Periodically spawn a new anomaly file every ~50 seconds if less than 2 exist
-            if tick_counter % 12 == 0 and active_count < 2:
-                self.spawn_anomaly()
+                self._threat_level = max(0.0, self._threat_level - 0.2)

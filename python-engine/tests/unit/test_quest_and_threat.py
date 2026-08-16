@@ -42,7 +42,7 @@ async def test_quest_manager_sector_progression(tmp_path: Path):
     decrypted = qm.decrypt_cipher_code("0x4F_CLEAN")
     assert decrypted is not None
     assert decrypted.id == "trial_slicer"
-    assert qm.completed_count == 2
+    assert decrypted.is_unlocked is True
 
 
 @pytest.mark.asyncio
@@ -61,8 +61,8 @@ async def test_desktop_threat_manager_safe_tracking(tmp_path: Path):
 
     assert dt.spawned_file_count == 1
     # Check override code
-    dt.spawn_anomaly(3) # riddle (0x7F_K3RN3L)
-    assert dt.check_override_code("0x7F_K3RN3L") is True
+    dt.spawn_anomaly(3) # ECHO_432
+    assert dt.check_override_code("ECHO_432") is True
 
     # Cleanup game files
     dt.cleanup_spawned_files()
