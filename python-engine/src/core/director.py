@@ -224,9 +224,10 @@ class Director:
         if cmd in ["/help", "help", "yardım"]:
             help_msg = (
                 "ℹ️ [KOMUT REHBERİ]\n"
-                "• /scan   : Masaüstü ve CCTV tehditlerini tarar\n"
+                "• /trial  : Aktif sektör güvenlik görevini başlatır\n"
+                "• /status : Görev detayını ve sektör durumunu gösterir\n"
                 "• /cctv   : Güvenlik kameralarını canlı izler\n"
-                "• /status : Görev ve sektör durumunu gösterir\n"
+                "• /scan   : Masaüstü ve CCTV tehditlerini tarar\n"
                 "• /hack   : Mevcut hedefe dair ipucu/analiz verir\n"
                 "• /override <KOD> : Bulmaca şifrelerini girmek içindir"
             )
@@ -236,15 +237,48 @@ class Director:
             )
             return True
 
+        elif cmd in ["/trial", "trial", "/gorev", "gorev", "/baslat", "baslat", "/play", "play"]:
+            trial = self.quest_manager.get_next_available_trial()
+            if trial:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={
+                        "speech": f"🚀 [SEKTÖR BAŞLATILIYOR]: {trial.title}\n{trial.description}",
+                        "emotion": "sinister",
+                        "actions": [],
+                    },
+                )
+                await self._launch_trial_by_file(trial.game_file)
+            else:
+                await self.event_bus.publish(
+                    "ai_response",
+                    payload={
+                        "speech": "✅ Tüm 10 güvenlik sektörü zaten mühürlendi! Sistem karantinada.",
+                        "emotion": "calm",
+                        "actions": [],
+                    },
+                )
+            return True
+
         elif cmd in ["/status", "status", "durum"]:
-            curr_obj = self.quest_manager.get_current_objective_title()
+            trial = self.quest_manager.get_next_available_trial()
             completed = self.quest_manager.completed_count
             total = self.quest_manager.total_count
-            status_report = (
-                f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
-                f"• Aktif Hedef: {curr_obj}\n"
-                f"• Mühürlenen Sektörler: {completed}/{total} Tamamlandı"
-            )
+
+            if trial:
+                status_report = (
+                    f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
+                    f"• Aktif Hedef: {trial.title}\n"
+                    f"• Görev Detayı: {trial.description}\n"
+                    f"• İlerleme: {completed}/{total} Sektör Mühürlendi\n"
+                    f"👉 Görevi Başlatmak İçin: '/trial' veya '/gorev' yazın."
+                )
+            else:
+                status_report = (
+                    f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
+                    f"• Durum: Tüm {total} Sektör Başarıyla Mühürlendi!\n"
+                    f"• Karantina: SENTIENT çekirdeği kontrol altında."
+                )
             await self.event_bus.publish(
                 "ai_response",
                 payload={"speech": status_report, "emotion": "calm", "actions": []},

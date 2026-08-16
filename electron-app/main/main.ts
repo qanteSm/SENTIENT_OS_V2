@@ -111,7 +111,9 @@ class Application {
 
     ipcMain.on('minigame-result', (_event, data) => {
       console.log('[MAIN] Minigame finished with result:', data);
-      this.windowManager.closeMinigame();
+      if (!data?.keepOpen && !data?.is_surveillance) {
+        this.windowManager.closeMinigame();
+      }
       this.ipcBridge.send('minigame_completed', data);
     });
 

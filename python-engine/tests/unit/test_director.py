@@ -87,6 +87,10 @@ async def test_director_orchestration(tmp_path):
     await director.handle_user_input("user_input", text="/help")
     assert "KOMUT REHBERİ" in ai_responses[-1]["speech"]
 
+    # 7. Test /trial command
+    await director.handle_user_input("user_input", text="/trial")
+    assert "SEKTÖR BAŞLATILIYOR" in ai_responses[-1]["speech"]
+
     # Cleanup
     await director.stop()
     await ws_server.stop()

@@ -940,7 +940,14 @@
               this.statusEl.className = 'osd-status-badge';
               this.statusEl.textContent = '🟢 ANOMALİ MÜHÜRLENDİ // GÜVENLİK YENİLENDİ';
 
-              // Notify Backend of neutralization
+              const hintEl = document.getElementById('neutralize-hint');
+              if (hintEl) {
+                hintEl.innerHTML = '🟢 <strong>VARLIK MÜHÜRLENDİ:</strong> Kamera güvenliği sağlandı. Kameraları izlemeye devam edebilir veya dilediğiniz zaman sağ üstteki <strong>[X]</strong> butonu ya da <strong>ESC</strong> ile pencereyi kapatabilirsiniz.';
+                hintEl.style.borderColor = '#00ff88';
+                hintEl.style.color = '#00ff88';
+              }
+
+              // Notify Backend of neutralization (Keep window open so player closes it)
               if (window.sentientAPI && window.sentientAPI.sendEvent) {
                 window.sentientAPI.sendEvent('minigame-result', {
                   success: true,
@@ -949,6 +956,7 @@
                   game: 'games/game6_cctv.html',
                   anomaly_cleared: true,
                   is_surveillance: this.mode === 'surveillance',
+                  keepOpen: true,
                 });
               }
 
