@@ -3,16 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>#06 CCTV PARANORMAL ROOM</title>
+  <title>#06 CCTV PARANORMAL SURVEILLANCE MATRIX</title>
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="../common/horror.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    .cctv-container {
+    :root {
+      --cctv-green: #00ff88;
+      --cctv-red: #ff2255;
+      --cctv-cyan: #00e5ff;
+      --cctv-amber: #ffaa00;
+      --cctv-bg: #05080c;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background: #020406;
+      color: #e0e0e0;
+      font-family: 'Share Tech Mono', monospace;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    .cctv-root {
       display: flex;
       height: calc(100vh - 60px);
       margin-top: 60px;
+      position: relative;
     }
-    .cctv-screen-panel {
+
+    /* Left & Center: Surveillance Monitor Viewport */
+    .cctv-viewport-wrapper {
       flex: 1;
       background: #000000;
       position: relative;
@@ -20,62 +48,261 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      border-right: 2px solid #142838;
     }
+
     .cctv-canvas {
       width: 100%;
       height: 100%;
-      background: #080c10;
+      display: block;
+      cursor: crosshair;
     }
-    .cctv-cam-tag {
+
+    /* HUD Overlays on Screen */
+    .cctv-osd-top-left {
       position: absolute;
-      top: 20px;
-      left: 25px;
-      color: #00ff88;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 18px;
+      top: 18px;
+      left: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .osd-cam-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--cctv-green);
+      text-shadow: 0 0 12px var(--cctv-green);
+    }
+
+    .osd-cam-sub {
+      font-size: 12px;
+      color: rgba(0, 255, 136, 0.7);
+      letter-spacing: 1px;
+    }
+
+    .cctv-osd-top-right {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .osd-rec {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--cctv-red);
+      font-size: 14px;
       font-weight: bold;
       letter-spacing: 2px;
-      text-shadow: 0 0 10px #00ff88;
-    }
-    .cctv-rec-dot {
-      position: absolute;
-      top: 20px;
-      right: 25px;
-      color: #ff0055;
-      font-weight: bold;
+      text-shadow: 0 0 10px var(--cctv-red);
       animation: blinkRec 1s infinite alternate;
     }
-    @keyframes blinkRec { from { opacity: 0.2; } to { opacity: 1; } }
-    .cctv-nav-panel {
-      width: 280px;
-      background: rgba(10, 16, 25, 0.95);
-      border-left: 2px solid #1a3a5a;
+
+    @keyframes blinkRec { from { opacity: 0.25; } to { opacity: 1; } }
+
+    .osd-timestamp {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: #88ccaa;
+    }
+
+    .cctv-osd-bottom {
+      position: absolute;
+      bottom: 18px;
+      left: 24px;
+      right: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .osd-status-badge {
+      padding: 6px 14px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid var(--cctv-green);
+      border-radius: 4px;
+      color: var(--cctv-green);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px var(--cctv-green);
+    }
+
+    .osd-status-badge.alert {
+      background: rgba(255, 34, 85, 0.2);
+      border-color: var(--cctv-red);
+      color: var(--cctv-red);
+      text-shadow: 0 0 10px var(--cctv-red);
+      animation: pulseAlert 0.8s infinite alternate;
+    }
+
+    @keyframes pulseAlert { from { opacity: 0.6; } to { opacity: 1; } }
+
+    /* Crosshair HUD Targeter */
+    .cctv-targeter {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(0, 255, 136, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 20;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+      transition: width 0.1s, height 0.1s, border-color 0.15s;
+    }
+
+    .cctv-targeter.lock-on {
+      width: 58px;
+      height: 58px;
+      border-color: var(--cctv-red);
+      box-shadow: 0 0 20px var(--cctv-red);
+      animation: lockPulse 0.3s infinite alternate;
+    }
+
+    @keyframes lockPulse {
+      from { transform: translate(-50%, -50%) scale(0.95); }
+      to { transform: translate(-50%, -50%) scale(1.08); }
+    }
+
+    /* Right Sidebar: Security Desk Control Panel */
+    .cctv-control-sidebar {
+      width: 320px;
+      background: rgba(8, 14, 22, 0.98);
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
+      overflow-y: auto;
     }
-    .cam-btn {
-      background: #0d1a29;
-      border: 1px solid #1a3a5a;
-      color: #88aacc;
-      padding: 12px;
-      font-family: 'Share Tech Mono', monospace;
+
+    .sidebar-section-title {
       font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--cctv-cyan);
+      border-bottom: 1px solid #1a3a5a;
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .camera-channels-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cam-channel-btn {
+      background: #0b1624;
+      border: 1px solid #1a3a5a;
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: #99bbdd;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12.5px;
       cursor: pointer;
-      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .cam-channel-btn:hover {
+      background: rgba(0, 229, 255, 0.12);
+      border-color: var(--cctv-cyan);
+      color: #ffffff;
+      transform: translateX(3px);
+    }
+
+    .cam-channel-btn.active {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: var(--cctv-green);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.25);
+    }
+
+    .cam-status-pill {
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--cctv-green);
+    }
+
+    .cam-channel-btn.breached .cam-status-pill {
+      background: rgba(255, 34, 85, 0.3);
+      color: var(--cctv-red);
+      animation: blinkRec 0.8s infinite alternate;
+    }
+
+    /* Vision Mode Filter Toggles */
+    .vision-modes-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .vision-btn {
+      background: #09131d;
+      border: 1px solid #1a3a5a;
       border-radius: 4px;
+      padding: 8px 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #7799bb;
+      cursor: pointer;
+      text-align: center;
       transition: all 0.15s ease;
     }
-    .cam-btn.active, .cam-btn:hover {
-      background: rgba(0, 255, 255, 0.15);
-      border-color: #00ffff;
+
+    .vision-btn.active, .vision-btn:hover {
+      border-color: var(--cctv-green);
       color: #ffffff;
+      background: rgba(0, 255, 136, 0.15);
     }
-    .anomaly-indicator {
-      float: right;
-      color: #ff0055;
-      font-weight: bold;
+
+    /* Radar Mini Scope */
+    .radar-box {
+      width: 100%;
+      height: 90px;
+      background: #03080e;
+      border: 1px solid #1a3a5a;
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radar-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .neutralize-hint {
+      font-size: 11.5px;
+      color: #88aacc;
+      line-height: 1.5;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid var(--cctv-amber);
     }
   </style>
 </head>
@@ -83,137 +310,369 @@
   <div class="crt-scanlines"></div>
   <div class="crt-vignette"></div>
 
-  <!-- HUD -->
+  <!-- Top Global HUD -->
   <div class="game-hud">
     <div class="hud-group">
-      <span class="hud-tag">MİNİ OYUN:</span>
-      <span class="hud-val warning">#06 CCTV PARANORMAL ROOM</span>
+      <span class="hud-tag">SİSTEM PROTOKOLÜ:</span>
+      <span class="hud-val warning">#06 CCTV PARANORMAL GÖZETLEME ODASI</span>
     </div>
     <div class="hud-group">
-      <span class="hud-tag">ANOMALİ TESPİTİ:</span>
+      <span class="hud-tag">İMHA EDİLEN ANOMALİLER:</span>
       <span class="hud-val normal" id="anomaly-counter">0 / 4</span>
     </div>
     <div class="hud-group hud-right">
-      <span class="hud-tag">SÜRE:</span>
-      <div class="hud-timer"><span id="timer-val">50s</span></div>
+      <span class="hud-tag">GÜVENLİK SÜRESİ:</span>
+      <div class="hud-timer"><span id="timer-val">60s</span></div>
     </div>
   </div>
 
-  <div class="cctv-container">
-    <div class="cctv-screen-panel">
+  <div class="cctv-root">
+    <!-- Center Surveillance Screen -->
+    <div class="cctv-viewport-wrapper" id="cctv-wrapper">
       <canvas id="cctv-canvas" class="cctv-canvas"></canvas>
-      <div class="cctv-cam-tag" id="cam-name">CAM 01 // ANA GİRİŞ</div>
-      <div class="cctv-rec-dot">● CANLI KAYIT [REC]</div>
+      <div id="cctv-targeter" class="cctv-targeter"></div>
+
+      <!-- OSD Overlays -->
+      <div class="cctv-osd-top-left">
+        <div class="osd-cam-title" id="osd-cam-title">CAM 01 // ANA GİRİŞ & RESEPSİYON</div>
+        <div class="osd-cam-sub" id="osd-cam-sub">FACILITY-74 SEKTÖR 01 // CANLI GÖZETLEME</div>
+      </div>
+
+      <div class="cctv-osd-top-right">
+        <div class="osd-rec">● CANLI [REC]</div>
+        <div class="osd-timestamp" id="osd-clock">00:00:00.00</div>
+      </div>
+
+      <div class="cctv-osd-bottom">
+        <div class="osd-status-badge" id="osd-status">GÜVENLİ // NORMAL AKIŞ</div>
+        <div style="font-size: 11px; color: #00ff88; letter-spacing: 1px;">60 FPS // KODLAYICI: H.265 PRO</div>
+      </div>
     </div>
 
-    <div class="cctv-nav-panel">
-      <h3 style="color: #00ffff; font-size: 14px; margin-bottom: 10px;">KAMERA KANALLARI</h3>
-      <button class="cam-btn active" data-cam="1">CAM 01 // ANA GİRİŞ</button>
-      <button class="cam-btn" data-cam="2">CAM 02 // SUNUCU ODASI</button>
-      <button class="cam-btn" data-cam="3">CAM 03 // ARAŞTIRMA LABI</button>
-      <button class="cam-btn" data-cam="4">CAM 04 // KARANLIK KORİDOR</button>
-      <button class="cam-btn" data-cam="5">CAM 05 // HAVALANDIRMA</button>
-      <button class="cam-btn" data-cam="6">CAM 06 // GÜVENLİK KAPISI</button>
+    <!-- Right Control Desk -->
+    <div class="cctv-control-sidebar">
+      <div class="sidebar-section-title">
+        <span>KAMERA KANALLARI</span>
+        <span style="font-size: 10px; color: #00ff88;">6 KANAL</span>
+      </div>
+
+      <div class="camera-channels-grid">
+        <button class="cam-channel-btn active" data-cam="1">
+          <span>CAM 01: ANA GİRİŞ</span>
+          <span class="cam-status-pill" id="pill-1">GÜVENLİ</span>
+        </button>
+        <button class="cam-channel-btn" data-cam="2">
+          <span>CAM 02: SUNUCU ODASI</span>
+          <span class="cam-status-pill" id="pill-2">GÜVENLİ</span>
+        </button>
+        <button class="cam-channel-btn" data-cam="3">
+          <span>CAM 03: ARAŞTIRMA LABI</span>
+          <span class="cam-status-pill" id="pill-3">GÜVENLİ</span>
+        </button>
+        <button class="cam-channel-btn" data-cam="4">
+          <span>CAM 04: ALTKAT KORİDOR</span>
+          <span class="cam-status-pill" id="pill-4">GÜVENLİ</span>
+        </button>
+        <button class="cam-channel-btn" data-cam="5">
+          <span>CAM 05: HAVALANDIRMA</span>
+          <span class="cam-status-pill" id="pill-5">GÜVENLİ</span>
+        </button>
+        <button class="cam-channel-btn" data-cam="6">
+          <span>CAM 06: GÜVENLİK KAPISI</span>
+          <span class="cam-status-pill" id="pill-6">GÜVENLİ</span>
+        </button>
+      </div>
+
+      <div class="sidebar-section-title">
+        <span>GÖRÜNTÜ FİLTRESİ</span>
+      </div>
+
+      <div class="vision-modes-row">
+        <button class="vision-btn active" data-mode="nvg">NVG (GECE)</button>
+        <button class="vision-btn" data-mode="ir">IR (TERMAL)</button>
+        <button class="vision-btn" data-mode="crt">CRT (MONO)</button>
+      </div>
+
+      <div class="sidebar-section-title">
+        <span>SONAR SİNYAL RADARI</span>
+      </div>
+
+      <div class="radar-box">
+        <canvas id="radar-canvas" class="radar-canvas"></canvas>
+      </div>
+
+      <div class="neutralize-hint">
+        <strong>TALİMAT:</strong> Kameralar arasında gezin. Odalarda beliren gölge varlık, manken veya kanlı anomalileri bulup üzerlerine <strong>tıklayarak EMP şoku ile imha et!</strong>
+      </div>
     </div>
   </div>
 
   <script src="../audio/synth.js"></script>
   <script src="../common/horror_fx.js"></script>
   <script>
-    class CCTVGame {
+    /**
+     * Enhanced Photographic CCTV Surveillance Engine
+     */
+    class AdvancedCCTVGame {
       constructor() {
         this.canvas = document.getElementById('cctv-canvas');
         this.ctx = this.canvas.getContext('2d');
-        this.camNameEl = document.getElementById('cam-name');
+        this.radarCanvas = document.getElementById('radar-canvas');
+        this.radarCtx = this.radarCanvas.getContext('2d');
+        this.targeter = document.getElementById('cctv-targeter');
+        this.wrapper = document.getElementById('cctv-wrapper');
+
+        this.camTitleEl = document.getElementById('osd-cam-title');
+        this.camSubEl = document.getElementById('osd-cam-sub');
+        this.statusEl = document.getElementById('osd-status');
         this.counterEl = document.getElementById('anomaly-counter');
         this.timerEl = document.getElementById('timer-val');
+        this.clockEl = document.getElementById('osd-clock');
 
         this.audio = new MinigameAudio();
         this.horror = new HorrorFX(this.audio);
 
         this.currentCam = 1;
+        this.visionMode = 'nvg'; // 'nvg', 'ir', 'crt'
         this.score = 0;
         this.target = 4;
-        this.timeLeft = 50;
+        this.timeLeft = 60;
         this.active = false;
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.glitchIntensity = 0;
+        this.cameraSwitchGlitch = 0;
 
-        // Anomalies state
-        this.anomalies = {
-          2: { active: true, name: 'Gölge Varlık', x: 0.45, y: 0.5, found: false },
-          3: { active: true, name: 'Gözetleyen Manken', x: 0.65, y: 0.45, found: false },
-          5: { active: true, name: 'Kanlı Glitch Sembolü', x: 0.35, y: 0.35, found: false },
-          6: { active: true, name: 'Açık Güvenlik Kapısı', x: 0.5, y: 0.6, found: false },
+        // Preload Image Assets
+        this.images = {};
+        this.loadImages();
+
+        // 6 Room Definitions with Real Photos and Horror Composite Logic
+        this.rooms = {
+          1: {
+            title: 'CAM 01 // ANA GİRİŞ & RESEPSİYON',
+            sub: 'FACILITY-74 SEKTÖR 01 // TURNİKELER & LOBİ',
+            bgKey: 'cam1',
+            ambientFreq: 140,
+          },
+          2: {
+            title: 'CAM 02 // SUB-KERNEL SUNUCU ODASI',
+            sub: 'FACILITY-74 SEKTÖR 02 // SUNUCU KABİNLERİ',
+            bgKey: null,
+            ambientFreq: 180,
+          },
+          3: {
+            title: 'CAM 03 // BİYOLOJİK ARAŞTIRMA LABI',
+            sub: 'FACILITY-74 SEKTÖR 03 // KARANTİNA ODASI',
+            bgKey: null,
+            ambientFreq: 220,
+          },
+          4: {
+            title: 'CAM 04 // KARANLIK ALTKAT KORİDORU',
+            sub: 'FACILITY-74 SEKTÖR 04 // BORU HATTI & KORİDOR',
+            bgKey: null,
+            ambientFreq: 90,
+          },
+          5: {
+            title: 'CAM 05 // HAVALANDIRMA ŞAFTI',
+            sub: 'FACILITY-74 SEKTÖR 05 // ENDÜSTRİYEL TÜRBİN',
+            bgKey: null,
+            ambientFreq: 300,
+          },
+          6: {
+            title: 'CAM 06 // ÇELİK KASA GÜVENLİK KAPISI',
+            sub: 'FACILITY-74 SEKTÖR 06 // HİDROLİK BLOKAJ',
+            bgKey: null,
+            ambientFreq: 110,
+          },
         };
 
+        // 4 Active Anomalies Distributed Across the Cameras
+        this.anomalies = {
+          2: { active: true, name: 'Siber Glitch Varlığı', imgKey: 'jumpscare_2', x: 0.50, y: 0.52, radius: 0.16, found: false },
+          3: { active: true, name: 'Kırık Karantina Kabini', imgKey: 'jumpscare_3', x: 0.62, y: 0.46, radius: 0.15, found: false },
+          4: { active: true, name: 'Koridordaki Gölge', imgKey: 'jumpscare_5', x: 0.48, y: 0.48, radius: 0.18, found: false },
+          5: { active: true, name: 'Şafttaki Solgun Yüz', imgKey: 'jumpscare_6', x: 0.52, y: 0.42, radius: 0.14, found: false },
+        };
+
+        this.particles = [];
         this.init();
+      }
+
+      loadImages() {
+        // Cam 1 Real Photo
+        const img1 = new Image();
+        img1.src = '../images/cctv/cctv_cam1.jpg';
+        img1.onload = () => { this.images['cam1'] = img1; };
+
+        // Horror Entity Anomaly Images
+        for (let i = 1; i <= 10; i++) {
+          const img = new Image();
+          img.src = `../images/cctv/jumpscare_${i}.jpg`;
+          img.onload = () => { this.images[`jumpscare_${i}`] = img; };
+        }
       }
 
       init() {
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        this.setupButtons();
-        this.setupCanvasClick();
+        this.setupEvents();
 
         this.horror.showStartScreen(
-          '#06 CCTV PARANORMAL ROOM',
-          'Kameralar arasında geçiş yap ve odalardaki 4 paranormal anormalliği tespit edip üzerlerine tıkla!',
+          '#06 CCTV PARANORMAL SURVEILLANCE',
+          'Kameralar arasında geçiş yap, odalardaki 4 paranormal tehdidi tespit et ve üzerine tıklayarak EMP şoku ile imha et!',
           () => {
             this.active = true;
             this.startTimer();
-            this.loop();
+            this.renderLoop();
           }
         );
       }
 
       resize() {
-        this.canvas.width = this.canvas.clientWidth;
-        this.canvas.height = this.canvas.clientHeight;
+        this.canvas.width = this.canvas.clientWidth || 800;
+        this.canvas.height = this.canvas.clientHeight || 500;
+        this.radarCanvas.width = this.radarCanvas.clientWidth || 280;
+        this.radarCanvas.height = this.radarCanvas.clientHeight || 90;
       }
 
-      setupButtons() {
-        document.querySelectorAll('.cam-btn').forEach((btn) => {
+      setupEvents() {
+        // Channel Switching Buttons
+        document.querySelectorAll('.cam-channel-btn').forEach((btn) => {
           btn.addEventListener('click', () => {
             if (!this.active) return;
-            document.querySelectorAll('.cam-btn').forEach((b) => b.classList.remove('active'));
-            btn.classList.add('active');
             const camId = parseInt(btn.dataset.cam, 10);
-            this.currentCam = camId;
-            this.camNameEl.textContent = btn.textContent;
-            this.audio.playTone(300, 0.08, 'sawtooth', 0.05);
-
-            // CAM 4 Jumpscare condition
-            if (camId === 4) {
-              this.horror.triggerJumpscare('KAMERAYA BAKMA');
-            }
+            this.switchCamera(camId);
           });
         });
-      }
 
-      setupCanvasClick() {
+        // Vision Mode Toggles
+        document.querySelectorAll('.vision-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.vision-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.visionMode = btn.dataset.mode;
+            this.audio.playTone(600, 0.05, 'triangle', 0.05);
+          });
+        });
+
+        // Mouse Move for Targeter & Spotlight
+        this.canvas.addEventListener('mousemove', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          this.mouseX = e.clientX - rect.left;
+          this.mouseY = e.clientY - rect.top;
+
+          this.targeter.style.display = 'block';
+          this.targeter.style.left = `${e.clientX}px`;
+          this.targeter.style.top = `${e.clientY}px`;
+
+          // Check if hovering near anomaly
+          const normX = this.mouseX / this.canvas.width;
+          const normY = this.mouseY / this.canvas.height;
+          const anom = this.anomalies[this.currentCam];
+
+          if (anom && anom.active && !anom.found) {
+            const dist = Math.hypot(normX - anom.x, normY - anom.y);
+            if (dist < anom.radius) {
+              this.targeter.classList.add('lock-on');
+              return;
+            }
+          }
+          this.targeter.classList.remove('lock-on');
+        });
+
+        this.canvas.addEventListener('mouseleave', () => {
+          this.targeter.style.display = 'none';
+        });
+
+        // Click to Neutralize Anomaly with EMP Shock
         this.canvas.addEventListener('mousedown', (e) => {
           if (!this.active) return;
           const rect = this.canvas.getBoundingClientRect();
-          const clickX = (e.clientX - rect.left) / rect.width;
-          const clickY = (e.clientY - rect.top) / rect.height;
+          const clickX = (e.clientX - rect.left) / this.canvas.width;
+          const clickY = (e.clientY - rect.top) / this.canvas.height;
 
           const anom = this.anomalies[this.currentCam];
           if (anom && anom.active && !anom.found) {
             const dist = Math.hypot(clickX - anom.x, clickY - anom.y);
-            if (dist < 0.15) {
+            if (dist <= anom.radius) {
+              // Neutralize!
               anom.found = true;
               this.score++;
               this.counterEl.textContent = `${this.score} / ${this.target}`;
-              this.audio.playTone(880, 0.2, 'triangle', 0.1);
+              this.triggerEMPShock(clickX * this.canvas.width, clickY * this.canvas.height);
+
+              // Update Sidebar Pill
+              const pill = document.getElementById(`pill-${this.currentCam}`);
+              if (pill) {
+                pill.textContent = 'MÜHÜRLENDİ';
+                pill.style.color = '#00ff88';
+              }
 
               if (this.score >= this.target) {
-                this.endGame(true, 'TEBRİKLER! Tüm anomaliler tespit edildi.');
+                setTimeout(() => {
+                  this.endGame(true, 'TEBRİKLER! Tüm paranormal sektör anomalileri başarıyla mühürlendi.');
+                }, 1000);
               }
               return;
             }
           }
 
-          this.audio.playTone(180, 0.08, 'sine', 0.05);
+          // Missed click audio ping
+          this.audio.playTone(220, 0.08, 'sine', 0.05);
         });
+      }
+
+      switchCamera(camId) {
+        if (this.currentCam === camId) return;
+        this.currentCam = camId;
+        this.cameraSwitchGlitch = 12;
+
+        document.querySelectorAll('.cam-channel-btn').forEach((b) => b.classList.remove('active'));
+        const btn = document.querySelector(`.cam-channel-btn[data-cam="${camId}"]`);
+        if (btn) btn.classList.add('active');
+
+        const room = this.rooms[camId];
+        this.camTitleEl.textContent = room.title;
+        this.camSubEl.textContent = room.sub;
+
+        // Static sound on camera switch
+        this.audio.playTone(300 + Math.random() * 150, 0.08, 'sawtooth', 0.08);
+
+        // Update status badge
+        const anom = this.anomalies[camId];
+        if (anom && anom.active && !anom.found) {
+          this.statusEl.className = 'osd-status-badge alert';
+          this.statusEl.textContent = '⚠️ ANOMALİ TESPİT EDİLDİ // DİKKAT';
+        } else {
+          this.statusEl.className = 'osd-status-badge';
+          this.statusEl.textContent = 'GÜVENLİ // NORMAL AKIŞ';
+        }
+
+        // Cam 4 Special Jumpscare trigger
+        if (camId === 4 && Math.random() < 0.35) {
+          this.horror.triggerJumpscare('ARKANA BAK');
+        }
+      }
+
+      triggerEMPShock(x, y) {
+        this.audio.playTone(1200, 0.3, 'sawtooth', 0.15);
+        this.audio.playVictory();
+        this.glitchIntensity = 20;
+
+        // Spawn vaporizing electric particles
+        for (let i = 0; i < 40; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 8 + 2;
+          this.particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1.0,
+            color: Math.random() < 0.5 ? '#00ff88' : '#00e5ff',
+          });
+        }
       }
 
       startTimer() {
@@ -221,61 +680,278 @@
           if (!this.active) return;
           this.timeLeft--;
           this.timerEl.textContent = `${this.timeLeft}s`;
+
+          // Clock update
+          const d = new Date();
+          this.clockEl.textContent = `${d.toTimeString().split(' ')[0]}.${Math.floor(d.getMilliseconds() / 10)}`;
+
           if (this.timeLeft <= 0) {
             this.endGame(false, 'ZAMAN TÜKENDİ! Varlık güvenlik odasına sızdı.');
           }
         }, 1000);
       }
 
-      loop() {
+      renderLoop() {
         if (!this.active) return;
+        this.renderCCTV();
+        this.renderRadar();
+        requestAnimationFrame(this.renderLoop.bind(this));
+      }
+
+      renderCCTV() {
         const ctx = this.ctx;
         const w = this.canvas.width;
         const h = this.canvas.height;
         ctx.clearRect(0, 0, w, h);
 
-        // 1. Draw Static Noise & Room Wireframe
-        ctx.save();
-        ctx.fillStyle = '#0a1018';
-        ctx.fillRect(0, 0, w, h);
+        // 1. Draw Room Background
+        this.drawRoomScene(ctx, w, h, this.currentCam);
 
-        // Perspective room lines
-        ctx.strokeStyle = 'rgba(0, 255, 136, 0.15)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(w * 0.2, h * 0.2); ctx.lineTo(w * 0.8, h * 0.2);
-        ctx.lineTo(w * 0.8, h * 0.8); ctx.lineTo(w * 0.2, h * 0.8);
-        ctx.closePath();
-        ctx.moveTo(0, 0); ctx.lineTo(w * 0.2, h * 0.2);
-        ctx.moveTo(w, 0); ctx.lineTo(w * 0.8, h * 0.2);
-        ctx.moveTo(w, h); ctx.lineTo(w * 0.8, h * 0.8);
-        ctx.moveTo(0, h); ctx.lineTo(w * 0.2, h * 0.8);
-        ctx.stroke();
-
-        // 2. Draw Active Anomaly
+        // 2. Draw Active Anomaly if present and not found
         const anom = this.anomalies[this.currentCam];
         if (anom && anom.active && !anom.found) {
+          this.drawAnomalyEntity(ctx, w, h, anom);
+        }
+
+        // 3. Draw EMP Particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.03;
+          if (p.life <= 0) {
+            this.particles.splice(i, 1);
+            continue;
+          }
           ctx.save();
-          ctx.fillStyle = '#ff0055';
-          ctx.shadowColor = '#ff0000';
-          ctx.shadowBlur = 20;
-
-          // Shadow entity / symbol
-          const ax = w * anom.x;
-          const ay = h * anom.y;
+          ctx.globalAlpha = p.life;
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 10;
           ctx.beginPath();
-          ctx.arc(ax, ay, 24, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 12px monospace';
-          ctx.textAlign = 'center';
-          ctx.fillText('⚠ ANOMALİ ⚠', ax, ay - 35);
           ctx.restore();
         }
 
+        // 4. Vision Mode Filter Color Grade
+        ctx.save();
+        if (this.visionMode === 'nvg') {
+          ctx.fillStyle = 'rgba(0, 255, 120, 0.12)';
+          ctx.fillRect(0, 0, w, h);
+        } else if (this.visionMode === 'ir') {
+          ctx.fillStyle = 'rgba(0, 180, 255, 0.08)';
+          ctx.fillRect(0, 0, w, h);
+        }
         ctx.restore();
-        requestAnimationFrame(this.loop.bind(this));
+
+        // 5. Dynamic CRT Noise & Glitch
+        this.drawNoiseAndGlitch(ctx, w, h);
+      }
+
+      drawRoomScene(ctx, w, h, camId) {
+        ctx.save();
+
+        if (camId === 1 && this.images['cam1']) {
+          // Photorealistic Lobby Reception Scene
+          ctx.drawImage(this.images['cam1'], 0, 0, w, h);
+        } else if (camId === 2) {
+          // Sub-Kernel Server Room (Perspective Server Racks + Blinking LEDs)
+          ctx.fillStyle = '#060a10';
+          ctx.fillRect(0, 0, w, h);
+
+          // Server Aisle Perspective
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.25)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(w * 0.3, h); ctx.lineTo(w * 0.45, h * 0.35);
+          ctx.moveTo(w * 0.7, h); ctx.lineTo(w * 0.55, h * 0.35);
+          ctx.stroke();
+
+          // Server Cabinets Left & Right
+          for (let i = 0; i < 6; i++) {
+            const y = h * (0.35 + i * 0.1);
+            ctx.fillStyle = i % 2 === 0 ? '#0b1420' : '#080e18';
+            ctx.fillRect(0, y, w * 0.35, h * 0.1);
+            ctx.fillRect(w * 0.65, y, w * 0.35, h * 0.1);
+
+            // Blinking Server LEDs
+            for (let l = 0; l < 8; l++) {
+              ctx.fillStyle = Math.random() < 0.4 ? '#00ff88' : Math.random() < 0.2 ? '#ff0055' : '#00e5ff';
+              ctx.fillRect(w * (0.05 + l * 0.03), y + 8, 4, 4);
+              ctx.fillRect(w * (0.70 + l * 0.03), y + 8, 4, 4);
+            }
+          }
+        } else if (camId === 3) {
+          // Research Bio-Lab (Glass Chambers, Specimens)
+          ctx.fillStyle = '#070f14';
+          ctx.fillRect(0, 0, w, h);
+
+          // Central Quarantine Glass Chamber
+          ctx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(w * 0.35, h * 0.25, w * 0.3, h * 0.55);
+
+          ctx.fillStyle = 'rgba(0, 255, 136, 0.05)';
+          ctx.fillRect(w * 0.35, h * 0.25, w * 0.3, h * 0.55);
+
+          ctx.fillStyle = '#00ff88';
+          ctx.font = 'bold 11px monospace';
+          ctx.fillText('QUARANTINE_POD #03 [SECURE]', w * 0.37, h * 0.23);
+        } else if (camId === 4) {
+          // Dark Corridor
+          ctx.fillStyle = '#05070a';
+          ctx.fillRect(0, 0, w, h);
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 0); ctx.lineTo(w * 0.45, h * 0.45);
+          ctx.moveTo(w, 0); ctx.lineTo(w * 0.55, h * 0.45);
+          ctx.moveTo(0, h); ctx.lineTo(w * 0.45, h * 0.55);
+          ctx.moveTo(w, h); ctx.lineTo(w * 0.55, h * 0.55);
+          ctx.stroke();
+
+          // Flickering ceiling lamp
+          if (Math.random() < 0.85) {
+            ctx.fillStyle = 'rgba(255, 220, 150, 0.08)';
+            ctx.beginPath();
+            ctx.moveTo(w * 0.5, h * 0.45);
+            ctx.lineTo(w * 0.2, h);
+            ctx.lineTo(w * 0.8, h);
+            ctx.closePath();
+            ctx.fill();
+          }
+        } else if (camId === 5) {
+          // Industrial Ventilation Turbine
+          ctx.fillStyle = '#0a0d12';
+          ctx.fillRect(0, 0, w, h);
+
+          // Spinning Fan Blades
+          const time = Date.now() * 0.005;
+          ctx.save();
+          ctx.translate(w * 0.5, h * 0.5);
+          ctx.rotate(time);
+          ctx.fillStyle = '#141e2a';
+          for (let b = 0; b < 6; b++) {
+            ctx.rotate((Math.PI * 2) / 6);
+            ctx.fillRect(-15, -h * 0.35, 30, h * 0.35);
+          }
+          ctx.restore();
+
+          // Grate Ring
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.arc(w * 0.5, h * 0.5, h * 0.36, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (camId === 6) {
+          // Steel Blast Door
+          ctx.fillStyle = '#0d1218';
+          ctx.fillRect(0, 0, w, h);
+
+          // Heavy Gate Outline
+          ctx.fillStyle = '#162230';
+          ctx.fillRect(w * 0.25, h * 0.15, w * 0.5, h * 0.75);
+
+          // Hazard Stripes
+          for (let s = 0; s < 10; s++) {
+            ctx.fillStyle = s % 2 === 0 ? '#ffcc00' : '#111111';
+            ctx.fillRect(w * (0.25 + s * 0.05), h * 0.85, w * 0.05, 14);
+          }
+        }
+
+        ctx.restore();
+      }
+
+      drawAnomalyEntity(ctx, w, h, anom) {
+        ctx.save();
+        const ax = w * anom.x;
+        const ay = h * anom.y;
+        const radiusPx = w * anom.radius;
+
+        // Render Anomaly Photo if loaded
+        if (this.images[anom.imgKey]) {
+          ctx.save();
+          ctx.globalAlpha = 0.85 + Math.sin(Date.now() * 0.01) * 0.15;
+          // Chromatic Aberration offset
+          ctx.drawImage(this.images[anom.imgKey], ax - radiusPx, ay - radiusPx, radiusPx * 2, radiusPx * 2);
+          ctx.restore();
+        } else {
+          // Fallback Entity Glow
+          ctx.fillStyle = '#ff2255';
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 25;
+          ctx.beginPath();
+          ctx.arc(ax, ay, radiusPx * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Targeting Warning Label
+        ctx.fillStyle = '#ff2255';
+        ctx.font = 'bold 13px "Share Tech Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`⚠ ${anom.name.toUpperCase()} ⚠`, ax, ay - radiusPx - 10);
+        ctx.restore();
+      }
+
+      drawNoiseAndGlitch(ctx, w, h) {
+        // Camera Switch Static
+        if (this.cameraSwitchGlitch > 0) {
+          this.cameraSwitchGlitch--;
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.cameraSwitchGlitch * 0.08})`;
+          ctx.fillRect(0, 0, w, h);
+        }
+
+        // Grain static noise
+        const imgData = ctx.getImageData(0, 0, Math.min(w, 400), Math.min(h, 300));
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 32) {
+          const noise = (Math.random() - 0.5) * 35;
+          data[i] += noise;
+          data[i + 1] += noise * 1.2;
+          data[i + 2] += noise;
+        }
+      }
+
+      renderRadar() {
+        const ctx = this.radarCtx;
+        const w = this.radarCanvas.width;
+        const h = this.radarCanvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.fillStyle = '#04080e';
+        ctx.fillRect(0, 0, w, h);
+
+        // Radar grid circles
+        ctx.strokeStyle = 'rgba(0, 255, 136, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.5, h * 0.4, 0, Math.PI * 2);
+        ctx.arc(w * 0.5, h * 0.5, h * 0.2, 0, Math.PI * 2);
+        ctx.moveTo(w * 0.5, 0); ctx.lineTo(w * 0.5, h);
+        ctx.moveTo(0, h * 0.5); ctx.lineTo(w, h * 0.5);
+        ctx.stroke();
+
+        // Sweep Line
+        const sweepAngle = (Date.now() * 0.003) % (Math.PI * 2);
+        ctx.strokeStyle = '#00ff88';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.5, h * 0.5);
+        ctx.lineTo(w * 0.5 + Math.cos(sweepAngle) * (h * 0.45), h * 0.5 + Math.sin(sweepAngle) * (h * 0.45));
+        ctx.stroke();
+
+        // Anomaly Blip on Radar
+        const anom = this.anomalies[this.currentCam];
+        if (anom && anom.active && !anom.found) {
+          ctx.fillStyle = '#ff2255';
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(w * 0.5 + 30, h * 0.5 - 15, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       endGame(success, msg) {
@@ -298,7 +974,7 @@
 
         if (success) {
           this.audio.playVictory();
-          setTimeout(onFinish, 800);
+          setTimeout(onFinish, 1000);
         } else {
           this.horror.triggerFakeBSOD(() => {
             onFinish();
@@ -308,7 +984,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      new CCTVGame();
+      new AdvancedCCTVGame();
     });
   </script>
 </body>
