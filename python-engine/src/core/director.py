@@ -223,14 +223,12 @@ class Director:
 
         if cmd in ["/help", "help", "yardım"]:
             help_msg = (
-                "=== SENTIENT_OS GÜVENLİK TERMİNALİ ===\n"
-                "Kullanılabilir Komutlar:\n"
-                "  • /status : Sistem teşhis ve sektör durum raporu\n"
-                "  • /scan   : Kök dizin taraması ve anomali tespiti\n"
-                "  • /hack   : Aktif sektör güvenlik sınavını başlat\n"
-                "  • /cctv   : Güvenlik kameralarını canlı izle / anomali ara\n"
-                "  • /override <KOD> : Güvenlik şifresi gir (Masaüstü/ARG)\n"
-                "========================================"
+                "ℹ️ [KOMUT REHBERİ]\n"
+                "• /scan   : Masaüstü ve CCTV tehditlerini tarar\n"
+                "• /cctv   : Güvenlik kameralarını canlı izler\n"
+                "• /status : Görev ve sektör durumunu gösterir\n"
+                "• /hack   : Mevcut hedefe dair ipucu/analiz verir\n"
+                "• /override <KOD> : Bulmaca şifrelerini girmek içindir"
             )
             await self.event_bus.publish(
                 "ai_response",
@@ -239,55 +237,60 @@ class Director:
             return True
 
         elif cmd in ["/status", "status", "durum"]:
-            report = self.quest_manager.get_system_status_summary()
-            cctv_stat = self.cctv_threat.get_status_report()
-            full_report = f"{report}\n\nSURVEILLANCE:\n{cctv_stat}"
+            curr_obj = self.quest_manager.get_current_objective_title()
+            completed = sum(1 for t in self.quest_manager.trials if t.completed)
+            total = len(self.quest_manager.trials)
+            status_report = (
+                f"📊 [GÖREV & ÇEKİRDEK DURUMU]\n"
+                f"• Aktif Hedef: {curr_obj}\n"
+                f"• Mühürlenen Sektörler: {completed}/{total} Tamamlandı"
+            )
             await self.event_bus.publish(
                 "ai_response",
-                payload={"speech": full_report, "emotion": "sinister", "actions": []},
+                payload={"speech": status_report, "emotion": "calm", "actions": []},
             )
             return True
 
         elif cmd in ["/scan", "scan", "tara"]:
-            active_threats = self.desktop_threat.spawned_file_count
-            cctv_alert = "⚠️ ANOMALİ MEVCUT!" if self.cctv_threat.has_active_anomaly else "🟢 TEMİZ"
+            active_desktop = self.desktop_threat.spawned_file_count
+            desktop_status = f"⚠️ {active_desktop} Şüpheli Dosya Algılandı" if active_desktop > 0 else "🟢 Temiz"
+
+            if self.cctv_threat.has_active_anomaly:
+                anom_room = self.cctv_threat.active_anomaly.get("name", "Bilinmeyen Kamera")
+                rem_sec = int(self.cctv_threat.time_remaining_sec)
+                cctv_status = f"🚨 {anom_room} İhlal Edildi (Kalan: {rem_sec}s)"
+            else:
+                cctv_status = "🟢 Güvenli (Anomali Yok)"
+
             scan_report = (
-                f"[SİSTEM DERİN TARAMASI BAŞLATILDI...]\n"
-                f"• Masaüstü Anomali İndeksi: {active_threats} Şüpheli Dosya\n"
-                f"• CCTV Kamera Durumu: {cctv_alert}\n"
-                f"• Aktif Savunma Hattı: {self.quest_manager.get_current_objective_title()}\n"
-                f"• Güvenlik Önerisi: Masaüstünü ve güvenlik kameralarını periyodik denetle!"
+                f"🔍 [HIZLI TEHDİT TARAMASI]\n"
+                f"• Masaüstü: {desktop_status}\n"
+                f"• CCTV Kameraları: {cctv_status}"
             )
             await self.event_bus.publish(
                 "ai_response",
-                payload={
-                    "speech": scan_report,
-                    "emotion": "sinister",
-                    "actions": [{"type": "screen_glitch", "params": {"intensity": 0.4, "duration_ms": 600}}],
-                },
+                payload={"speech": scan_report, "emotion": "calm", "actions": []},
             )
             return True
 
-        elif cmd in ["/hack", "hack", "sız"]:
-            trial = self.quest_manager.get_next_available_trial()
-            if trial:
-                await self._launch_trial_by_file(trial.game_file)
-                await self.event_bus.publish(
-                    "ai_response",
-                    payload={
-                        "speech": f"[SİSTEM SINAVI BAŞLATILIYOR]: {trial.title}\n{trial.description}",
-                        "emotion": "sinister",
-                        "actions": [
-                            {"type": "trigger_trial", "params": {"game": trial.game_file, "title": trial.title}},
-                            {"type": "screen_shake", "params": {"intensity": 0.4, "duration_ms": 800}},
-                        ],
-                    },
-                )
+        elif cmd in ["/hack", "hack", "sız", "/hint", "ipucu", "analiz"]:
+            trial = self.quest_manager.get_current_active_trial() or self.quest_manager.get_next_available_trial()
+            active_files = self.desktop_threat.spawned_files
+
+            if active_files:
+                sample_file = list(active_files)[0]
+                msg = f"💡 [ANALİZ]: Masaüstünde '{sample_file}' şüpheli dosyası tespit edildi. Dosyayı inceleyin veya silin."
+            elif self.cctv_threat.has_active_anomaly:
+                msg = "💡 [ANALİZ]: Güvenlik kameralarında anomali tespit edildi. '/cctv' ile bağlanıp varlığı mühürleyin."
+            elif trial:
+                msg = f"💡 [HEDEF ANALİZİ]: {trial.title}\n{trial.description}"
             else:
-                await self.event_bus.publish(
-                    "ai_response",
-                    payload={"speech": "Tüm sektörler mühürlendi. Çekirdek savaşına hazırlan!", "emotion": "angry", "actions": []},
-                )
+                msg = "💡 [ANALİZ]: Tüm güvenlik sektörleri stabil. Sistem tetikte bekliyor."
+
+            await self.event_bus.publish(
+                "ai_response",
+                payload={"speech": msg, "emotion": "calm", "actions": []},
+            )
             return True
 
         elif cmd in ["/cctv", "cctv", "kamera"]:
