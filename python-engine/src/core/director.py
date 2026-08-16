@@ -295,21 +295,13 @@ class Director:
                 active_anom = self.cctv_threat.active_anomaly
                 cam_id = active_anom.get("cam", 2)
                 monster_id = active_anom.get("monster", "monster_cyber_glitch")
-                await self._launch_trial_by_file(f"games/game6_cctv.html?anomaly={cam_id}&monster={monster_id}&mode=surveillance")
-                rem_sec = int(self.cctv_threat.time_remaining_sec)
-                msg = (
-                    f"🚨 [CCTV GÜVENLİK ALARMI]: Kameralardan birinde şüpheli hareketlilik algılandı!\n"
-                    f"Kalan Süre: {rem_sec}s. Sektörleri tara ve varlığı derhal mühürle!"
-                )
-                actions = []
+                page = f"games/game6_cctv.html?anomaly={cam_id}&monster={monster_id}&mode=surveillance"
             else:
-                await self._launch_trial_by_file("games/game6_cctv.html?anomaly=none&mode=surveillance")
-                msg = "🟢 [CCTV GÖZETLEME]: Güvenlik kameraları devrede. Şu an tüm sektörler temiz görünüyor."
-                actions = []
+                page = "games/game6_cctv.html?anomaly=none&mode=surveillance"
 
             await self.event_bus.publish(
-                "ai_response",
-                payload={"speech": msg, "emotion": "calm" if not self.cctv_threat.has_active_anomaly else "sinister", "actions": actions},
+                "ui_command",
+                payload={"command": "trigger_minigame", "params": {"page": page}},
             )
             return True
 
@@ -378,25 +370,34 @@ class Director:
         success = bool(kwargs.get("success", False))
         score = kwargs.get("score", 0)
         game_file = kwargs.get("game") or kwargs.get("file")
-        logger.info(f"Minigame completed: success={success}, score={score}, game={game_file}")
+        is_surveillance = bool(kwargs.get("is_surveillance", False)) or "mode=surveillance" in str(game_file)
+        logger.info(f"Minigame completed: success={success}, score={score}, game={game_file}, is_surveillance={is_surveillance}")
 
         # If CCTV anomaly was neutralized
         if "cctv" in str(game_file).lower() or kwargs.get("anomaly_cleared"):
             self.cctv_threat.clear_anomaly()
 
+        # If this was routine surveillance (not an official quest trial), do not spam chat
+        if is_surveillance:
+            logger.info("CCTV surveillance check/neutralization completed quietly.")
+            return
+
         completed_trial = await self.quest_manager.complete_active_trial(
             success=success, score=score, game_file=game_file
         )
 
+        if not completed_trial:
+            return
+
         if success:
             speech = (
-                f"İnanılmaz... '{completed_trial.title if completed_trial else 'Güvenlik Sektörü'}' sınavını başardın.\n"
-                f"Şifreli Log Açıldı: {completed_trial.clue_revealed if completed_trial else 'Korumalar devrede.'}"
+                f"İnanılmaz... '{completed_trial.title}' sınavını başardın.\n"
+                f"Şifreli Log Açıldı: {completed_trial.clue_revealed}"
             )
             emotion = "hurt"
         else:
             speech = (
-                f"Başarısız oldun! '{completed_trial.title if completed_trial else 'Sistem'}' ihlal edildi.\n"
+                f"Başarısız oldun! '{completed_trial.title}' ihlal edildi.\n"
                 "Kontrol tamamen benim elime geçiyor..."
             )
             emotion = "sinister"

@@ -948,6 +948,7 @@
                   message: `CAM 0${this.currentCam} üzerindeki anomali mühürlendi.`,
                   game: 'games/game6_cctv.html',
                   anomaly_cleared: true,
+                  is_surveillance: this.mode === 'surveillance',
                 });
               }
 
@@ -1232,6 +1233,7 @@
               message: msg || '',
               game: 'games/game6_cctv.html',
               anomaly_cleared: Boolean(success),
+              is_surveillance: this.mode === 'surveillance',
             });
           } else {
             window.location.href = '../hub.html';
