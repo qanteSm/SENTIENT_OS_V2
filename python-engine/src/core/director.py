@@ -107,13 +107,6 @@ class Director:
         await self.event_bus.subscribe("minigame_completed", self._on_minigame_completed)
         await self.event_bus.subscribe("desktop.file_cleaned", self._on_desktop_file_cleaned)
 
-        # Start desktop threat engine and CCTV surveillance monitor
-        await self.desktop_threat.start()
-        await self.cctv_threat.start()
-
-        # Start Phase 1 Timeline
-        await self.timeline.start_phase(self.narrative.current_phase)
-
     async def _on_effect_event(self, event_type: str, **kwargs: Any) -> None:
         """Execute native Windows operations when an effect event is published."""
         payload = kwargs.get("payload", {})
@@ -497,8 +490,19 @@ class Director:
         await self.transition_to_phase(NarrativePhase.DIALOGUE)
 
     async def _on_onboarding_completed(self, event_type: str, **kwargs: Any) -> None:
-        """Called when Electron onboarding flow is finished."""
-        logger.info("Onboarding completed by user. Starting narrative progression.")
+        """Called when Electron onboarding flow is finished and user launched the connection."""
+        intensity = kwargs.get("intensity", "medium")
+        language = kwargs.get("language", "tr")
+        logger.info(f"Onboarding completed by user (intensity={intensity}, lang={language}). Starting game systems and narrative progression.")
+
+        self.config.intensity = intensity
+        self.config.language = language
+
+        # Start desktop threat engine and CCTV surveillance monitor
+        await self.desktop_threat.start()
+        await self.cctv_threat.start()
+
+        # Start Phase 1 Timeline
         await self.timeline.start_phase(NarrativePhase.FIRST_CONTACT)
 
     async def transition_to_phase(self, new_phase: NarrativePhase) -> None:
