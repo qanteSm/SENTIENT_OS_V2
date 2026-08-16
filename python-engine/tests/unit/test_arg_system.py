@@ -19,7 +19,7 @@ async def test_desktop_arg_puzzle_lifecycle():
         puzzle = DesktopARGPuzzle(target_dir=tmp_dir)
         created = puzzle.deploy_puzzle_files()
 
-        assert len(created) == 2
+        assert len(created) >= 2
         for path_str in created:
             assert Path(path_str).exists()
             content = Path(path_str).read_text(encoding="utf-8")

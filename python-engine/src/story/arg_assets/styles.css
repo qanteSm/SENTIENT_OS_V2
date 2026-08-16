@@ -29,7 +29,17 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-  user-select: none;
+  user-select: text;
+}
+
+.terminal-body,
+.term-line,
+.log-viewer,
+.log-entry,
+.freq-result-box,
+.module-desc,
+.doc-box {
+  user-select: text !important;
 }
 
 /* CRT Scanline & Curved Vignette Overlay */

@@ -247,19 +247,32 @@ class ARGPortal {
 
     lockBtn.addEventListener('click', () => {
       this.synth.ensureContext();
+      if (this.frequencyLocked) return;
+
       const freqDiff = Math.abs(this.currentFreq - this.targetFreq);
       const phaseDiff = Math.abs(this.currentPhase - this.targetPhase);
 
       if (freqDiff <= 25 && phaseDiff <= 0.35) {
         this.frequencyLocked = true;
         this.synth.playBeep(1200, 0.3, 'triangle');
+
+        // Lock UI controls so they cannot be altered
+        freqSlider.disabled = true;
+        phaseSlider.disabled = true;
+        lockBtn.disabled = true;
+        lockBtn.textContent = '✓ FREKANS KİLİTLENDİ [0x7F_K3RN3L]';
+        lockBtn.style.background = 'rgba(0, 255, 136, 0.25)';
+        lockBtn.style.borderColor = '#00ff88';
+        lockBtn.style.color = '#00ff88';
+        lockBtn.style.cursor = 'default';
+
         resultBox.className = 'freq-result-box success';
-        resultBox.innerHTML = `✓ REZONANS KİLİTLENDİ!<br><strong>[PARÇA 1]: 0x7F_K3RN3L</strong>`;
+        resultBox.innerHTML = `✓ REZONANS KİLİTLENDİ!<br><span style="font-size: 13px; color: #00ff88;">[1. PARÇA ANAHTARI]: <strong>0x7F_K3RN3L</strong></span>`;
         this.appendTerminalLine('========================================', 'cyan');
         this.appendTerminalLine('✓ FREKANS MODÜLASYONU KİLİTLENDİ!', 'cyan');
         this.appendTerminalLine('Çözülen [1. PARÇA]: 0x7F_K3RN3L', 'green');
-        this.appendTerminalLine('Şimdi masaüstündeki ENCRYPTED_SECTOR_0x4F.dat dosyasında gizlenen 2. Parça ile birleştirin.', 'amber');
-        this.appendTerminalLine('Kullanım formatı: override 0x7F_K3RN3L_[PARÇA2]', 'cyan');
+        this.appendTerminalLine('Masaüstünüzdeki ENCRYPTED_SECTOR_0x4F.txt dosyasında gizlenen 2. Parça: V0ID', 'amber');
+        this.appendTerminalLine('Root Terminaline girilecek komut: override 0x7F_K3RN3L_V0ID', 'cyan');
         this.appendTerminalLine('========================================', 'cyan');
       } else {
         this.synth.playAlarm();

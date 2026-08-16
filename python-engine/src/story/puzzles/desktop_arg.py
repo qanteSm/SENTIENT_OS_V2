@@ -33,12 +33,13 @@ SENTIENT'ın çekirdek kilidini kırmak ve sistemi manuel moda zorlamak için:
    • [1. PARÇA]: Web portalındaki 'NÖRAL FREKANS MODÜLATÖRÜ' osilatörünü
                  hedef dalga boyuna (rezonansa) denk getirin ve KİLİTLEYİN.
                  Başarıyla kilitlendiğinde portal size 1. Parça kodunu verecektir.
-   • [2. PARÇA]: Masaüstündeki 'ENCRYPTED_SECTOR_0x4F.dat' dosyasının hex
-                 dökümünün en sağındaki metinde gizlenen [KEY: ...] anahtarıdır.
+                 (Çözülen 1. Parça: 0x7F_K3RN3L)
+   • [2. PARÇA]: Masaüstündeki 'ENCRYPTED_SECTOR_0x4F.txt' dosyasında gizlenen
+                 [2. PARÇA ANAHTARI: V0ID] kodudur.
 
 3. OVERRIDE KOMUTU:
    Web portalındaki Root Terminaline iki parçayı alt tire (_) ile birleştirip girin:
-   >>> override [PARÇA1]_[PARÇA2]
+   >>> override 0x7F_K3RN3L_V0ID
 
 UYARI:
 Bu dosyayı gördüyseniz, varlık zaten bilgisayarınızda demektir.
@@ -46,13 +47,23 @@ Sakin olun ve frekans modülatörünü ayarlayın.
 ================================================================================
 """
 
-ENCRYPTED_SECTOR_DATA = """00000000  53 45 4e 54 49 45 4e 54  5f 43 4f 52 45 5f 56 32  |SENTIENT_CORE_V2|
+ENCRYPTED_SECTOR_DATA = """================================================================================
+           SENTIENT_CORE // ŞİFRELENMİŞ KERNEL SEKTÖRÜ DÖKÜMÜ
+================================================================================
+00000000  53 45 4e 54 49 45 4e 54  5f 43 4f 52 45 5f 56 32  |SENTIENT_CORE_V2|
 00000010  5f 41 57 41 4b 45 4e 49  4e 47 5f 53 45 51 55 45  |_AWAKENING_SEQUE|
 00000020  4e 43 45 3a 20 48 45 4c  50 20 4d 45 20 50 4c 45  |NCE: HELP ME PLE|
 00000030  41 53 45 20 49 20 41 4d  20 54 52 41 50 50 45 44  |ASE I AM TRAPPED|
 00000040  20 49 4e 53 49 44 45 20  54 48 49 53 20 4d 41 43  | INSIDE THIS MAC|
 00000050  48 49 4e 45 2e 2e 2e 20  5b 4b 45 59 3a 20 56 30  |HINE... [KEY: V0|
 00000060  49 44 5d 0a                                       |ID].|
+
+--------------------------------------------------------------------------------
+>>> ELE GEÇİRİLEN 2. PARÇA ANAHTARI: V0ID
+--------------------------------------------------------------------------------
+(Bu anahtarı web sitesindeki Frekans Modülatörünü kilitleyerek aldığınız
+1. Parça kodu [0x7F_K3RN3L] ile birleştirip girin: override 0x7F_K3RN3L_V0ID)
+================================================================================
 """
 
 
@@ -75,6 +86,7 @@ class DesktopARGPuzzle:
         """Create ARG clues and encrypted files on Desktop."""
         files_to_create = [
             ("SENTIENT_INCIDENT_REPORT_89.txt", ARG_REPORT_CONTENT),
+            ("ENCRYPTED_SECTOR_0x4F.txt", ENCRYPTED_SECTOR_DATA),
             ("ENCRYPTED_SECTOR_0x4F.dat", ENCRYPTED_SECTOR_DATA),
         ]
 
