@@ -337,7 +337,8 @@ class QuestManager:
             lines.append(f"🔎 SIRADAKİ HEDEF: {active_trial.title} [{lock_status}]")
             lines.append(f"📁 İpucu Kaynağı: {active_trial.clue_source}")
             lines.append(f"👉 {active_trial.investigation_lead}")
-            lines.append("Komutlar: '/decrypt <KOD>' | '/trial' (Başlat) | '/logs'")
+            lines.append("💡 Komutlar: '/decrypt <KOD>' | '/trial' (Görevi Başlat) | '/logs' | '/scan'")
+            lines.append("💡 Temizlik: Şüpheli bozuk dosyaları inceledikten sonra çöp kutusuna atabilirsiniz.")
 
         return "\n".join(lines)
 

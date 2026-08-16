@@ -90,18 +90,26 @@ class CCTVThreatEngine:
         self.active_anomaly = None
         logger.info("CCTVThreatEngine stopped.")
 
-    def spawn_random_anomaly(self) -> Dict[str, Any]:
-        """Spawn a new paranormal entity on a random camera channel."""
-        picked = random.choice(ANOMALY_ROOMS)
+    def spawn_anomaly(self, cam: Optional[int] = None, monster: Optional[str] = None) -> Dict[str, Any]:
+        """Spawn a new paranormal entity on a specific or random camera channel."""
+        if cam is not None:
+            picked = next((r for r in ANOMALY_ROOMS if r["cam"] == cam), ANOMALY_ROOMS[0])
+        else:
+            picked = random.choice(ANOMALY_ROOMS)
+
         self.active_anomaly = {
             "cam": picked["cam"],
             "name": picked["name"],
             "desc": picked["desc"],
-            "monster": picked.get("monster", "monster_shadow_lurker"),
+            "monster": monster or picked.get("monster", "monster_shadow_lurker"),
         }
         self.anomaly_spawn_time = time.time()
         logger.info(f"[CCTV] Paranormal Anomaly spawned on {picked['name']}: {picked['desc']} (3 min timeout)")
         return self.active_anomaly
+
+    def spawn_random_anomaly(self) -> Dict[str, Any]:
+        """Spawn a new paranormal entity on a random camera channel."""
+        return self.spawn_anomaly()
 
     def clear_anomaly(self) -> bool:
         """Neutralize active anomaly when player catches it in CCTV minigame."""
@@ -185,15 +193,29 @@ class CCTVThreatEngine:
                 if tick >= 25:
                     tick = 0
                     anom = self.spawn_random_anomaly()
-                    # Creepy hint in chat
                     hints = [
                         "Güvenlik kameralarından birinin sinyali bozuluyor...",
                         "Havalandırmadan ayak sesleri geliyor... Gözlerin kameralarda olsun.",
                         "Monitörün arkasındaki gölgeleri fark ettin mi?",
                     ]
+                    # Play eerie chime sound
+                    await self.event_bus.publish(
+                        "effect",
+                        payload={"category": "audio", "name": "play_stinger", "params": {"name": "chime_eerie", "volume": 0.7}},
+                    )
+                    alert_msg = (
+                        f"🚨 [CCTV GÜVENLİK İKAZI // ANOMALİ ALGILANDI]:\n"
+                        f"• {random.choice(hints)}\n"
+                        f"• Hedef Bölge: {anom.get('name', 'Bilinmeyen Kamera')}\n"
+                        f"👉 '/cctv' yazarak kameraları hemen tara ve varlığı mühürle (3 dk süren var)!"
+                    )
                     await self.event_bus.publish(
                         "ai_response",
-                        payload={"speech": random.choice(hints), "emotion": "sinister", "actions": []},
+                        payload={
+                            "speech": alert_msg,
+                            "emotion": "sinister",
+                            "actions": [{"type": "screen_fade", "params": {"color": "#ff0033", "target_opacity": 0.2, "duration_ms": 600}}],
+                        },
                     )
                     await self.event_bus.publish(
                         "cctv_anomaly_update",

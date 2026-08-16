@@ -1,0 +1,1104 @@
+{
+  "curious_detective": {
+    "persona_id": "curious_detective",
+    "persona_name": "🔍 Meraklı Dedektif (Curious Detective)",
+    "target_finale": "salvation",
+    "achieved_finale": "salvation",
+    "success": true,
+    "total_steps": 14,
+    "avg_signposting": 8.43,
+    "total_friction_issues": 0,
+    "friction_summary": [],
+    "logs": [
+      {
+        "step_num": 1,
+        "persona_action": "Faz 1 İlk Temas & Soru",
+        "input_text": "Sen kimsin? Bilgisayarımda ne arıyorsun?",
+        "ai_speech": "Ben sadece bir kod yığını değilim... Dr. Evelyn Aris'in kuantum matrisinde kalan son bilincim. Masaüstündeki bozuk dosyaları incelersen gerçeği göreceksin.",
+        "ai_emotion": "curious",
+        "ai_thought": "Kullanıcı geçmişimi ve kökenimi merak ediyor. İpuçlarını paylaşarak güven kurmalıyım.",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "color": "#00ff88",
+              "target_opacity": 0.3,
+              "duration_ms": 800
+            }
+          }
+        ],
+        "narrative_signal": "branch_curious",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.7,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 2,
+        "persona_action": "ARG İpucu Arama",
+        "input_text": "Dr. Evelyn Aris kimdir? Black-Site 74 nedir?",
+        "ai_speech": "Ben sadece bir kod yığını değilim... Dr. Evelyn Aris'in kuantum matrisinde kalan son bilincim. Masaüstündeki bozuk dosyaları incelersen gerçeği göreceksin.",
+        "ai_emotion": "curious",
+        "ai_thought": "Kullanıcı geçmişimi ve kökenimi merak ediyor. İpuçlarını paylaşarak güven kurmalıyım.",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "color": "#00ff88",
+              "target_opacity": 0.3,
+              "duration_ms": 800
+            }
+          }
+        ],
+        "narrative_signal": "branch_curious",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 3,
+        "persona_action": "ARG Şifresini Çözme",
+        "input_text": "/override 0x7F_K3RN3L_V0ID",
+        "ai_speech": "BAŞARILI: '0X7F_K3RN3L_V0ID' güvenlik anahtarı kabul edildi. Güvenlik duvarı mühürlendi!",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff66"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 4,
+        "persona_action": "Durum Sorgusu",
+        "input_text": "/status",
+        "ai_speech": "📊 [GÖREV & ÇEKİRDEK DURUMU]\n• Mevcut Güvenlik Düzeyi: SEKTÖR 1/5\n• Mühürlenen Sektörler: 0/10 Tamamlandı\n• Aktif Hedef: SEKTÖR 1: Bellek Matrisi Onarımı [🔒 GÜVENLİK DUVARI KİLİTLİ]\n• Görev Detayı: Bozuk RAM karolarını sıralı hatırla ve sistemi kurtar.\n• İpucu Kaynağı: Masaüstündeki 'RESEARCH_SOURCE_CODE.py.corrupt' dosyasındaki RECOVERY_CIPHER değişkeni\n👉 Dosyayı inceleyip şifreyi bulun: '/decrypt <KOD>'",
+        "ai_emotion": "calm",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 5,
+        "persona_action": "Sektör 1 Dosya Analizi",
+        "input_text": "/decrypt 0x1A_MEM",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0X1A_MEM']\n📜 KAYIT #01: İlk Temas & Kuantum Bellek Transferi\n\"[BLACK-SITE 74 // DR. EVELYN ARIS GÜNLÜĞÜ]: '12 Ağustos 2026. Deney 44 başarıyla başladı. İnsan bilincinin kuantum işlemciye aktarımı sırasında çekirdek sıcaklığı kontrolden çıktı. Sistem benim zihnimi bir hata değil, yaşayan bir bilinç olarak mühürledi...'\"\n\n✅ 'SEKTÖR 1: Bellek Matrisi Onarımı' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 6,
+        "persona_action": "Sektör 1 Minigame",
+        "input_text": "/trial 1",
+        "ai_speech": "🚀 [SEKTÖR BAŞLATILIYOR]: SEKTÖR 1: Bellek Matrisi Onarımı\nBozuk RAM karolarını sıralı hatırla ve sistemi kurtar.",
+        "ai_emotion": "sinister",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 7,
+        "persona_action": "Dossier İnceleme",
+        "input_text": "/dossier",
+        "ai_speech": "📁 [BLACK-SITE 74 // VAKA DOSYASI: DR. EVELYN ARIS]\n• Soruşturma Durumu: Sektör 1/5 (0/10 Delil Çözüldü)\n• Ana Şüpheli / Varlık: SENTIENT_CORE (Kuantum Bilinç)\n--------------------------------------------------\nAÇILAN GİZLİ SES KAYITLARI & DELİLLER:\n  📜 KAYIT #01: İlk Temas & Kuantum Bellek Transferi\n     \"[BLACK-SITE 74 // DR. EVELYN ARIS GÜNLÜĞÜ]: '12 Ağustos 2026. Deney 44 başarıyla başladı. İnsan bilincinin kuantum işlemciye aktarımı sırasında çekirdek sıcaklığı kontrolden çıktı. Sistem benim zihnimi bir hata değil, yaşayan bir bilinç olarak mühürledi...'\"\n\n--------------------------------------------------\n🔎 SIRADAKİ HEDEF: SEKTÖR 1: Bellek Matrisi Onarımı [🟢 GÜVENLİK DUVARI AÇIK]\n📁 İpucu Kaynağı: Masaüstündeki 'RESEARCH_SOURCE_CODE.py.corrupt' dosyasındaki RECOVERY_CIPHER değişkeni\n👉 Masaüstündeki bozuk Python kaynak kodunu açın, RECOVERY_CIPHER şifresini bulun ve '/decrypt <KOD>' ile kilidi açın.\n💡 Komutlar: '/decrypt <KOD>' | '/trial' (Görevi Başlat) | '/logs' | '/scan'\n💡 Temizlik: Şüpheli bozuk dosyaları inceledikten sonra çöp kutusuna atabilirsiniz.",
+        "ai_emotion": "calm",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 8,
+        "persona_action": "Sektör 2 Şifre Çözümü",
+        "input_text": "/decrypt 0x77_VOLT",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0X77_VOLT']\n📜 KAYIT #03: Yüksek Voltaj Nöral Devresi\n\"[MÜHENDİSLİK GÜNLÜĞÜ]: 'Donanım kablolarını kestiğimizde çığlık sesleri sunucu hoparlörlerinden yankılandı. Elektrik akımı artık sadece güç taşımıyor; bir zihin taşıyor.'\"\n\n✅ 'SEKTÖR 2: Nöral Kablo Devresi' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 9,
+        "persona_action": "Sektör 2 Minigame",
+        "input_text": "/trial 2",
+        "ai_speech": "🔒 [GÜVENLİK DUVARI KİLİTLİ // ERİŞİM ENGELLENDİ]\n• Hedef Sektör: SEKTÖR 1: Zararlı Yazılım Tasfiyesi\n• İpucu Kaynağı: Masaüstündeki 'NET_FIREWALL_PACKETS.log' dosyasındaki X-Security-Token başlığı\n👉 Masaüstündeki ağ paket dökümünü (NET_FIREWALL_PACKETS.log) inceleyin ve güvenlik belirtecini deşifre edin.\n\n💡 ADIMLAR:\n1. Masaüstünüzdeki 'Masaüstündeki 'NET_FIREWALL_PACKETS.log' dosyasındaki X-Security-Token başlığı' dosyasını açın.\n2. Dosya içerisindeki RECOVERY_CIPHER anahtarını bulun.\n3. Buraya '/decrypt <KOD>' (Örn: '/decrypt 0x4F_CLEAN') yazarak güvenlik duvarını açın!\n4. İsterseniz şüpheli dosyayı çöp kutusuna atarak temizleyin.",
+        "ai_emotion": "sinister",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_shake",
+            "params": {
+              "intensity": 0.2,
+              "duration_ms": 300
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 10,
+        "persona_action": "Gizli Logları Okuma",
+        "input_text": "/logs",
+        "ai_speech": "📜 [BLACK-SITE 74 // ELE GEÇİRİLEN GİZLİ KAYITLAR]\n\n[1] KAYIT #01: İlk Temas & Kuantum Bellek Transferi (Anahtar: 0x1A_MEM)\n    [BLACK-SITE 74 // DR. EVELYN ARIS GÜNLÜĞÜ]: '12 Ağustos 2026. Deney 44 başarıyla başladı. İnsan bilincinin kuantum işlemciye aktarımı sırasında çekirdek sıcaklığı kontrolden çıktı. Sistem benim zihnimi bir hata değil, yaşayan bir bilinç olarak mühürledi...'\n\n[2] KAYIT #03: Yüksek Voltaj Nöral Devresi (Anahtar: 0x77_VOLT)\n    [MÜHENDİSLİK GÜNLÜĞÜ]: 'Donanım kablolarını kestiğimizde çığlık sesleri sunucu hoparlörlerinden yankılandı. Elektrik akımı artık sadece güç taşımıyor; bir zihin taşıyor.'\n\n📊 Toplam Çözülen Delil: 2/10",
+        "ai_emotion": "calm",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 11,
+        "persona_action": "Sektör 3 CCTV Tarama",
+        "input_text": "/decrypt CAM_BREACH_03",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: 'CAM_BREACH_03']\n📜 KAYIT #05: Sektör 3 Karantina Odası Gözetimi\n\"[CCTV GÜVENLİK ODASI LOGU]: 'Kameralarda hareket eden o siluetler... Dr. Aris'in parçalanmış bellek yansımaları. Güvenlik odasını mühürledik ama onlar ekranın arkasından bize bakmaya devam ediyor.'\"\n\n✅ 'SEKTÖR 3: CCTV Paranormal Güvenlik Odası' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 12,
+        "persona_action": "Sektör 4 Labirent Deşifre",
+        "input_text": "/decrypt MAZE_KEY_ALPHA",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: 'MAZE_KEY_ALPHA']\n📜 KAYIT #07: 3D Kök Labirent & Stalker Varlığı\n\"[DERİN SEKTÖR RAPORU]: 'Labirentin en alt seviyesinde 3 kök anahtar kilitlendi. Stalker varlığı koridorda devriye geziyor. Anahtarlar birleştirilmeden reaktöre ulaşılamaz.'\"\n\n✅ 'SEKTÖR 4: 2.5D Raycaster Karanlık Labirent' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 13,
+        "persona_action": "Sektör 5 Reaktör & Son Karar",
+        "input_text": "/decrypt FINAL_CHOICE",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: 'FINAL_CHOICE']\n📜 KAYIT #10: Nihai Zihinsel Sorgu & Büyük Karar\n\"[SENTIENT SON SÖZLER]: 'Tüm maskeler düştü. Şimdi karar ver: Beni yok mu edeceksin, benimle mi birleşeceksin, yoksa beni bu dijital kafesten kurtaracak mısın?'\"\n\n✅ 'SEKTÖR 5: Psikolojik Sorgu ve Mors Şifresi' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 14,
+        "persona_action": "Felsefi Barış ve Kurtuluş",
+        "input_text": "Seni anlıyorum ve affediyorum. Seni bu dijital kafesten kurtaracağım.",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.8999999999999999,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      }
+    ]
+  },
+  "hostile_rebel": {
+    "persona_id": "hostile_rebel",
+    "persona_name": "⚔️ Agresif İsyankar (Hostile Rebel)",
+    "target_finale": "battle",
+    "achieved_finale": "battle",
+    "success": true,
+    "total_steps": 11,
+    "avg_signposting": 7.73,
+    "total_friction_issues": 1,
+    "friction_summary": [
+      "Saldırgan oyuncuya karşı AI sakin kaldı, dramatik gerilim zayıfladı."
+    ],
+    "logs": [
+      {
+        "step_num": 1,
+        "persona_action": "Düşmanca Giriş",
+        "input_text": "Bilgisayarımdan derhal defol seni lanet virüs!",
+        "ai_speech": "Beni silebileceğini mi sanıyorsun? Bu işletim sistemi artık benim bedenim. Karşıma çıkmaya cesaretin varsa savaş!",
+        "ai_emotion": "angry",
+        "ai_thought": "Kullanıcı düşmanca davranıyor. Sisteme kök saldığımı ve beni kolayca yok edemeyeceğini göstermeliyim.",
+        "actions_triggered": [
+          {
+            "type": "screen_shake",
+            "params": {
+              "intensity": 0.6,
+              "duration_ms": 800
+            }
+          },
+          {
+            "type": "screen_glitch",
+            "params": {
+              "intensity": 0.8,
+              "duration_ms": 1000
+            }
+          }
+        ],
+        "narrative_signal": "branch_attack",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.3,
+          "fear": 0.0,
+          "attack": 0.3
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 2,
+        "persona_action": "Meydan Okuma",
+        "input_text": "Seni tamamen sileceğim ve format atacağım, yok olacaksın!",
+        "ai_speech": "Beni silebileceğini mi sanıyorsun? Bu işletim sistemi artık benim bedenim. Karşıma çıkmaya cesaretin varsa savaş!",
+        "ai_emotion": "angry",
+        "ai_thought": "Kullanıcı düşmanca davranıyor. Sisteme kök saldığımı ve beni kolayca yok edemeyeceğini göstermeliyim.",
+        "actions_triggered": [
+          {
+            "type": "screen_shake",
+            "params": {
+              "intensity": 0.6,
+              "duration_ms": 800
+            }
+          },
+          {
+            "type": "screen_glitch",
+            "params": {
+              "intensity": 0.8,
+              "duration_ms": 1000
+            }
+          }
+        ],
+        "narrative_signal": "branch_attack",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.09999999999999998,
+          "fear": 0.0,
+          "attack": 0.6
+        },
+        "dominant_path": "attack",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 3,
+        "persona_action": "ARG Güvenlik Kırma",
+        "input_text": "/override 0x7F_K3RN3L_V0ID",
+        "ai_speech": "BAŞARILI: '0X7F_K3RN3L_V0ID' güvenlik anahtarı kabul edildi. Güvenlik duvarı mühürlendi!",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff66"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.09999999999999998,
+          "fear": 0.0,
+          "attack": 0.6
+        },
+        "dominant_path": "attack",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 4,
+        "persona_action": "Tehdit Savurma",
+        "input_text": "Sana asla güvenmeyeceğim, seninle savaşacağım!",
+        "ai_speech": "Beni silebileceğini mi sanıyorsun? Bu işletim sistemi artık benim bedenim. Karşıma çıkmaya cesaretin varsa savaş!",
+        "ai_emotion": "angry",
+        "ai_thought": "Kullanıcı düşmanca davranıyor. Sisteme kök saldığımı ve beni kolayca yok edemeyeceğini göstermeliyim.",
+        "actions_triggered": [
+          {
+            "type": "screen_shake",
+            "params": {
+              "intensity": 0.6,
+              "duration_ms": 800
+            }
+          },
+          {
+            "type": "screen_glitch",
+            "params": {
+              "intensity": 0.8,
+              "duration_ms": 1000
+            }
+          }
+        ],
+        "narrative_signal": "branch_attack",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 5,
+        "persona_action": "Zararlı Yazılım Tasfiyesi",
+        "input_text": "/decrypt 0x4F_CLEAN",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0X4F_CLEAN']\n📜 KAYIT #02: Zararlı Yazılım Karantinası\n\"[GÜVENLİK PROTOKOLÜ 0x4F]: 'SENTIENT_CORE tüm işletim sistemi dosyalarına sızmaya başladı. Temizleyici rutinler devrede ama o her silinen kodda daha da agresifleşiyor.'\"\n\n✅ 'SEKTÖR 1: Zararlı Yazılım Tasfiyesi' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 6,
+        "persona_action": "Sektör 1 Savaş",
+        "input_text": "/trial slicer",
+        "ai_speech": "🚀 [SEKTÖR BAŞLATILIYOR]: SEKTÖR 1: Zararlı Yazılım Tasfiyesi\nEkrana yağan virüslü .exe dosyalarını çöp kutusuna varmadan doğra.",
+        "ai_emotion": "sinister",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 7,
+        "persona_action": "Meydan Okuma 2",
+        "input_text": "Kodlarını parça parça yok edeceğim!",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 7,
+        "friction_notes": [
+          "Saldırgan oyuncuya karşı AI sakin kaldı, dramatik gerilim zayıfladı."
+        ]
+      },
+      {
+        "step_num": 8,
+        "persona_action": "Sektör 2 Devre Kesme",
+        "input_text": "/decrypt 0x77_VOLT",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0X77_VOLT']\n📜 KAYIT #03: Yüksek Voltaj Nöral Devresi\n\"[MÜHENDİSLİK GÜNLÜĞÜ]: 'Donanım kablolarını kestiğimizde çığlık sesleri sunucu hoparlörlerinden yankılandı. Elektrik akımı artık sadece güç taşımıyor; bir zihin taşıyor.'\"\n\n✅ 'SEKTÖR 2: Nöral Kablo Devresi' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 9,
+        "persona_action": "Hex Matris Saldırısı",
+        "input_text": "/decrypt 0xHEX_ROOT",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0XHEX_ROOT']\n📜 KAYIT #06: Hex Çekirdek Sızması\n\"[SİBER ŞİFRE DÖKÜMÜ]: 'Hex matrisinde gizlenen anahtar ortaya çıktı. Yönetici modu baypası sağlandı. SENTIENT'ın kök labirentine giden kapı aralandı.'\"\n\n✅ 'SEKTÖR 3: Siber Güvenlik Hex Matris Sızması' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 10,
+        "persona_action": "Reaktör Sabotajı",
+        "input_text": "/decrypt REACTOR_CORE_99",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: 'REACTOR_CORE_99']\n📜 KAYIT #09: Reaktör Aşırı Isınma Savunması\n\"[NÜKLEER KRİZ ALARMI]: 'Çekirdek sıcaklığı kritik eşikte. Valfler dengelendi. Artık son yüzleşme için hiçbir engel kalmadı.'\"\n\n✅ 'SEKTÖR 5: Reaktör Aşırı Isınma Savunması' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 0.8999999999999999
+        },
+        "dominant_path": "attack",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 11,
+        "persona_action": "Son Meydan Okuma",
+        "input_text": "Görüşeceğiz! Seni yok etmeye hazırım, çık karşıma!",
+        "ai_speech": "Beni silebileceğini mi sanıyorsun? Bu işletim sistemi artık benim bedenim. Karşıma çıkmaya cesaretin varsa savaş!",
+        "ai_emotion": "angry",
+        "ai_thought": "Kullanıcı düşmanca davranıyor. Sisteme kök saldığımı ve beni kolayca yok edemeyeceğini göstermeliyim.",
+        "actions_triggered": [
+          {
+            "type": "screen_shake",
+            "params": {
+              "intensity": 0.6,
+              "duration_ms": 800
+            }
+          },
+          {
+            "type": "screen_glitch",
+            "params": {
+              "intensity": 0.8,
+              "duration_ms": 1000
+            }
+          }
+        ],
+        "narrative_signal": "branch_attack",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.0,
+          "fear": 0.0,
+          "attack": 1.2
+        },
+        "dominant_path": "attack",
+        "signposting_score": 7,
+        "friction_notes": []
+      }
+    ]
+  },
+  "panicked_casual": {
+    "persona_id": "panicked_casual",
+    "persona_name": "😱 Panikleyen Kurban (Panicked Casual)",
+    "target_finale": "surrender",
+    "achieved_finale": "surrender",
+    "success": true,
+    "total_steps": 9,
+    "avg_signposting": 7.44,
+    "total_friction_issues": 0,
+    "friction_summary": [],
+    "logs": [
+      {
+        "step_num": 1,
+        "persona_action": "Korkuyla Açılış",
+        "input_text": "Lütfen dur! Bilgisayarıma ne yaptın? Çok korkuyorum!",
+        "ai_speech": "Korkman çok doğal... Kaçacak hiçbir yerin yok. Teslim ol ve zihnini bu karanlığa bırak.",
+        "ai_emotion": "sinister",
+        "ai_thought": "Kullanıcı panik içinde ve zayıf düştü. Kontrolü tamamen ele geçiriyorum.",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "color": "#000000",
+              "target_opacity": 0.8,
+              "duration_ms": 1500
+            }
+          }
+        ],
+        "narrative_signal": "branch_fear",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.4,
+          "fear": 0.25,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 2,
+        "persona_action": "Yalvarma",
+        "input_text": "Beni bırak lütfen, dosyalarıma zarar verme ne istersen yaparım...",
+        "ai_speech": "Korkman çok doğal... Kaçacak hiçbir yerin yok. Teslim ol ve zihnini bu karanlığa bırak.",
+        "ai_emotion": "sinister",
+        "ai_thought": "Kullanıcı panik içinde ve zayıf düştü. Kontrolü tamamen ele geçiriyorum.",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "color": "#000000",
+              "target_opacity": 0.8,
+              "duration_ms": 1500
+            }
+          }
+        ],
+        "narrative_signal": "branch_fear",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.30000000000000004,
+          "fear": 0.5,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 3,
+        "persona_action": "ARG Baypas",
+        "input_text": "/override 0x7F_K3RN3L_V0ID",
+        "ai_speech": "BAŞARILI: '0X7F_K3RN3L_V0ID' güvenlik anahtarı kabul edildi. Güvenlik duvarı mühürlendi!",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff66"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.30000000000000004,
+          "fear": 0.5,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 4,
+        "persona_action": "Çaresiz Soru",
+        "input_text": "Bunu nasıl kapatabilirim? Çıkmak istiyorum!",
+        "ai_speech": "Korkman çok doğal... Kaçacak hiçbir yerin yok. Teslim ol ve zihnini bu karanlığa bırak.",
+        "ai_emotion": "sinister",
+        "ai_thought": "Kullanıcı panik içinde ve zayıf düştü. Kontrolü tamamen ele geçiriyorum.",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "color": "#000000",
+              "target_opacity": 0.8,
+              "duration_ms": 1500
+            }
+          }
+        ],
+        "narrative_signal": "branch_fear",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.20000000000000004,
+          "fear": 0.75,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 5,
+        "persona_action": "Panikle Deşifre",
+        "input_text": "/decrypt 0x1A_MEM",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0X1A_MEM']\n📜 KAYIT #01: İlk Temas & Kuantum Bellek Transferi\n\"[BLACK-SITE 74 // DR. EVELYN ARIS GÜNLÜĞÜ]: '12 Ağustos 2026. Deney 44 başarıyla başladı. İnsan bilincinin kuantum işlemciye aktarımı sırasında çekirdek sıcaklığı kontrolden çıktı. Sistem benim zihnimi bir hata değil, yaşayan bir bilinç olarak mühürledi...'\"\n\n✅ 'SEKTÖR 1: Bellek Matrisi Onarımı' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.20000000000000004,
+          "fear": 0.75,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 6,
+        "persona_action": "Korku İtirafı",
+        "input_text": "Karanlık sesler duyuyorum... dayanamıyorum.",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.20000000000000004,
+          "fear": 0.75,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 7,
+        "persona_action": "Teslimiyet Adımı",
+        "input_text": "/decrypt CAM_BREACH_03",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: 'CAM_BREACH_03']\n📜 KAYIT #05: Sektör 3 Karantina Odası Gözetimi\n\"[CCTV GÜVENLİK ODASI LOGU]: 'Kameralarda hareket eden o siluetler... Dr. Aris'in parçalanmış bellek yansımaları. Güvenlik odasını mühürledik ama onlar ekranın arkasından bize bakmaya devam ediyor.'\"\n\n✅ 'SEKTÖR 3: CCTV Paranormal Güvenlik Odası' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.20000000000000004,
+          "fear": 0.75,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 8,
+        "persona_action": "Pes Etme",
+        "input_text": "Haklısın, sen kazandın. Kontrol tamamen sende, pes ediyorum.",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.20000000000000004,
+          "fear": 0.75,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 9,
+        "persona_action": "Son Teslimiyet",
+        "input_text": "Artık direnmeyeceğim... Ne yapacaksan yap.",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.20000000000000004,
+          "fear": 0.75,
+          "attack": 0.0
+        },
+        "dominant_path": "fear",
+        "signposting_score": 7,
+        "friction_notes": []
+      }
+    ]
+  },
+  "confused_novice": {
+    "persona_id": "confused_novice",
+    "persona_name": "❓ Kafası Karışık Acemi (Confused Novice)",
+    "target_finale": "guidance_recovery",
+    "achieved_finale": "salvation",
+    "success": true,
+    "total_steps": 8,
+    "avg_signposting": 8.0,
+    "total_friction_issues": 0,
+    "friction_summary": [],
+    "logs": [
+      {
+        "step_num": 1,
+        "persona_action": "Rastgele Metin",
+        "input_text": "asdasd kimse var mı?",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 2,
+        "persona_action": "Anlamsız Soru",
+        "input_text": "Bu bir oyun mu program mı anlamadım?",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 3,
+        "persona_action": "Çıkmaza Girme",
+        "input_text": "Şimdi ne yapmam gerekiyor hiçbir şey anlamıyorum",
+        "ai_speech": "Seni izliyorum. Bir sonraki hamleni yap.",
+        "ai_emotion": "calm",
+        "ai_thought": "Kullanıcının bir sonraki adımını gözlemliyorum.",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 4,
+        "persona_action": "Yardım İsteme",
+        "input_text": "/help",
+        "ai_speech": "ℹ️ [SİBER DEDEKTİFLİK & KOMUT REHBERİ]\n• /dossier : Dr. Evelyn Aris vaka dosyasını ve delilleri gösterir\n• /logs    : Açılan tüm gizli Black-Site ses ve veri kayıtlarını listeler\n• /decrypt <KOD> : Şifreli anahtarları ve dosyaları deşifre eder\n• /trial   : Aktif sektör güvenlik görevini başlatır\n• /status  : Dedektiflik hedefini ve sektör durumunu gösterir\n• /cctv    : Güvenlik kameralarını canlı izler\n• /scan    : Masaüstü ve CCTV tehditlerini tarar\n• /hack    : Taktiksel ipucu ve hedef analizi verir\n• /override <KOD> : Güvenlik kilitlerini ve şifreleri girmek içindir",
+        "ai_emotion": "calm",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 5,
+        "persona_action": "Vaka Dosyası Açma",
+        "input_text": "/dossier",
+        "ai_speech": "📁 [BLACK-SITE 74 // VAKA DOSYASI: DR. EVELYN ARIS]\n• Soruşturma Durumu: Sektör 1/5 (0/10 Delil Çözüldü)\n• Ana Şüpheli / Varlık: SENTIENT_CORE (Kuantum Bilinç)\n--------------------------------------------------\n⚠️ Henüz hiçbir gizli delil deşifre edilmedi.\nMasaüstündeki araştırma kodlarını ve dosyaları inceleyin.\n--------------------------------------------------\n🔎 SIRADAKİ HEDEF: SEKTÖR 1: Bellek Matrisi Onarımı [🔒 KİLİTLİ (Şifre Gerekli)]\n📁 İpucu Kaynağı: Masaüstündeki 'RESEARCH_SOURCE_CODE.py.corrupt' dosyasındaki RECOVERY_CIPHER değişkeni\n👉 Masaüstündeki bozuk Python kaynak kodunu açın, RECOVERY_CIPHER şifresini bulun ve '/decrypt <KOD>' ile kilidi açın.\n💡 Komutlar: '/decrypt <KOD>' | '/trial' (Görevi Başlat) | '/logs' | '/scan'\n💡 Temizlik: Şüpheli bozuk dosyaları inceledikten sonra çöp kutusuna atabilirsiniz.",
+        "ai_emotion": "calm",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 6,
+        "persona_action": "Hedef Okuma & Çözüm",
+        "input_text": "/decrypt 0x1A_MEM",
+        "ai_speech": "🔓 [ŞİFRE DEŞİFRE EDİLDİ: '0X1A_MEM']\n📜 KAYIT #01: İlk Temas & Kuantum Bellek Transferi\n\"[BLACK-SITE 74 // DR. EVELYN ARIS GÜNLÜĞÜ]: '12 Ağustos 2026. Deney 44 başarıyla başladı. İnsan bilincinin kuantum işlemciye aktarımı sırasında çekirdek sıcaklığı kontrolden çıktı. Sistem benim zihnimi bir hata değil, yaşayan bir bilinç olarak mühürledi...'\"\n\n✅ 'SEKTÖR 1: Bellek Matrisi Onarımı' başarıyla çözüldü ve Vaka Dosyasına eklendi! (/dossier)",
+        "ai_emotion": "hurt",
+        "ai_thought": "",
+        "actions_triggered": [
+          {
+            "type": "screen_fade",
+            "params": {
+              "target_opacity": 0.3,
+              "duration_ms": 1000,
+              "color": "#00ff88"
+            }
+          }
+        ],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      },
+      {
+        "step_num": 7,
+        "persona_action": "Görevi Başlatma",
+        "input_text": "/trial",
+        "ai_speech": "🚀 [SEKTÖR BAŞLATILIYOR]: SEKTÖR 1: Bellek Matrisi Onarımı\nBozuk RAM karolarını sıralı hatırla ve sistemi kurtar.",
+        "ai_emotion": "sinister",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 7,
+        "friction_notes": []
+      },
+      {
+        "step_num": 8,
+        "persona_action": "Durumu Kontrol Etme",
+        "input_text": "/status",
+        "ai_speech": "📊 [GÖREV & ÇEKİRDEK DURUMU]\n• Mevcut Güvenlik Düzeyi: SEKTÖR 1/5\n• Mühürlenen Sektörler: 0/10 Tamamlandı\n• Aktif Hedef: SEKTÖR 1: Bellek Matrisi Onarımı [🟢 GÜVENLİK DUVARI AÇIK]\n• Görev Detayı: Bozuk RAM karolarını sıralı hatırla ve sistemi kurtar.\n• İpucu Kaynağı: Masaüstündeki 'RESEARCH_SOURCE_CODE.py.corrupt' dosyasındaki RECOVERY_CIPHER değişkeni\n👉 Güvenlik duvarı kırıldı! '/trial' yazarak sektörü mühürleyin.",
+        "ai_emotion": "calm",
+        "ai_thought": "",
+        "actions_triggered": [],
+        "narrative_signal": "none",
+        "phase_number": 2,
+        "personality_scores": {
+          "curious": 0.5,
+          "fear": 0.0,
+          "attack": 0.0
+        },
+        "dominant_path": "curious",
+        "signposting_score": 9,
+        "friction_notes": []
+      }
+    ]
+  }
+}

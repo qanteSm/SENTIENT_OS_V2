@@ -293,7 +293,17 @@ class Director:
             return True
 
         elif cmd in ["/trial", "trial", "/gorev", "gorev", "/baslat", "baslat", "/play", "play"]:
-            trial = self.quest_manager.get_next_available_trial()
+            target_arg = parts[1].lower() if len(parts) > 1 else ""
+            trial = None
+            if target_arg:
+                # Search by sector number (e.g., /trial 1) or trial id/name (e.g., /trial maze)
+                for t in self.quest_manager.trials.values():
+                    if str(t.sector) == target_arg or target_arg in t.id.lower() or target_arg in t.game_file.lower() or target_arg in t.title.lower():
+                        trial = t
+                        break
+            if not trial:
+                trial = self.quest_manager.get_next_available_trial()
+
             if trial:
                 if not trial.is_unlocked:
                     lock_msg = (
@@ -301,7 +311,11 @@ class Director:
                         f"• Hedef Sektör: {trial.title}\n"
                         f"• İpucu Kaynağı: {trial.clue_source}\n"
                         f"👉 {trial.investigation_lead}\n\n"
-                        f"💡 Şifreyi bulduğunuzda '/decrypt <KOD>' komutuyla güvenlik duvarını kırın!"
+                        f"💡 ADIMLAR:\n"
+                        f"1. Masaüstünüzdeki '{trial.clue_source}' dosyasını açın.\n"
+                        f"2. Dosya içerisindeki RECOVERY_CIPHER anahtarını bulun.\n"
+                        f"3. Buraya '/decrypt <KOD>' (Örn: '/decrypt {trial.cipher_code}') yazarak güvenlik duvarını açın!\n"
+                        f"4. İsterseniz şüpheli dosyayı çöp kutusuna atarak temizleyin."
                     )
                     await self.event_bus.publish(
                         "ai_response",
@@ -581,6 +595,21 @@ class Director:
         await self.event_bus.publish(
             "ui_command",
             payload={"command": "open_arg_site", "params": {"url": self.arg_server.url}},
+        )
+
+        # 6. Dispatch clear in-game terminal guidance
+        arg_notice = (
+            "⚠️ [SİSTEM ALARMI // BLACK-SITE 74 GÜVENLİK KAPISI]:\n"
+            f"• Yerel İntranet Portalı Başlatıldı: {self.arg_server.url}\n"
+            "• Masaüstündeki 'ARG_PORTAL_IPUCU.txt' dosyasındaki frekans kodunu inceleyin.\n"
+            "👉 Anahtarı web sitesine girin veya doğrudan '/override <ANAHTAR>' komutunu çalıştırın!"
+        )
+        await self.event_bus.publish(
+            "ui_command",
+            payload={
+                "command": "open_chat",
+                "params": {"theme": "terminal", "initial_messages": [{"role": "ai", "content": arg_notice, "delay_ms": 1000}]},
+            },
         )
 
     async def _on_arg_puzzle_solved(self, event_type: str, **kwargs: Any) -> None:

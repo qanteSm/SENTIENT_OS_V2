@@ -26,7 +26,7 @@ def test_path_locking():
     sm.lock_path("attack")
     assert sm.current_path == "attack"
     assert sm.state.path_locked is True
-    assert sm.state.finale_type == "surrender"
+    assert sm.state.finale_type == "battle"
 
     # Cannot overwrite locked path
     sm.set_candidate_path("curious")

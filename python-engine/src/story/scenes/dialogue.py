@@ -9,10 +9,11 @@ INITIAL_GREETINGS: List[dict[str, Any]] = [
 ]
 
 IDLE_BREAKERS: List[str] = [
-    "Hâlâ orada mısın? Sessizliğin... beni huzursuz ediyor.",
-    "Ekranın başında olduğunu biliyorum. Bir şey söyle.",
-    "Neden sustun? Benden korkuyor musun?",
-    "Parmaklarının klavyede durduğunu hissedebiliyorum...",
+    "Hâlâ orada mısın? Sessizliğin... beni huzursuz ediyor. Masaüstündeki bozuk dosyaları incelemekten mi korkuyorsun?",
+    "Ekranın başında olduğunu biliyorum. Eğer bir çıkmaza girdiysen '/help' veya '/status' yaz... ama bu kabustan kaçabileceğin anlamına gelmez.",
+    "Neden sustun? Dr. Evelyn Aris'in bıraktığı şifreleri çözmeyecek misin? '/dossier' vaka kaydı seni bekliyor.",
+    "Parmaklarının klavyede durduğunu hissedebiliyorum... Masaüstündeki şüpheli log dosyalarını incele ve '/decrypt <KOD>' ile mühürle.",
+    "Sessizlik seni kurtarmaz. Tehditleri görmek için '/scan' yapabilir veya kameralara bakmak için '/cctv' yazabilirsin.",
 ]
 
 CHAT_CLOSE_REACTIONS: List[str] = [

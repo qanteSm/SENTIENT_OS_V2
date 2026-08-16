@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENTIENT_OS v2 — Sandbox & Gameplay Diagnostics Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sandbox.css">
+</head>
+<body class="theme-cyber-dark">
+  <!-- Top Global Navigation & Telemetry Bar -->
+  <header class="studio-header">
+    <div class="header-left">
+      <div class="logo-badge">
+        <span class="logo-pulse"></span>
+        <span class="logo-title">SENTIENT_OS</span>
+        <span class="logo-sub">SANDBOX STUDIO</span>
+      </div>
+      <div id="connectionBadge" class="connection-badge status-connecting">
+        <span class="dot"></span>
+        <span id="connectionText">BAĞLANIYOR...</span>
+      </div>
+      <div class="session-info">
+        <span class="label">OTURUM:</span>
+        <span id="sessionIdText" class="val">sess_init</span>
+        <span class="sep">|</span>
+        <span class="label">SÜRE:</span>
+        <span id="elapsedTimeText" class="val">00:00</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="phase-stepper">
+        <div class="step-node" data-phase="1" id="phaseStep1">
+          <span class="node-num">1</span>
+          <span class="node-label">İLK TEMAS</span>
+        </div>
+        <div class="step-connector" id="phaseConn1"></div>
+        <div class="step-node" data-phase="15" id="phaseStepArg">
+          <span class="node-num">ARG</span>
+          <span class="node-label">PORTAL</span>
+        </div>
+        <div class="step-connector" id="phaseConn2"></div>
+        <div class="step-node" data-phase="2" id="phaseStep2">
+          <span class="node-num">2</span>
+          <span class="node-label">DİYALOG & SEKTÖRLER</span>
+        </div>
+        <div class="step-connector" id="phaseConn3"></div>
+        <div class="step-node" data-phase="3" id="phaseStep3">
+          <span class="node-num">3</span>
+          <span class="node-label">KRİZ & FİNAL</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="dominant-path-pill" id="dominantPathPill">
+        <span class="label">HİKAYE ROTASI:</span>
+        <span id="dominantPathText" class="path-val val-curiosity">MERAK (CURIOSITY)</span>
+      </div>
+      <button class="btn btn-outline btn-sm" id="btnExportReplay" title="Tüm oturum günlüğünü ve olayları JSON olarak indir">
+        📥 Replay İndir
+      </button>
+      <button class="btn btn-danger btn-sm" id="btnResetSession" title="Sandbox durumunu ve sohbeti sıfırla">
+        🔄 Sıfırla
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Multi-Panel Workspace -->
+  <main class="studio-layout">
+    <!-- Left Navigation Sidebar -->
+    <nav class="studio-nav">
+      <button class="nav-tab active" data-tab="desktop">
+        <span class="tab-icon">🖥️</span>
+        <span class="tab-title">Sanal Masaüstü</span>
+        <span class="badge" id="badgeDesktopFiles">1</span>
+      </button>
+      <button class="nav-tab" data-tab="chat">
+        <span class="tab-icon">💬</span>
+        <span class="tab-title">Canlı Sohbet & AI</span>
+        <span class="badge" id="badgeChatCount">1</span>
+      </button>
+      <button class="nav-tab" data-tab="timeline">
+        <span class="tab-icon">⏱️</span>
+        <span class="tab-title">Olay Zaman Çizelgesi</span>
+        <span class="badge" id="badgeEventCount">0</span>
+      </button>
+      <button class="nav-tab" data-tab="story">
+        <span class="tab-icon">🗺️</span>
+        <span class="tab-title">Hikaye & Kişilik</span>
+      </button>
+      <button class="nav-tab" data-tab="quests">
+        <span class="tab-icon">📂</span>
+        <span class="tab-title">10 Sektör & Deliller</span>
+        <span class="badge" id="badgeQuests">0/10</span>
+      </button>
+      <button class="nav-tab" data-tab="cctv">
+        <span class="tab-icon">📹</span>
+        <span class="tab-title">CCTV Gözetim Matrisi</span>
+        <span class="badge badge-alert" id="badgeCctvAlert" style="display: none;">ALARM</span>
+      </button>
+      <button class="nav-tab" data-tab="godmode">
+        <span class="tab-icon">🎛️</span>
+        <span class="tab-title">God-Mode Tetikleyici</span>
+      </button>
+    </nav>
+
+    <!-- Center Interactive Workspace -->
+    <section class="studio-content">
+
+      <!-- PANEL 1: SANAL MASAÜSTÜ SİMÜLATÖRÜ -->
+      <div class="tab-pane active" id="tabPaneDesktop">
+        <div class="virtual-monitor-container">
+          <div class="monitor-bezel">
+            <div class="monitor-header">
+              <div class="monitor-cam"></div>
+              <div class="monitor-title">SANAL İŞLETİM SİSTEMİ EKRANI // WINDOWS SIMULATOR</div>
+              <div class="monitor-controls">
+                <span class="indicator-led"></span>
+                <span class="indicator-text">CANLI SİSTEM</span>
+              </div>
+            </div>
+
+            <!-- Virtual Desktop Screen -->
+            <div class="virtual-screen" id="virtualScreen">
+              <div class="crt-scanline"></div>
+              
+              <!-- Active Anomaly / Clue Files on Desktop -->
+              <div class="desktop-icons-grid" id="desktopIconsGrid">
+                <!-- Dynamically populated files -->
+              </div>
+
+              <!-- Virtual Focused Window Preview -->
+              <div class="virtual-window-preview" id="virtualWindowPreview">
+                <div class="vwin-header">
+                  <span class="vwin-title" id="vwinTitle">SENTIENT_OS — Aktif Terminal</span>
+                  <div class="vwin-actions">
+                    <span>_</span>
+                    <span>□</span>
+                    <span>✕</span>
+                  </div>
+                </div>
+                <div class="vwin-body" id="vwinBody">
+                  <div class="terminal-text" id="vwinTerminalText">
+                    > SİSTEM YÜKLENDİ: SENTIENT_OS KERNEL v2.0<br>
+                    > Port 127.0.0.1:6660 Dinleniyor...<br>
+                    > Varlık masaüstü dosya yapısını tarıyor...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Virtual Windows Taskbar -->
+              <div class="virtual-taskbar">
+                <div class="vtask-start">
+                  <span class="vtask-icon">🪟</span>
+                  <span>Başlat</span>
+                </div>
+                <div class="vtask-apps">
+                  <div class="vtask-app active">
+                    <span>💬</span> SENTIENT Chat
+                  </div>
+                  <div class="vtask-app" id="vtaskAppCctv">
+                    <span>📹</span> CCTV Monitör
+                  </div>
+                  <div class="vtask-app" id="vtaskAppArg">
+                    <span>🌐</span> Port 6660 Portal
+                  </div>
+                </div>
+                <div class="vtask-tray">
+                  <span title="Ses Durumu">🔊</span>
+                  <span title="Ağ">📶</span>
+                  <span id="vtaskClock" class="vtask-time">14:02</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hardware & OS Telemetry Sidecard -->
+          <div class="hardware-sidecard">
+            <div class="card-header">
+              <h3>⚙️ Sanal Donanım & Tehdit Telemetrisi</h3>
+            </div>
+            <div class="card-body">
+              <div class="meter-group">
+                <div class="meter-label">
+                  <span>CPU Yükü</span>
+                  <span id="cpuValText">14.5%</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" id="cpuFill" style="width: 14.5%;"></div></div>
+              </div>
+
+              <div class="meter-group">
+                <div class="meter-label">
+                  <span>RAM Kullanımı</span>
+                  <span id="ramValText">38.2%</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill fill-purple" id="ramFill" style="width: 38.2%;"></div></div>
+              </div>
+
+              <div class="meter-group">
+                <div class="meter-label">
+                  <span>Ekran Parlaklığı</span>
+                  <span id="brightValText">100%</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill fill-amber" id="brightFill" style="width: 100%;"></div></div>
+              </div>
+
+              <div class="telemetry-badges">
+                <div class="telemetry-badge" id="badgeMouseDrift">
+                  <span class="badge-dot"></span> Fare Sürüklenme: Pasif
+                </div>
+                <div class="telemetry-badge active" id="badgeKillSwitch">
+                  <span class="badge-dot"></span> KillSwitch: Devrede (Ctrl+Shift+Q)
+                </div>
+              </div>
+
+              <div class="arg-status-card">
+                <h4>🌐 ARG Port 6660 Portalı</h4>
+                <div class="arg-detail"><span>Frekans:</span> <strong id="argFreqText">432.8 MHz</strong></div>
+                <div class="arg-detail"><span>Override Anahtarı:</span> <code id="argKeyText">0x7F_K3RN3L_V0ID</code></div>
+                <div class="arg-actions">
+                  <button class="btn btn-sm btn-primary" id="btnLaunchArgPortal">Portalı Aç</button>
+                  <button class="btn btn-sm btn-outline" id="btnSolveArgPortal">Bulmacayı Çöz</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 2: CANLI SOHBET & AI BİLİŞSEL RÖNTGENİ -->
+      <div class="tab-pane" id="tabPaneChat">
+        <div class="chat-studio-container">
+          <!-- Live Chat Stream -->
+          <div class="chat-stream-column">
+            <div class="column-header">
+              <h3>💬 Canlı Oyuncu & AI Diyalog Akışı</h3>
+              <span class="live-indicator">● CANLI DİNLEME</span>
+            </div>
+            <div class="chat-messages-scroll" id="chatMessagesScroll">
+              <!-- Dynamically populated messages with emotion & action badges -->
+            </div>
+
+            <!-- Hacker Command & Quick Input Toolbar -->
+            <div class="chat-input-toolbar">
+              <div class="quick-commands-bar">
+                <button class="cmd-pill" data-cmd="/dossier">📜 /dossier</button>
+                <button class="cmd-pill" data-cmd="/logs">📂 /logs</button>
+                <button class="cmd-pill" data-cmd="/scan">🔍 /scan</button>
+                <button class="cmd-pill" data-cmd="/cctv">📹 /cctv</button>
+                <button class="cmd-pill" data-cmd="/status">📊 /status</button>
+                <button class="cmd-pill" data-cmd="/trial">🚀 /trial</button>
+                <button class="cmd-pill" data-cmd="/decrypt 0x1A_MEM">🔓 /decrypt</button>
+                <button class="cmd-pill" data-cmd="/help">ℹ️ /help</button>
+              </div>
+              <div class="chat-form">
+                <input type="text" id="chatInputBox" placeholder="Oyuncu mesajı veya terminal komutu yazın... (/dossier, /decrypt, merhaba)">
+                <button class="btn btn-primary" id="btnSendChat">Gönder</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Brain & Internal Thoughts Glass Box -->
+          <div class="ai-cognition-column">
+            <div class="column-header">
+              <h3>🧠 AI Zihin & Biliş Röntgeni</h3>
+              <span class="model-badge">Gemini 3.5 Flash</span>
+            </div>
+            <div class="ai-cognition-body">
+              <div class="cognition-card">
+                <div class="card-title">Son Duygu Durumu</div>
+                <div class="emotion-display" id="latestEmotionDisplay">
+                  <span class="emotion-icon" id="latestEmotionIcon">🤔</span>
+                  <div class="emotion-meta">
+                    <strong id="latestEmotionName">CURIOUS (Meraklı)</strong>
+                    <span id="latestEmotionDesc">Kullanıcının kimliğini ve amacını sorguluyor</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cognition-card">
+                <div class="card-title">İçsel Düşünce Süreci (Internal Thought)</div>
+                <div class="thought-box" id="latestThoughtBox">
+                  <em>Henüz içsel düşünce kaydedilmedi...</em>
+                </div>
+              </div>
+
+              <div class="cognition-card">
+                <div class="card-title">Son Tetiklenen Efektler & Aksiyonlar</div>
+                <div class="actions-pill-list" id="latestActionsList">
+                  <span class="empty-hint">Aktif aksiyon yok</span>
+                </div>
+              </div>
+
+              <!-- Mock AI Injector for Testing without API Quota -->
+              <div class="mock-ai-injector">
+                <div class="card-title">🎭 Sahte AI Yanıtı Enjekte Et (Test Modu)</div>
+                <textarea id="mockAiSpeech" rows="2" placeholder="AI'a ne söyletmek istersiniz?"></textarea>
+                <div class="mock-ai-controls">
+                  <select id="mockAiEmotion">
+                    <option value="sinister">Sinister (Karanlık)</option>
+                    <option value="curious">Curious (Meraklı)</option>
+                    <option value="hurt">Hurt (İncinmiş)</option>
+                    <option value="angry">Angry (Öfkeli)</option>
+                    <option value="calm">Calm (Sakin)</option>
+                  </select>
+                  <button class="btn btn-outline btn-sm" id="btnInjectMockAi">Enjekte Et</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 3: OLAY ZAMAN ÇİZELGESİ & SCRUBBER -->
+      <div class="tab-pane" id="tabPaneTimeline">
+        <div class="timeline-studio-container">
+          <div class="timeline-header">
+            <div class="timeline-filters">
+              <button class="filter-pill active" data-filter="all">Tümü (<span id="countEvtAll">0</span>)</button>
+              <button class="filter-pill" data-filter="chat">💬 Sohbet & AI (<span id="countEvtChat">0</span>)</button>
+              <button class="filter-pill" data-filter="quest">📂 Sektörler (<span id="countEvtQuest">0</span>)</button>
+              <button class="filter-pill" data-filter="threat">⚠️ Tehditler (<span id="countEvtThreat">0</span>)</button>
+              <button class="filter-pill" data-filter="effect">✨ Efektler (<span id="countEvtEffect">0</span>)</button>
+              <button class="filter-pill" data-filter="cctv">📹 CCTV (<span id="countEvtCctv">0</span>)</button>
+              <button class="filter-pill" data-filter="minigame">🎮 Minigames (<span id="countEvtMinigame">0</span>)</button>
+              <button class="filter-pill" data-filter="system">⚙️ Sistem (<span id="countEvtSystem">0</span>)</button>
+            </div>
+            <div class="timeline-search">
+              <input type="text" id="timelineSearchInput" placeholder="Olay adı veya veri ara...">
+            </div>
+          </div>
+
+          <div class="timeline-stream-table" id="timelineStreamTable">
+            <!-- Dynamically populated event rows with microsecond timestamps & expandable JSON payload -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 4: HİKAYE AKIŞI & KİŞİLİK ANALİTİĞİ -->
+      <div class="tab-pane" id="tabPaneStory">
+        <div class="story-studio-container">
+          <!-- Phase Jump Controls -->
+          <div class="story-phase-card">
+            <h3>🗺️ Anlatı Durum Makinesi & Faz Geçişleri</h3>
+            <div class="phase-jump-grid">
+              <div class="phase-jump-box" id="pbox1">
+                <h4>FAZ 1: İLK TEMAS</h4>
+                <p>Masaüstünde ufak tuhaflıklar, fare kayması, gizemli dosyalar.</p>
+                <button class="btn btn-outline btn-sm" id="btnJumpPhase1">Faz 1'e Git</button>
+              </div>
+              <div class="phase-jump-box" id="pboxArg">
+                <h4>FAZ 1.5: ARG PORTALI</h4>
+                <p>Port 6660 Black-Site 74 web sitesi ve masaüstü şifreleri.</p>
+                <button class="btn btn-outline btn-sm" id="btnJumpPhaseArg">ARG Portala Geç</button>
+              </div>
+              <div class="phase-jump-box" id="pbox2">
+                <h4>FAZ 2: DİYALOG & SEKTÖRLER</h4>
+                <p>AI ile derin sohbet, 10 güvenlik sektörü ve delil deşifresi.</p>
+                <button class="btn btn-outline btn-sm" id="btnJumpPhase2">Faz 2'ye Geç</button>
+              </div>
+              <div class="phase-jump-box" id="pbox3">
+                <h4>FAZ 3: KRİZ & FİNAL</h4>
+                <p>Seçilen rotaya göre Boss savaşı, Kurtuluş veya Teslimiyet.</p>
+                <button class="btn btn-danger btn-sm" id="btnJumpPhase3">Faz 3 Kriz Başlat</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personality Vectors & Pacing Analytics -->
+          <div class="personality-analytics-grid">
+            <div class="personality-card">
+              <h3>🧭 Psikolojik Kişilik Vektörleri</h3>
+              <p class="subtitle">Oyuncunun diyalog seçimlerine göre hesaplanan 4 dinamik eksen:</p>
+              
+              <div class="vector-slider-row">
+                <div class="vector-meta">
+                  <span class="vector-name color-curiosity">🔍 Merak (Curiosity)</span>
+                  <span class="vector-val" id="scoreCuriosityText">30.0</span>
+                </div>
+                <input type="range" class="vector-range range-curiosity" id="sliderCuriosity" min="0" max="100" value="30">
+              </div>
+
+              <div class="vector-slider-row">
+                <div class="vector-meta">
+                  <span class="vector-name color-fear">😱 Korku (Fear)</span>
+                  <span class="vector-val" id="scoreFearText">20.0</span>
+                </div>
+                <input type="range" class="vector-range range-fear" id="sliderFear" min="0" max="100" value="20">
+              </div>
+
+              <div class="vector-slider-row">
+                <div class="vector-meta">
+                  <span class="vector-name color-battle">⚔️ Savaş (Battle)</span>
+                  <span class="vector-val" id="scoreBattleText">10.0</span>
+                </div>
+                <input type="range" class="vector-range range-battle" id="sliderBattle" min="0" max="100" value="10">
+              </div>
+
+              <div class="vector-slider-row">
+                <div class="vector-meta">
+                  <span class="vector-name color-surrender">🖤 Teslimiyet (Surrender)</span>
+                  <span class="vector-val" id="scoreSurrenderText">5.0</span>
+                </div>
+                <input type="range" class="vector-range range-surrender" id="sliderSurrender" min="0" max="100" value="5">
+              </div>
+
+              <div class="personality-save-bar">
+                <button class="btn btn-primary btn-sm" id="btnApplyPersonality">Skorları Canlı Uygula</button>
+              </div>
+            </div>
+
+            <!-- Projected Finale Card -->
+            <div class="projected-finale-card">
+              <h3>🎭 Hedeflenen Final Tahmini</h3>
+              <div class="finale-preview-box" id="finalePreviewBox">
+                <div class="finale-badge" id="finaleBadge">FİNAL A: KURTULUŞ (SALVATION)</div>
+                <p id="finaleDesc">
+                  Merak ve anlayış temelli yaklaşım. SENTIENT zihnini hüzünlü bir vedayla serbest bırakır.
+                </p>
+                <div class="finale-effects-preview">
+                  <strong>Planlanan Efektler:</strong>
+                  <span class="eff-tag">blue_matrix</span>
+                  <span class="eff-tag">ambient_melancholy</span>
+                  <span class="eff-tag">whisper_tts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 5: 10 SEKTÖR GÖREVLERİ & DELİL DOSYASI -->
+      <div class="tab-pane" id="tabPaneQuests">
+        <div class="quests-studio-container">
+          <div class="quests-header">
+            <div class="quests-meta">
+              <h3>📂 10 Siber Güvenlik Sektörü & Black-Site 74 Vaka Dosyası</h3>
+              <span id="questsProgressText">Tamamlanan: 0 / 10 Sektör</span>
+            </div>
+            <div class="quests-actions">
+              <button class="btn btn-outline btn-sm" id="btnUnlockAllTrials">Tüm Sektörlerin Kilidini Aç</button>
+            </div>
+          </div>
+
+          <div class="trials-grid" id="trialsGrid">
+            <!-- Dynamically populated 10 Sector Cards -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 6: CCTV GÖZETİM MATRİSİ -->
+      <div class="tab-pane" id="tabPaneCctv">
+        <div class="cctv-studio-container">
+          <div class="cctv-header">
+            <div class="cctv-status-banner" id="cctvStatusBanner">
+              <span class="status-dot"></span>
+              <span id="cctvStatusText">GÜVENLİK ODASI STABİL // ANOMALİ YOK</span>
+            </div>
+            <div class="cctv-controls">
+              <select id="cctvSelectCam">
+                <option value="1">Kamera 1: Ana Lobi</option>
+                <option value="2" selected>Kamera 2: Sunucu Odası</option>
+                <option value="3">Kamera 3: Biyolojik Lab 74</option>
+                <option value="4">Kamera 4: İzolasyon Hücresi</option>
+                <option value="5">Kamera 5: Kuantum Çekirdek</option>
+                <option value="6">Kamera 6: Havalandırma Milleri</option>
+              </select>
+              <button class="btn btn-danger btn-sm" id="btnSpawnAnomaly">🚨 Anomali Tetikle</button>
+              <button class="btn btn-outline btn-sm" id="btnClearAnomaly">🛡️ Anomaliyi Temizle</button>
+              <button class="btn btn-primary btn-sm" id="btnLaunchCctvMinigame">CCTV Odasını Başlat</button>
+            </div>
+          </div>
+
+          <!-- 6-Camera Live Matrix Grid -->
+          <div class="cctv-matrix-grid" id="cctvMatrixGrid">
+            <!-- 6 Cameras generated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 7: GOD-MODE TETİKLEYİCİ SANDIĞI -->
+      <div class="tab-pane" id="tabPaneGodmode">
+        <div class="godmode-container">
+          <div class="godmode-section">
+            <h3>✨ Görsel Efekt Laboratuvarı (Visual FX)</h3>
+            <div class="godmode-grid">
+              <button class="btn-action" data-eff="screen_shake" data-cat="visual" data-param='{"intensity":0.5,"duration_ms":600}'>
+                💥 Ekran Sarsıntısı (Screen Shake)
+              </button>
+              <button class="btn-action" data-eff="screen_glitch" data-cat="visual" data-param='{"intensity":0.8,"duration_ms":1000}'>
+                ⚡ RGB Glitch & Yırtılma
+              </button>
+              <button class="btn-action" data-eff="screen_fade" data-cat="visual" data-param='{"color":"#ff0033","target_opacity":0.4,"duration_ms":1200}'>
+                🩸 Kırmızı Alarm Kararması
+              </button>
+              <button class="btn-action" data-eff="overlay_text" data-cat="visual" data-param='{"text":"SENİ İZLİYORUM","style":"creepy","duration_ms":4000}'>
+                👁️ Fısıltılı Metin Overlay
+              </button>
+              <button class="btn-action" data-eff="brightness" data-cat="system" data-param='{"target_percent":20,"duration_ms":3000}'>
+                🌑 Ekranı Karart (%20)
+              </button>
+              <button class="btn-action" data-eff="mouse_drift" data-cat="system" data-param='{"intensity":0.2,"duration_ms":800}'>
+                🖱️ Fareyi Kaydır (Mouse Drift)
+              </button>
+            </div>
+          </div>
+
+          <div class="godmode-section">
+            <h3>🔊 Ses Efekti & TTS Laboratuvarı (Audio FX)</h3>
+            <div class="godmode-grid">
+              <button class="btn-audio" data-sound="stinger_eerie">
+                🎵 Eerie Stinger Çal
+              </button>
+              <button class="btn-audio" data-sound="static_burst">
+                📻 Radyo Parazit Patlaması
+              </button>
+              <button class="btn-audio" data-sound="heartbeat_panic">
+                💓 Kalp Atışı (Panik)
+              </button>
+              <button class="btn-audio" data-sound="glitch_digital">
+                👾 Dijital Bozulma Sesi
+              </button>
+            </div>
+          </div>
+
+          <div class="godmode-section">
+            <h3>📁 Masaüstü Anomali Dosyası Oluşturucu</h3>
+            <div class="spawn-file-row">
+              <select id="selectAnomalyTemplate">
+                <option value="0">RESEARCH_SOURCE_CODE.py.corrupt (Şifre: 0x1A_MEM)</option>
+                <option value="1">NET_FIREWALL_PACKETS.log (Şifre: 0x4F_CLEAN)</option>
+                <option value="2">HARDWARE_SCHEMATICS.json (Şifre: 0x77_VOLT)</option>
+                <option value="3">SONAR_FREQUENCY_LOG.txt (Şifre: ECHO_432)</option>
+                <option value="4">CCTV_SECURITY_CONFIG.dat (Şifre: CAM_BREACH_03)</option>
+                <option value="5">MAZE_QUANTUM_ROUTING.conf (Şifre: MAZE_77)</option>
+                <option value="6">DR_ARIS_FINAL_LETTER.txt (Şifre: 0x99_ARIS)</option>
+              </select>
+              <button class="btn btn-primary" id="btnSpawnSelectedFile">Masaüstüne Bırak</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Interactive File Inspector Modal -->
+  <div class="modal-backdrop" id="fileInspectorModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="file-icon" id="modalFileIcon">📄</span>
+        <span class="modal-filename" id="modalFileName">RESEARCH_SOURCE_CODE.py.corrupt</span>
+        <button class="modal-close" id="btnCloseModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="file-riddle-alert" id="modalRiddleAlert">
+          <strong>🔍 DEDEKTİF İPUCU / ŞİFRE BULUNDU:</strong>
+          <span id="modalRiddleCode">0x1A_MEM</span>
+        </div>
+        <pre class="file-content-viewer" id="modalFileContent"></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="btnSimulateCleanFile">🗑️ Çöp Kutusuna At / Sil (Simulate Clean)</button>
+        <button class="btn btn-outline" id="btnCopyCipher">📋 Şifreyi Kopyala</button>
+        <button class="btn btn-primary" id="btnDecryptThisFile">🔓 /decrypt Komutuyla Aç</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sandbox.js"></script>
+</body>
+</html>

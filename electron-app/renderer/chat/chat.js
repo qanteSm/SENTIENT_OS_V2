@@ -1,6 +1,15 @@
-/**
- * SENTIENT_OS v2 — Chat Controller & IPC Communication
- */
+const COMMAND_SUGGESTIONS = [
+  { cmd: '/dossier', desc: 'Dr. Evelyn Aris vaka dosyasını & delilleri aç', hint: '' },
+  { cmd: '/decrypt', desc: 'Masaüstü dosyasındaki şifreyi çöz', hint: ' <KOD> (Örn: /decrypt 0x1A_MEM)' },
+  { cmd: '/trial', desc: 'Güvenlik sektörü minigame sınavını başlat', hint: ' [1-5] (Örn: /trial 1)' },
+  { cmd: '/cctv', desc: 'Güvenlik kameralarını canlı izle & anomali yakala', hint: '' },
+  { cmd: '/scan', desc: 'Masaüstü ve CCTV tehditlerini tara', hint: '' },
+  { cmd: '/status', desc: 'Sektör ilerlemesi ve çekirdek durumunu raporla', hint: '' },
+  { cmd: '/logs', desc: 'Ele geçirilen Black-Site ses ve veri kayıtları', hint: '' },
+  { cmd: '/override', desc: 'ARG güvenlik baypas anahtarını gir', hint: ' <ANAHTAR>' },
+  { cmd: '/hack', desc: 'Sıradaki hedef için taktiksel ipucu al', hint: '' },
+  { cmd: '/help', desc: 'Tüm komutların listesini ve kullanımını göster', hint: '' },
+];
 
 class ChatManager {
   constructor() {
@@ -9,7 +18,9 @@ class ChatManager {
     this.sendBtn = document.getElementById('chat-send-btn');
     this.closeBtn = document.getElementById('btn-close');
     this.typingIndicator = document.getElementById('typing-indicator');
+    this.autocompleteBox = document.getElementById('cmd-autocomplete');
     this.typewriter = new TypewriterAnimator();
+    this.selectedAutoIdx = -1;
 
     this.initEvents();
   }
@@ -17,8 +28,43 @@ class ChatManager {
   initEvents() {
     this.sendBtn.addEventListener('click', () => this.handleSend());
     this.input.addEventListener('keydown', (e) => {
+      if (this.autocompleteBox && this.autocompleteBox.style.display === 'flex') {
+        const items = this.autocompleteBox.querySelectorAll('.cmd-autocomplete-item');
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          this.selectedAutoIdx = (this.selectedAutoIdx + 1) % items.length;
+          this.updateAutoHighlight(items);
+          return;
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          this.selectedAutoIdx = (this.selectedAutoIdx - 1 + items.length) % items.length;
+          this.updateAutoHighlight(items);
+          return;
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+          if (this.selectedAutoIdx >= 0 && items[this.selectedAutoIdx]) {
+            e.preventDefault();
+            items[this.selectedAutoIdx].click();
+            return;
+          }
+        } else if (e.key === 'Escape') {
+          this.hideAutocomplete();
+          return;
+        }
+      }
+
       if (e.key === 'Enter') {
         this.handleSend();
+      }
+    });
+
+    // Autocomplete input listener
+    this.input.addEventListener('input', () => {
+      this.handleAutocompleteInput();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!this.input.contains(e.target) && !this.autocompleteBox.contains(e.target)) {
+        this.hideAutocomplete();
       }
     });
 
@@ -51,7 +97,66 @@ class ChatManager {
     }
   }
 
+  handleAutocompleteInput() {
+    const val = this.input.value.trimStart();
+    if (!val.startsWith('/')) {
+      this.hideAutocomplete();
+      return;
+    }
+
+    const search = val.toLowerCase();
+    const matches = COMMAND_SUGGESTIONS.filter((c) => c.cmd.startsWith(search) || search === '/');
+
+    if (matches.length === 0) {
+      this.hideAutocomplete();
+      return;
+    }
+
+    this.selectedAutoIdx = 0;
+    this.autocompleteBox.innerHTML = '';
+    matches.forEach((m, idx) => {
+      const item = document.createElement('div');
+      item.className = `cmd-autocomplete-item ${idx === 0 ? 'active' : ''}`;
+      item.innerHTML = `
+        <span class="cmd-auto-tag">${m.cmd}</span>
+        <span class="cmd-auto-hint">${m.hint}</span>
+        <span class="cmd-auto-desc">${m.desc}</span>
+      `;
+      item.addEventListener('click', () => {
+        if (m.hint.includes('<')) {
+          this.input.value = `${m.cmd} `;
+        } else {
+          this.input.value = m.cmd;
+        }
+        this.input.focus();
+        this.hideAutocomplete();
+      });
+      this.autocompleteBox.appendChild(item);
+    });
+
+    this.autocompleteBox.style.display = 'flex';
+  }
+
+  updateAutoHighlight(items) {
+    items.forEach((it, idx) => {
+      if (idx === this.selectedAutoIdx) {
+        it.classList.add('active');
+        it.scrollIntoView({ block: 'nearest' });
+      } else {
+        it.classList.remove('active');
+      }
+    });
+  }
+
+  hideAutocomplete() {
+    if (this.autocompleteBox) {
+      this.autocompleteBox.style.display = 'none';
+      this.selectedAutoIdx = -1;
+    }
+  }
+
   handleSend() {
+    this.hideAutocomplete();
     const text = this.input.value.trim();
     if (!text) return;
 
@@ -113,6 +218,10 @@ class ChatManager {
 
     if (text.includes('başardın') || text.includes('Başarısız') || text.includes('sınavını') || text.includes('İnanılmaz')) {
       this.markPreviousActionCardsCompleted();
+    }
+
+    if (text.includes('DEŞİFRE EDİLDİ') || text.includes('mühürlendi') || text.includes('BAŞARILI')) {
+      bubble.classList.add('decrypt-success-pulse');
     }
 
     // Dynamically react with theme shifts and window tension

@@ -54,6 +54,6 @@ FINALE_SURRENDER = FinaleScript(
 
 FINALES_BY_PATH = {
     "curious": FINALE_SALVATION,
-    "fear": FINALE_BATTLE,
-    "attack": FINALE_SURRENDER,
+    "attack": FINALE_BATTLE,
+    "fear": FINALE_SURRENDER,
 }

@@ -97,8 +97,8 @@ class NarrativeStateMachine:
         # Map path to finale type
         path_to_finale = {
             "curious": "salvation",
-            "fear": "battle",
-            "attack": "surrender",
+            "attack": "battle",
+            "fear": "surrender",
         }
         self.state.finale_type = path_to_finale.get(path, "salvation")
         logger.info(f"Narrative path LOCKED: '{path}' (Finale: '{self.state.finale_type}')")
